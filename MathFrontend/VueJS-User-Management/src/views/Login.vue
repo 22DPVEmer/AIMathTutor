@@ -11,8 +11,8 @@
             <div class="col-12 col-md-6">
               <div class="card-body p-3 p-md-4 p-xl-5">
                 <div class="mb-4 mt-4">
-                  <h3>Login</h3>
-                  <p>Enter your account or <router-link to="/register">create</router-link> a new account.</p>
+                  <h1 class="text-3xl">Login</h1>
+                  <p>Enter your account or <router-link class="text-primary-400" to="/register">create</router-link> a new account.</p>
                 </div>
 
                 <!-- Login Form -->

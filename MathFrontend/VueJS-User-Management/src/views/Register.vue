@@ -11,10 +11,10 @@
             <div class="col-12 col-md-6">
               <div class="card-body p-3 p-md-4 p-xl-5">
                 <div class="mb-4 mt-4">
-                  <h3>Register</h3>
+                  <h1 class="text-3xl">Register</h1>
                   <p>
                     Create your new account or
-                    <router-link to="/login">login</router-link> with existing
+                    <router-link class="text-primary-400" to="/login">login</router-link> with existing
                     account.
                   </p>
                 </div>
@@ -24,36 +24,36 @@
                   <div class="row gy-3 gy-md-4 overflow-hidden">
                     <div class="col-6">
                       <InputField
-                        v-model="firstname"
-                        id="firstname"
+                        v-model="firstName"
+                        id="firstName"
                         label="First Name"
                         placeholder="John"
                         :disabled="isSubmitting"
                       />
                       <div
-                        v-if="validationErrors.firstname"
+                        v-if="validationErrors.firstName"
                         class="alert-message"
                       >
                         <span class="text-danger">{{
-                          validationErrors.firstname
+                          validationErrors.firstName
                         }}</span>
                       </div>
                     </div>
                     <div class="col-6">
                       <InputField
-                        v-model="lastname"
-                        id="lastname"
+                        v-model="lastName"
+                        id="lastName"
                         label="Last Name"
                         placeholder="Doe"
                         :disabled="isSubmitting"
 
                       />
                       <div
-                        v-if="validationErrors.lastname"
+                        v-if="validationErrors.lastName"
                         class="alert-message"
                       >
                         <span class="text-danger">{{
-                          validationErrors.lastname
+                          validationErrors.lastName
                         }}</span>
                       </div>
                     </div>
@@ -79,6 +79,7 @@
                         label="Password"
                         :disabled="isSubmitting"
                       />
+                      <PasswordStrength :password="password" class="mt-2" />
                       <div
                         v-if="validationErrors.password"
                         class="alert-message"
@@ -122,6 +123,7 @@
 import SideBanner from "@/components/Common/SideBanner.vue";
 import InputField from "@/components/Common/InputField.vue";
 import PasswordField from "@/components/Common/PasswordField.vue";
+import PasswordStrength from "@/components/Common/PasswordStrength.vue";
 import { validateRegisterForm } from "@/utils/registerValidation";
 
 export default {
@@ -129,11 +131,12 @@ export default {
     SideBanner,
     InputField,
     PasswordField,
+    PasswordStrength,
   },
   data() {
     return {
-      firstname: "",
-      lastname: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       error: null,
@@ -152,8 +155,8 @@ export default {
 
       // Validate form data
       const validationErrors = validateRegisterForm({
-        firstname: this.firstname,
-        lastname: this.lastname,
+        firstName: this.firstName,
+        lastName: this.lastName,
         email: this.email,
         password: this.password,
       });
@@ -168,8 +171,8 @@ export default {
       try {
         await this.$store.dispatch("user/register", {
           // dispatching action to register user in Vuex store
-          firstname: this.firstname,
-          lastname: this.lastname,
+          firstName: this.firstName,
+          lastName: this.lastName,
           email: this.email,
           password: this.password,
         });

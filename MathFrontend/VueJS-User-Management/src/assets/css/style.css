@@ -28,7 +28,9 @@ html, body {
 .card-body {
     flex: 1; /* Allow card body to grow and fill the available space */
 }
-
+.text-primary-100{
+    color: #217bff;
+}
 /* Global styles for headings */
 h1, .h1 {
     font-size: 2rem;

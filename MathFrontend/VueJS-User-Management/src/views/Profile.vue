@@ -1,176 +1,165 @@
 <template>
-  <div>
-    <section class="p-3 p-md-4 p-xl-5">
-      <div class="container-fluid">
-        <div class="card border-light-subtle shadow-sm">
-          <div class="row g-0">
+  <div class="min-h-screen bg-gray-50">
+    <section class="p-4 sm:p-6 lg:p-8">
+      <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="flex flex-col md:flex-row">
             <Sidebar />
-            <div class="col-12 col-md-9">
-              <div class="card-body p-3 p-md-4 p-xl-5">
-                <div v-if="loading" class="d-flex justify-content-center">
-                  <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
+            <div class="flex-1">
+              <div class="p-4 sm:p-6 lg:p-8">
+                <div v-if="loading" class="flex justify-center">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                 </div>
                 <div v-else>
                   <!-- Profile Header -->
-                  <div
-                    class="mb-4 d-flex justify-content-between align-items-center"
-                  >
+                  <div class="mb-6 flex justify-between items-center">
                     <div>
-                      <h3 class="mb-0">Welcome, {{ user.firstName }}</h3>
-                      <p class="text-secondary mb-0">{{ user.email }}</p>
+                      <h3 class="text-2xl font-bold text-gray-900">Welcome, {{ user.firstName }}</h3>
+                      <p class="text-gray-600">{{ user.email }}</p>
                     </div>
-                    <div>
+                    <div class="flex space-x-3">
                       <button
                         @click="showEditMode"
-                        class="btn btn-outline-primary me-2"
+                        class="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                       >
-                        <i class="bi bi-pencil-square me-1"></i> Edit Profile
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Profile
                       </button>
                       <button
                         @click="confirmDelete"
-                        class="btn btn-outline-danger"
+                        class="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                       >
-                        <i class="bi bi-trash me-1"></i> Delete Account
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Account
                       </button>
                     </div>
                   </div>
 
-                  <div class="row">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Math Progress Widget -->
                     <MathProgressWidget :progress="progress" />
 
                     <!-- Profile Card (View Mode) -->
-                    <div class="col-md-6" v-if="!editMode">
-                      <div class="card mb-4 shadow-sm border-0">
-                        <div class="card-header bg-primary text-white">
-                          <h5 class="card-title mb-0">User Profile</h5>
+                    <div v-if="!editMode">
+                      <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="bg-primary-600 px-4 py-3">
+                          <h5 class="text-lg font-medium text-white">User Profile</h5>
                         </div>
-                        <div class="card-body">
-                          <div class="d-flex mb-3">
-                            <div
-                              class="profile-avatar me-3 bg-light rounded-circle d-flex justify-content-center align-items-center"
-                              style="width: 64px; height: 64px; font-size: 24px"
-                            >
-                              {{ user.firstName?.charAt(0)
-                              }}{{ user.lastName?.charAt(0) }}
+                        <div class="p-4">
+                          <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-medium text-gray-600 mr-4">
+                              {{ user.firstName?.charAt(0) }}{{ user.lastName?.charAt(0) }}
                             </div>
                             <div>
-                              <h5 class="mb-1">
+                              <h5 class="text-lg font-medium text-gray-900">
                                 {{ user.firstName }} {{ user.lastName }}
                               </h5>
-                              <p class="mb-0 text-muted">
-                                <i class="bi bi-envelope me-1"></i
-                                >{{ user.email }}
+                              <p class="text-gray-600 flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                {{ user.email }}
                               </p>
                             </div>
                           </div>
-                          <hr />
-                          <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">First Name:</div>
-                            <div class="col-sm-8">{{ user.firstName }}</div>
-                          </div>
-                          <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Last Name:</div>
-                            <div class="col-sm-8">{{ user.lastName }}</div>
-                          </div>
-                          <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Email:</div>
-                            <div class="col-sm-8">{{ user.email }}</div>
-                          </div>
-                          <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Created:</div>
-                            <div class="col-sm-8">
-                              {{ formatDate(user.createdAt) }}
-                            </div>
-                          </div>
-                          <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Last Login:</div>
-                            <div class="col-sm-8">
-                              {{ formatDate(user.lastLogin) }}
-                            </div>
-                          </div>
-                          <div class="row mb-2">
-                            <div class="col-sm-4 text-muted">Verified:</div>
-                            <div class="col-sm-8">
-                              <span
-                                class="badge"
-                                :class="
-                                  user.isVerified ? 'bg-success' : 'bg-warning'
-                                "
-                              >
-                                {{ user.isVerified ? "Yes" : "No" }}
-                              </span>
-                            </div>
+                          <div class="border-t border-gray-200 pt-4">
+                            <dl class="divide-y divide-gray-200">
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">First Name:</dt>
+                                <dd class="text-sm text-gray-900 col-span-2">{{ user.firstName }}</dd>
+                              </div>
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">Last Name:</dt>
+                                <dd class="text-sm text-gray-900 col-span-2">{{ user.lastName }}</dd>
+                              </div>
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">Email:</dt>
+                                <dd class="text-sm text-gray-900 col-span-2">{{ user.email }}</dd>
+                              </div>
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">Created:</dt>
+                                <dd class="text-sm text-gray-900 col-span-2">{{ formatDate(user.createdAt) }}</dd>
+                              </div>
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">Last Login:</dt>
+                                <dd class="text-sm text-gray-900 col-span-2">{{ formatDate(user.lastLogin) }}</dd>
+                              </div>
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">Verified:</dt>
+                                <dd class="text-sm col-span-2">
+                                  <span
+                                    class="px-2 py-1 text-xs font-medium rounded-full"
+                                    :class="user.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                                  >
+                                    {{ user.isVerified ? "Yes" : "No" }}
+                                  </span>
+                                </dd>
+                              </div>
+                            </dl>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <!-- Edit Profile Form (Edit Mode) -->
-                    <div class="col-md-6" v-if="editMode">
-                      <div class="card mb-4 shadow-sm border-0">
-                        <div class="card-header bg-primary text-white">
-                          <h5 class="card-title mb-0">Edit Profile</h5>
+                    <div v-if="editMode">
+                      <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="bg-primary-600 px-4 py-3">
+                          <h5 class="text-lg font-medium text-white">Edit Profile</h5>
                         </div>
-                        <div class="card-body">
-                          <form @submit.prevent="updateProfile">
-                            <div class="mb-3">
-                              <label for="firstName" class="form-label"
-                                >First Name</label
-                              >
+                        <div class="p-4">
+                          <form @submit.prevent="updateProfile" class="space-y-4">
+                            <div>
+                              <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
                               <input
                                 type="text"
-                                class="form-control"
                                 id="firstName"
                                 v-model="formData.firstName"
                                 required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                               />
                             </div>
-                            <div class="mb-3">
-                              <label for="lastName" class="form-label"
-                                >Last Name</label
-                              >
+                            <div>
+                              <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
                               <input
                                 type="text"
-                                class="form-control"
                                 id="lastName"
                                 v-model="formData.lastName"
                                 required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                               />
                             </div>
-                            <div class="mb-3">
-                              <label for="email" class="form-label"
-                                >Email</label
-                              >
+                            <div>
+                              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                               <input
                                 type="email"
-                                class="form-control"
                                 id="email"
                                 v-model="formData.email"
                                 required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                               />
                             </div>
-                            <div class="d-flex justify-content-end gap-2">
+                            <div class="flex justify-end space-x-3">
                               <button
                                 type="button"
                                 @click="cancelEdit"
-                                class="btn btn-outline-secondary"
+                                class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                               >
                                 Cancel
                               </button>
                               <button
                                 type="submit"
-                                class="btn btn-primary"
                                 :disabled="updating"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                               >
-                                <span
-                                  v-if="updating"
-                                  class="spinner-border spinner-border-sm me-1"
-                                  role="status"
-                                  aria-hidden="true"
-                                ></span>
+                                <svg v-if="updating" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
                                 Save Changes
                               </button>
                             </div>
@@ -180,68 +169,57 @@
                     </div>
 
                     <!-- Change Password Card -->
-                    <div class="col-md-6" v-if="editMode">
-                      <div class="card mb-4 shadow-sm border-0">
-                        <div class="card-header bg-primary text-white">
-                          <h5 class="card-title mb-0">Change Password</h5>
+                    <div v-if="editMode">
+                      <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="bg-primary-600 px-4 py-3">
+                          <h5 class="text-lg font-medium text-white">Change Password</h5>
                         </div>
-                        <div class="card-body">
-                          <form @submit.prevent="changePassword">
-                            <div class="mb-3">
-                              <label for="currentPassword" class="form-label"
-                                >Current Password</label
-                              >
+                        <div class="p-4">
+                          <form @submit.prevent="changePassword" class="space-y-4">
+                            <div>
+                              <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
                               <input
                                 type="password"
-                                class="form-control"
                                 id="currentPassword"
                                 v-model="passwordData.currentPassword"
                                 required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                               />
                             </div>
-                            <div class="mb-3">
-                              <label for="newPassword" class="form-label"
-                                >New Password</label
-                              >
+                            <div>
+                              <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
                               <input
                                 type="password"
-                                class="form-control"
                                 id="newPassword"
                                 v-model="passwordData.newPassword"
                                 required
                                 minlength="6"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                               />
                             </div>
-                            <div class="mb-3">
-                              <label for="confirmPassword" class="form-label"
-                                >Confirm New Password</label
-                              >
+                            <div>
+                              <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
                               <input
                                 type="password"
-                                class="form-control"
                                 id="confirmPassword"
                                 v-model="passwordData.confirmPassword"
                                 required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                               />
-                              <div
-                                class="form-text text-danger"
-                                v-if="passwordMismatch"
-                              >
+                              <p v-if="passwordMismatch" class="mt-1 text-sm text-red-600">
                                 Passwords do not match
-                              </div>
+                              </p>
                             </div>
-                            <div class="d-flex justify-content-end">
+                            <div class="flex justify-end">
                               <button
                                 type="submit"
-                                class="btn btn-primary"
                                 :disabled="changingPassword || passwordMismatch"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                               >
-                                <span
-                                  v-if="changingPassword"
-                                  class="spinner-border spinner-border-sm me-1"
-                                  role="status"
-                                  aria-hidden="true"
-                                ></span>
+                                <svg v-if="changingPassword" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
                                 Update Password
                               </button>
                             </div>
@@ -323,7 +301,6 @@ import Navbar from "@/components/Home/Navbar.vue";
 
 import MathProgressWidget from "@/components/Home/MathProgressWidget.vue";
 import { mapState, mapGetters } from "vuex";
-import { Modal } from "bootstrap";
 import { useStore } from "@/store";
 
 interface UserData {
