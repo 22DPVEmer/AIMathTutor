@@ -74,6 +74,9 @@ MathBackend/**/wwwroot/
 MathFrontend/*/dist/
 MathFrontend/*/node_modules/
 
+**/Migrations/
+
+
 # Temporary files
 **/tmp/
 **/temp/
