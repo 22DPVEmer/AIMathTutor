@@ -12,6 +12,7 @@ import Login from "../views/Login.vue";
 import Profile from "../views/Profile.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
+import MathProblemView from "../views/MathProblemView.vue";
 import store from "@/store";
 
 // Define the route meta types
@@ -70,6 +71,12 @@ const routes: AppRouteRecordRaw[] = [
     component: ResetPassword,
     beforeEnter: guestOnly,
     meta: { title: "Reset Password" },
+  },
+  {
+    path: "/math-problems",
+    name: "MathProblems",
+    component: MathProblemView,
+    meta: { requiresAuth: true, title: "Math Problems" },
   },
   {
     path: "/logout",

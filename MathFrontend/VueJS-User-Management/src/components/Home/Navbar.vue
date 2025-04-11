@@ -24,6 +24,9 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/topics">Topics</router-link>
           </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/math-problems">Math Generator</router-link>
+          </li>
         </ul>
 
         <!-- Right side navigation items -->

@@ -33,6 +33,13 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// Register AIService
+builder.Services.AddScoped<IAIservice, AIservice>();
+
+// Register Math Problem Services and Repository
+builder.Services.AddScoped<IMathProblemService, MathProblemService>();
+builder.Services.AddScoped<IMathProblemRepository, MathProblemRepository>();
+
 // Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(

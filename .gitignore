@@ -19,6 +19,7 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+# .env.local
 
 # C# / Backend
 bin/
