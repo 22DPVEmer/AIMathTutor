@@ -56,7 +56,7 @@ interface ApiResponse<T = any> {
 const API_URL = "http://localhost:5000/api";
 
 // Create axios instance with default config
-const api: AxiosInstance = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",

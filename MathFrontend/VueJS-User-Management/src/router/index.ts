@@ -21,8 +21,8 @@ interface RouteMeta {
   title?: string;
 }
 
-// Extend the RouteRecordRaw to include our custom meta
-interface AppRouteRecordRaw extends Omit<RouteRecordRaw, "meta"> {
+// Extend the RouteRecordRaw type to include our meta type
+interface AppRouteRecordRaw extends RouteRecordRaw {
   meta?: RouteMeta;
 }
 
@@ -97,29 +97,39 @@ const router = createRouter({
   routes: routes as RouteRecordRaw[],
 });
 
-router.beforeEach(
-  (
-    to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
-    next: NavigationGuardNext
-  ) => {
-    // Update document title
-    const defaultTitle = "Math Tutor";
-    document.title = to.meta.title
-      ? `${to.meta.title} | ${defaultTitle}`
-      : defaultTitle;
+// Global navigation guard
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  // Set page title
+  document.title = to.meta?.title ? `${to.meta.title} - AI Math Tutor` : 'AI Math Tutor';
 
-    // Check auth requirements
-    if (to.matched.some((record) => record.meta.requiresAuth)) {
-      if (!store.getters["user/isAuthenticated"]) {
-        next({ name: "Login" });
-      } else {
-        next();
+  // Check if route requires authentication
+  if (to.meta?.requiresAuth) {
+    const isAuthenticated = store.getters["user/isAuthenticated"];
+    
+    if (!isAuthenticated) {
+      // Try to restore auth state
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          await store.dispatch("user/checkAuth");
+          await store.dispatch("user/getUserProfile");
+          
+          // If we successfully restored auth, proceed
+          if (store.getters["user/isAuthenticated"]) {
+            return next();
+          }
+        } catch (error) {
+          console.error("Error restoring auth state:", error);
+          localStorage.removeItem("token");
+        }
       }
-    } else {
-      next();
+      
+      // If we couldn't restore auth, redirect to login
+      return next({ name: "Login", query: { redirect: to.fullPath } });
     }
   }
-);
+  
+  next();
+});
 
 export default router;
