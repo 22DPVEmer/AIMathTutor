@@ -38,6 +38,7 @@ namespace MathTutor.Application.DTOs
         public string Difficulty { get; set; } = "Medium";
         [JsonIgnore]
         public int TopicId { get; set; }
+        public bool SaveToDatabase { get; set; }
     }
 
     public class GeneratedMathProblemResponseDto

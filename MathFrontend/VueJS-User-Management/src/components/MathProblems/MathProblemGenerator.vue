@@ -89,7 +89,7 @@
 
 <script>
 import { ref, computed } from 'vue';
-import axios from 'axios';
+import { generateMathProblem, evaluateMathAnswer } from '@/api/math';
 
 export default {
   name: 'MathProblemGenerator',
@@ -131,12 +131,10 @@ export default {
       solutionVisible.value = false;
       
       try {
-        const response = await axios.post('/api/MathProblem/generate', {
+        generatedProblem.value = await generateMathProblem({
           topic: formData.value.topic,
           difficulty: formData.value.difficulty
         });
-        
-        generatedProblem.value = response.data;
       } catch (error) {
         console.error('Error generating problem:', error);
         alert('Failed to generate problem. Please try again.');
@@ -154,13 +152,10 @@ export default {
       isChecking.value = true;
       
       try {
-        // Use the direct evaluation endpoint that doesn't require a problem ID
-        const response = await axios.post('/api/MathProblem/evaluate-direct', {
+        evaluation.value = await evaluateMathAnswer({
           problem: generatedProblem.value.statement,
           userAnswer: userAnswer.value
         });
-        
-        evaluation.value = response.data;
         
         // Automatically show solution if answer is incorrect
         if (!evaluation.value.isCorrect) {

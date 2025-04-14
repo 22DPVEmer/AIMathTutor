@@ -13,8 +13,8 @@ namespace MathTutor.API.Controllers
     // Add this new DTO for direct evaluation
     public class DirectEvaluationRequestDto
     {
-        public string Problem { get; set; } = string.Empty;
-        public string UserAnswer { get; set; } = string.Empty;
+        public string problem { get; set; } = string.Empty;
+        public string userAnswer { get; set; } = string.Empty;
     }
 
     [ApiController]
@@ -164,18 +164,19 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Problem) || string.IsNullOrWhiteSpace(request.UserAnswer))
+                if (string.IsNullOrWhiteSpace(request.problem) || string.IsNullOrWhiteSpace(request.userAnswer))
                 {
                     return BadRequest("Problem statement and user answer are required");
                 }
                 
-                string aiResponse = await _aiService.EvaluateAnswerAsync(request.Problem, request.UserAnswer);
+                string aiResponse = await _aiService.EvaluateAnswerAsync(request.problem, request.userAnswer);
                 EvaluateMathAnswerResponseDto evaluationResult;
                 
                 try 
                 {
                     // Try to deserialize the response
-                    evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse);
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse, options);
                 }
                 catch (JsonException)
                 {
@@ -186,7 +187,8 @@ namespace MathTutor.API.Controllers
                     if (jsonStart >= 0 && jsonEnd > jsonStart)
                     {
                         var jsonPart = aiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                        evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(jsonPart);
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(jsonPart, options);
                     }
                     else
                     {

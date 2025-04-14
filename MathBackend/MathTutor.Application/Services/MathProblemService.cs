@@ -93,15 +93,28 @@ namespace MathTutor.Application.Services
                 string difficultyLevel = MapDifficultyToString(request.Difficulty);
                 string aiResponse = await _aiService.GenerateMathProblemAsync(request.Topic, difficultyLevel);
                 
-                GeneratedMathProblemResponseDto generatedProblem;
+                _logger.LogDebug("Raw AI Response: {Response}", aiResponse);
+                
+                // Define serializer options with more permissive settings
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip
+                };
+                
+                GeneratedMathProblemResponseDto generatedProblem = null;
                 
                 try 
                 {
                     // Try to deserialize the response
-                    generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(aiResponse);
+                    generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(aiResponse, jsonOptions);
+                    _logger.LogDebug("Deserialized problem: {Problem}", JsonSerializer.Serialize(generatedProblem));
                 }
-                catch (JsonException)
+                catch (JsonException ex)
                 {
+                    _logger.LogWarning(ex, "Initial deserialization failed, attempting fallback parsing");
+                    
                     // If direct deserialization fails, try to extract the JSON portion
                     // Gemini sometimes includes additional text around the JSON
                     var jsonStart = aiResponse.IndexOf('{');
@@ -110,7 +123,15 @@ namespace MathTutor.Application.Services
                     if (jsonStart >= 0 && jsonEnd > jsonStart)
                     {
                         var jsonPart = aiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                        generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(jsonPart);
+                        _logger.LogDebug("Extracted JSON part: {JsonPart}", jsonPart);
+                        
+                        try {
+                            generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(jsonPart, jsonOptions);
+                        }
+                        catch (JsonException innerEx) {
+                            _logger.LogWarning(innerEx, "Fallback parsing also failed");
+                            throw new InvalidOperationException("Failed to parse the generated math problem");
+                        }
                     }
                     else
                     {
@@ -119,14 +140,20 @@ namespace MathTutor.Application.Services
                     }
                 }
                 
-                if (generatedProblem == null || string.IsNullOrWhiteSpace(generatedProblem.Statement))
+                if (generatedProblem == null)
                 {
-                    _logger.LogWarning("AI generated an invalid math problem response");
+                    _logger.LogWarning("Deserialized problem is null");
                     throw new InvalidOperationException("Failed to generate a valid math problem");
                 }
                 
-                // If TopicId is provided, we can automatically store the generated problem in the database
-                if (request.TopicId > 0)
+                if (string.IsNullOrWhiteSpace(generatedProblem.Statement))
+                {
+                    _logger.LogWarning("AI generated a problem with no statement");
+                    throw new InvalidOperationException("Generated problem is missing a statement");
+                }
+                
+                // If TopicId is provided and SaveToDatabase is true, store the generated problem
+                if (request.TopicId > 0 && request.SaveToDatabase)
                 {
                     DifficultyLevel difficulty = MapStringToDifficulty(request.Difficulty);
                     
@@ -140,6 +167,7 @@ namespace MathTutor.Application.Services
                     };
                     
                     await CreateProblemAsync(problemToCreate);
+                    _logger.LogInformation("Generated problem saved to database with TopicId: {TopicId}", request.TopicId);
                 }
                 
                 return generatedProblem;
@@ -161,66 +189,73 @@ namespace MathTutor.Application.Services
                 {
                     throw new InvalidOperationException($"Math problem with ID {request.ProblemId} not found");
                 }
+
+                // Normalize both answers for comparison
+                string normalizedUserAnswer = NormalizeAnswer(request.UserAnswer);
+                string normalizedSolution = NormalizeAnswer(problem.Solution);
+
+                bool isCorrect = string.Equals(normalizedUserAnswer, normalizedSolution, StringComparison.OrdinalIgnoreCase);
                 
-                string aiResponse = await _aiService.EvaluateAnswerAsync(problem.Statement, request.UserAnswer);
-                
-                EvaluateMathAnswerResponseDto evaluationResult;
-                
-                try 
+                string feedback = isCorrect 
+                    ? "Correct! " + problem.Explanation
+                    : $"Incorrect. The correct answer is: {problem.Solution}. Here's why: {problem.Explanation}";
+
+                return new EvaluateMathAnswerResponseDto
                 {
-                    // Try to deserialize the response
-                    evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse);
-                }
-                catch (JsonException)
-                {
-                    // If direct deserialization fails, try to extract the JSON portion
-                    var jsonStart = aiResponse.IndexOf('{');
-                    var jsonEnd = aiResponse.LastIndexOf('}');
-                    
-                    if (jsonStart >= 0 && jsonEnd > jsonStart)
-                    {
-                        var jsonPart = aiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                        evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(jsonPart);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Could not extract valid JSON from AI response");
-                        throw new InvalidOperationException("Failed to evaluate the answer");
-                    }
-                }
-                
-                if (evaluationResult == null)
-                {
-                    _logger.LogWarning("AI generated an invalid evaluation response");
-                    throw new InvalidOperationException("Failed to evaluate the answer");
-                }
-                
-                return evaluationResult;
+                    IsCorrect = isCorrect,
+                    Feedback = feedback
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error evaluating math answer");
+                _logger.LogError(ex, "Error evaluating answer");
                 throw;
             }
         }
 
+        private string NormalizeAnswer(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer))
+                return string.Empty;
+
+            // Remove whitespace, convert to lowercase, and handle common math formatting
+            return answer.Trim()
+                .ToLower()
+                .Replace(" ", "")
+                .Replace("=", "")
+                .Replace("≈", "")
+                .Replace("~", "")
+                .Replace("pi", "π")
+                .Replace("sqrt", "√");
+        }
+
         private string MapDifficultyToString(string difficulty)
         {
-            return difficulty.ToLower() switch
+            // Normalize input by trimming and converting to lowercase
+            string normalizedDifficulty = difficulty?.Trim().ToLower() ?? "medium";
+            
+            return normalizedDifficulty switch
             {
-                "easy" => "Easy",
-                "hard" => "Hard",
-                _ => "Medium"
+                "easy" or "beginner" or "1" => "Easy",
+                "medium" or "intermediate" or "2" => "Medium",
+                "hard" or "difficult" or "advanced" or "3" => "Hard",
+                "very hard" or "expert" or "4" => "Very Hard",
+                _ => "Medium" // Default to Medium if unknown
             };
         }
 
         private DifficultyLevel MapStringToDifficulty(string difficulty)
         {
-            return difficulty.ToLower() switch
+            // Normalize input by trimming and converting to lowercase
+            string normalizedDifficulty = difficulty?.Trim().ToLower() ?? "medium";
+            
+            return normalizedDifficulty switch
             {
-                "easy" => DifficultyLevel.Easy,
-                "hard" => DifficultyLevel.Hard,
-                _ => DifficultyLevel.Medium
+                "easy" or "beginner" or "1" => DifficultyLevel.Easy,
+                "medium" or "intermediate" or "2" => DifficultyLevel.Medium,
+                "hard" or "difficult" or "advanced" or "3" => DifficultyLevel.Hard,
+                "very hard" or "expert" or "4" => DifficultyLevel.Hard, // Map Very Hard to Hard since we only have 3 levels
+                _ => DifficultyLevel.Medium // Default to Medium if unknown
             };
         }
     }

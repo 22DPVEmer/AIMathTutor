@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,13 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+// Register HttpClient for AIservice
+builder.Services.AddHttpClient<IAIservice, AIservice>(client =>
+{
+    client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+});
 
 // Register AIService
 builder.Services.AddScoped<IAIservice, AIservice>();
@@ -93,7 +101,7 @@ builder.Services.AddAuthentication(options =>
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 if (allowedOrigins == null || allowedOrigins.Length == 0)
 {
-    allowedOrigins = new[] { "http://localhost:5173" };
+    allowedOrigins = new[] { "http://localhost:5174", "http://localhost:5173" };
 }
 
 // Configure CORS
