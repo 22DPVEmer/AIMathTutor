@@ -26,7 +26,13 @@
               to="/math-problems"
               class="flex items-center text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-primary-600"
             >
-              Math Generator
+              Problem Generator
+            </router-link>
+            <router-link 
+              to="/my-problems"
+              class="flex items-center text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-primary-600"
+            >
+              My Problems
             </router-link>
           </div>
         </div>
@@ -147,39 +153,14 @@
           to="/math-problems"
           class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
         >
-          Math Generator
+          Problem Generator
         </router-link>
-
-        <!-- Mobile auth links -->
-        <template v-if="!isAuthenticated">
-          <router-link 
-            to="/login"
-            class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-          >
-            Login
-          </router-link>
-          <router-link 
-            to="/register"
-            class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-          >
-            Register
-          </router-link>
-        </template>
-        <template v-else>
-          <router-link 
-            to="/profile"
-            class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-          >
-            Profile
-          </router-link>
-          <a
-            href="#"
-            @click.prevent="handleLogout"
-            class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-          >
-            Logout
-          </a>
-        </template>
+        <router-link 
+          to="/my-problems"
+          class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
+        >
+          My Problems
+        </router-link>
       </div>
     </div>
   </nav>

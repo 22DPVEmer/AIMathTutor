@@ -99,6 +99,23 @@
                                   </span>
                                 </dd>
                               </div>
+                              <div class="grid grid-cols-3 gap-4 py-3">
+                                <dt class="text-sm font-medium text-gray-500">Roles:</dt>
+                                <dd class="text-sm col-span-2">
+                                  <div class="flex flex-wrap gap-2">
+                                    <span
+                                      v-for="role in user.roles"
+                                      :key="role"
+                                      class="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800"
+                                    >
+                                      {{ role }}
+                                    </span>
+                                    <span v-if="!user.roles?.length" class="text-gray-500">
+                                      No roles assigned
+                                    </span>
+                                  </div>
+                                </dd>
+                              </div>
                             </dl>
                           </div>
                         </div>
@@ -161,66 +178,6 @@
                                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 Save Changes
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Change Password Card -->
-                    <div v-if="editMode">
-                      <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="bg-primary-600 px-4 py-3">
-                          <h5 class="text-lg font-medium text-white">Change Password</h5>
-                        </div>
-                        <div class="p-4">
-                          <form @submit.prevent="changePassword" class="space-y-4">
-                            <div>
-                              <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
-                              <input
-                                type="password"
-                                id="currentPassword"
-                                v-model="passwordData.currentPassword"
-                                required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
-                              <input
-                                type="password"
-                                id="newPassword"
-                                v-model="passwordData.newPassword"
-                                required
-                                minlength="6"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                              <input
-                                type="password"
-                                id="confirmPassword"
-                                v-model="passwordData.confirmPassword"
-                                required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                              />
-                              <p v-if="passwordMismatch" class="mt-1 text-sm text-red-600">
-                                Passwords do not match
-                              </p>
-                            </div>
-                            <div class="flex justify-end">
-                              <button
-                                type="submit"
-                                :disabled="changingPassword || passwordMismatch"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                              >
-                                <svg v-if="changingPassword" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Update Password
                               </button>
                             </div>
                           </form>
@@ -298,10 +255,9 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Navbar from "@/components/Home/Navbar.vue";
-
 import MathProgressWidget from "@/components/Home/MathProgressWidget.vue";
 import { mapState, mapGetters } from "vuex";
-import { useStore } from "@/store";
+import { useToast } from 'vue-toastification';
 
 interface UserData {
   id?: string;
@@ -311,6 +267,7 @@ interface UserData {
   createdAt?: string;
   lastLogin?: string;
   isVerified?: boolean;
+  roles?: string[];
   [key: string]: any;
 }
 
@@ -320,9 +277,13 @@ export default defineComponent({
     Navbar,
     MathProgressWidget,
   },
+  setup() {
+    const toast = useToast();
+    return { toast }
+  },
   data() {
     return {
-      progress: 65, // Example math learning progress percentage
+      progress: 65,
       editMode: false,
       formData: {
         firstName: "",
@@ -330,14 +291,8 @@ export default defineComponent({
         email: "",
         id: "",
       },
-      passwordData: {
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      },
       updating: false,
-      changingPassword: false,
-      deleteModal: null as Modal | null,
+      deleteModal: null as any,
       deleting: false,
       deleteError: "",
     };
@@ -347,12 +302,6 @@ export default defineComponent({
     ...mapState("user", ["loading"]),
     user(): UserData {
       return this.userData;
-    },
-    passwordMismatch(): boolean {
-      return (
-        this.passwordData.newPassword !== this.passwordData.confirmPassword &&
-        this.passwordData.confirmPassword !== ""
-      );
     },
   },
   methods: {
@@ -378,11 +327,6 @@ export default defineComponent({
     },
     cancelEdit() {
       this.editMode = false;
-      this.passwordData = {
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      };
     },
     async updateProfile() {
       this.updating = true;
@@ -391,50 +335,27 @@ export default defineComponent({
           "user/updateUserProfile",
           this.formData
         );
+        
         if (response.success) {
-          this.$toast.success("Profile updated successfully");
+          // Update the store with new user data
+          this.$store.commit("user/SET_USER_DATA", response.data);
+          
+          this.toast.success("Profile updated successfully");
           this.editMode = false;
         } else {
-          this.$toast.error(response.message || "Failed to update profile");
+          this.toast.error(response.message || "Failed to update profile");
         }
-      } catch (error) {
-        this.$toast.error("An error occurred while updating your profile");
+      } catch (error: any) {
+        this.toast.error(error.message || "An error occurred while updating your profile");
         console.error("Profile update error:", error);
       } finally {
         this.updating = false;
       }
     },
-    async changePassword() {
-      if (this.passwordMismatch) return;
-
-      this.changingPassword = true;
-      try {
-        const response = await this.$store.dispatch("user/changePassword", {
-          userId: this.user.id,
-          currentPassword: this.passwordData.currentPassword,
-          newPassword: this.passwordData.newPassword,
-        });
-
-        if (response.success) {
-          this.$toast.success("Password changed successfully");
-          this.passwordData = {
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-          };
-          this.editMode = false;
-        } else {
-          this.$toast.error(response.message || "Failed to change password");
-        }
-      } catch (error) {
-        this.$toast.error("An error occurred while changing your password");
-        console.error("Change password error:", error);
-      } finally {
-        this.changingPassword = false;
-      }
-    },
     confirmDelete() {
       this.deleteError = "";
+      // Using any to avoid Modal type issues
+      const Modal = (window as any).Modal;
       this.deleteModal = new Modal(
         document.getElementById("deleteModal") as HTMLElement
       );
@@ -451,7 +372,7 @@ export default defineComponent({
         );
         if (response.success) {
           this.deleteModal?.hide();
-          this.$toast.success("Account deleted successfully");
+          this.toast.success("Account deleted successfully");
           // Log out and redirect to login page
           await this.$store.dispatch("user/logout");
           this.$router.push("/login");

@@ -3,9 +3,32 @@ import App from "@/App.vue";
 import router from "./router";
 import store, { key } from "./store";
 import './assets/main.css'
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
+
+// Toast options
+const toastOptions = {
+  position: "top-right",
+  timeout: 3000,
+  closeOnClick: true,
+  pauseOnFocusLoss: true,
+  pauseOnHover: true,
+  draggable: true,
+  draggablePercent: 0.6,
+  showCloseButtonOnHover: false,
+  hideProgressBar: false,
+  closeButton: "button",
+  icon: true,
+  rtl: false
+};
 
 // Create the Vue application
 const app = createApp(App);
+
+// Use plugins
+app.use(router);
+app.use(store, key);
+app.use(Toast, toastOptions);
 
 // Initialize authentication state
 const initializeAuth = async () => {
@@ -26,12 +49,7 @@ const initializeAuth = async () => {
   }
 };
 
-// Initialize auth before mounting the app
+// Initialize auth and mount app
 initializeAuth().then(() => {
-  // Use router and store
-  app.use(router);
-  app.use(store, key);
-  
-  // Mount the app
   app.mount("#app");
 });

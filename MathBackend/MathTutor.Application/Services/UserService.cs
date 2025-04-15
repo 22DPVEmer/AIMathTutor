@@ -87,13 +87,13 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<bool> UpdateUserAsync(UserModel userModel)
+    public async Task<UserModel> UpdateUserAsync(UserModel userModel)
     {
         try
         {
             var user = await _userRepository.GetByIdAsync(userModel.Id);
             if (user == null)
-                return false;
+                return null;
 
             user.FirstName = userModel.FirstName;
             user.LastName = userModel.LastName;
@@ -107,12 +107,16 @@ public class UserService : IUserService
                 user.IsVerified = false;
             }
             
-            return await _userRepository.UpdateAsync(user);
+            var updatedUser = await _userRepository.UpdateAsync(user);
+            var roles = await _userRepository.GetRolesAsync(updatedUser);
+            var result = _mapper.Map<UserModel>(updatedUser);
+            result.Roles = roles.ToList();
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating user");
-            return false;
+            return null;
         }
     }
 

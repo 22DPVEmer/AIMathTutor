@@ -102,6 +102,68 @@ namespace MathTutor.Infrastructure.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "357f15e5-b143-40b8-bb8a-898646f7994c",
+                            CreatedAt = new DateTime(2025, 4, 14, 9, 52, 42, 995, DateTimeKind.Utc).AddTicks(201),
+                            Email = "admin@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Admin",
+                            IsVerified = true,
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            NormalizedUserName = "ADMIN@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKBilJPhkMKW46vttfWFCaUo5yl6jNvf9L6mUi9B+C4Wwh3W4Ne7mhBaWEx5oBanWw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "cbdb5938-2041-4702-8a5a-fdc5672d10f1",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@example.com"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "79268e80-0f61-466f-853c-2fc04597d2af",
+                            CreatedAt = new DateTime(2025, 4, 14, 9, 52, 43, 73, DateTimeKind.Utc).AddTicks(6161),
+                            Email = "student@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Student",
+                            IsVerified = true,
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "STUDENT@EXAMPLE.COM",
+                            NormalizedUserName = "STUDENT@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAMtS6bh0UvTtYdtLbhOc8+9SvWQFM7ub/MetST3At2G9YbyoTMZkHYtsCSKD7umAQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d1ccb362-601a-4488-961c-5c9028f6fe95",
+                            TwoFactorEnabled = false,
+                            UserName = "student@example.com"
+                        },
+                        new
+                        {
+                            Id = "3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e969b6e8-0954-4bac-b9cf-dba150a73c4a",
+                            CreatedAt = new DateTime(2025, 4, 14, 9, 52, 43, 141, DateTimeKind.Utc).AddTicks(3592),
+                            Email = "teacher@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Teacher",
+                            IsVerified = true,
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "TEACHER@EXAMPLE.COM",
+                            NormalizedUserName = "TEACHER@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKEHd7XExVHcBAz+54jwr9zVF/7GbUQlZZuPQ9Kpz7KAxTCymAfZ3qDIKYYc9DLGHA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "f59be00d-3e9f-4878-8d1f-0015663c6fd7",
+                            TwoFactorEnabled = false,
+                            UserName = "teacher@example.com"
+                        });
                 });
 
             modelBuilder.Entity("MathTutor.Core.Entities.MathCategory", b =>
@@ -280,6 +342,59 @@ namespace MathTutor.Infrastructure.Migrations
                     b.ToTable("StudentProgress");
                 });
 
+            modelBuilder.Entity("MathTutor.Core.Entities.UserMathProblem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Solution")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TopicId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TopicName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserAnswer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMathProblems");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -305,6 +420,29 @@ namespace MathTutor.Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            ConcurrencyStamp = "cba1bef1-6bbf-4a5d-aae3-07c38a37bea6",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            ConcurrencyStamp = "9d391b96-6568-47b6-92e3-17dee806670e",
+                            Name = "Student",
+                            NormalizedName = "STUDENT"
+                        },
+                        new
+                        {
+                            Id = "3",
+                            ConcurrencyStamp = "39213d04-0c72-435c-944f-1186bb2c9cf4",
+                            Name = "Teacher",
+                            NormalizedName = "TEACHER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -392,6 +530,23 @@ namespace MathTutor.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "1",
+                            RoleId = "1"
+                        },
+                        new
+                        {
+                            UserId = "2",
+                            RoleId = "2"
+                        },
+                        new
+                        {
+                            UserId = "3",
+                            RoleId = "3"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -473,6 +628,23 @@ namespace MathTutor.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MathTutor.Core.Entities.UserMathProblem", b =>
+                {
+                    b.HasOne("MathTutor.Core.Entities.MathTopic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId");
+
+                    b.HasOne("MathTutor.Core.Entities.ApplicationUser", "User")
+                        .WithMany("UserMathProblems")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Topic");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -529,6 +701,8 @@ namespace MathTutor.Infrastructure.Migrations
                     b.Navigation("ProblemAttempts");
 
                     b.Navigation("Progress");
+
+                    b.Navigation("UserMathProblems");
                 });
 
             modelBuilder.Entity("MathTutor.Core.Entities.MathCategory", b =>

@@ -18,5 +18,6 @@ namespace MathTutor.Application.Interfaces
         Task<bool> DeleteProblemAsync(int id);
         Task<GeneratedMathProblemResponseDto> GenerateMathProblemAsync(GenerateMathProblemRequestDto request);
         Task<EvaluateMathAnswerResponseDto> EvaluateAnswerAsync(EvaluateMathAnswerRequestDto request);
+        Task<bool> SaveProblemAttemptAsync(SaveProblemAttemptDto attemptDto);
     }
 } 

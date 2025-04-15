@@ -7,27 +7,21 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using System.Text.Json;
 using System;
+using System.Security.Claims;
 
 namespace MathTutor.API.Controllers
 {
-    // Add this new DTO for direct evaluation
-    public class DirectEvaluationRequestDto
-    {
-        public string problem { get; set; } = string.Empty;
-        public string userAnswer { get; set; } = string.Empty;
-    }
-
     [ApiController]
     [Route("api/[controller]")]
-    public class MathProblemController : ControllerBase
+    public class MathProblemController : BaseApiController
     {
         private readonly IMathProblemService _mathProblemService;
         private readonly IAIservice _aiService;
 
         public MathProblemController(IMathProblemService mathProblemService, IAIservice aiService)
         {
-            _mathProblemService = mathProblemService;
-            _aiService = aiService;
+            _mathProblemService = mathProblemService ?? throw new ArgumentNullException(nameof(mathProblemService));
+            _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
         }
 
         [HttpGet]
@@ -35,7 +29,7 @@ namespace MathTutor.API.Controllers
         public async Task<IActionResult> GetAllProblems()
         {
             var problems = await _mathProblemService.GetAllProblemsAsync();
-            return Ok(problems);
+            return HandleResult(problems);
         }
 
         [HttpGet("{id}")]
@@ -44,13 +38,7 @@ namespace MathTutor.API.Controllers
         public async Task<IActionResult> GetProblemById(int id)
         {
             var problem = await _mathProblemService.GetProblemByIdAsync(id);
-            
-            if (problem == null)
-            {
-                return NotFound();
-            }
-            
-            return Ok(problem);
+            return HandleResult(problem);
         }
 
         [HttpGet("topic/{topicId}")]
@@ -58,7 +46,7 @@ namespace MathTutor.API.Controllers
         public async Task<IActionResult> GetProblemsByTopic(int topicId)
         {
             var problems = await _mathProblemService.GetProblemsByTopicAsync(topicId);
-            return Ok(problems);
+            return HandleResult(problems);
         }
 
         [HttpGet("difficulty/{difficulty}")]
@@ -66,7 +54,7 @@ namespace MathTutor.API.Controllers
         public async Task<IActionResult> GetProblemsByDifficulty(DifficultyLevel difficulty)
         {
             var problems = await _mathProblemService.GetProblemsByDifficultyAsync(difficulty);
-            return Ok(problems);
+            return HandleResult(problems);
         }
 
         [HttpGet("topic/{topicId}/difficulty/{difficulty}")]
@@ -74,7 +62,7 @@ namespace MathTutor.API.Controllers
         public async Task<IActionResult> GetProblemsByTopicAndDifficulty(int topicId, DifficultyLevel difficulty)
         {
             var problems = await _mathProblemService.GetProblemsByTopicAndDifficultyAsync(topicId, difficulty);
-            return Ok(problems);
+            return HandleResult(problems);
         }
 
         [HttpPost]
@@ -128,9 +116,9 @@ namespace MathTutor.API.Controllers
             try
             {
                 var generatedProblem = await _mathProblemService.GenerateMathProblemAsync(request);
-                return Ok(generatedProblem);
+                return HandleResult(generatedProblem);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -145,13 +133,13 @@ namespace MathTutor.API.Controllers
             try
             {
                 var evaluationResult = await _mathProblemService.EvaluateAnswerAsync(request);
-                return Ok(evaluationResult);
+                return HandleResult(evaluationResult);
             }
-            catch (System.InvalidOperationException ex)
+            catch (InvalidOperationException ex)
             {
                 return NotFound(ex.Message);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -164,44 +152,38 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.problem) || string.IsNullOrWhiteSpace(request.userAnswer))
+                if (string.IsNullOrWhiteSpace(request.Problem) || string.IsNullOrWhiteSpace(request.UserAnswer))
                 {
                     return BadRequest("Problem statement and user answer are required");
                 }
                 
-                string aiResponse = await _aiService.EvaluateAnswerAsync(request.problem, request.userAnswer);
-                EvaluateMathAnswerResponseDto evaluationResult;
-                
-                try 
+                string aiResponse = await _aiService.EvaluateAnswerAsync(request.Problem, request.UserAnswer);
+                return await ParseAiResponseAsync<EvaluateMathAnswerResponseDto>(aiResponse);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("save-attempt")]
+        [Authorize]
+        [ProducesResponseType(typeof(bool), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> SaveProblemAttempt(SaveProblemAttemptDto attemptDto)
+        {
+            try
+            {
+                var userId = GetUserId();
+                if (string.IsNullOrEmpty(userId))
                 {
-                    // Try to deserialize the response
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse, options);
-                }
-                catch (JsonException)
-                {
-                    // If direct deserialization fails, try to extract the JSON portion
-                    var jsonStart = aiResponse.IndexOf('{');
-                    var jsonEnd = aiResponse.LastIndexOf('}');
-                    
-                    if (jsonStart >= 0 && jsonEnd > jsonStart)
-                    {
-                        var jsonPart = aiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        evaluationResult = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(jsonPart, options);
-                    }
-                    else
-                    {
-                        return BadRequest("Failed to evaluate the answer due to invalid response format");
-                    }
+                    return Unauthorized("User not authenticated");
                 }
                 
-                if (evaluationResult == null)
-                {
-                    return BadRequest("Failed to evaluate the answer");
-                }
-                
-                return Ok(evaluationResult);
+                attemptDto.UserId = userId;
+                var result = await _mathProblemService.SaveProblemAttemptAsync(attemptDto);
+                return HandleResult(result);
             }
             catch (Exception ex)
             {

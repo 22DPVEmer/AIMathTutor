@@ -46,5 +46,10 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"))
             .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.Name));
         CreateMap<StudentProgressModel, StudentProgress>();
+        
+        // User Math Problem mappings
+        CreateMap<UserMathProblem, UserMathProblemModel>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
+        CreateMap<UserMathProblemModel, UserMathProblem>();
     }
 } 

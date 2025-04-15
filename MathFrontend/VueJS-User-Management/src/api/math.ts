@@ -4,6 +4,7 @@ interface GenerateMathProblemRequest {
   topic: string;
   difficulty: string;
   topicId?: number;
+  saveToDatabase?: boolean;
 }
 
 interface GeneratedMathProblemResponse {
@@ -22,6 +23,32 @@ interface EvaluateMathAnswerResponse {
   feedback: string;
 }
 
+interface SaveProblemAttemptRequest {
+  statement: string;
+  solution: string;
+  explanation: string;
+  userAnswer: string;
+  isCorrect: boolean;
+  difficulty: string;
+  topic: string;
+  topicId?: number;
+}
+
+interface UserMathProblemModel {
+  id: number;
+  statement: string;
+  solution: string;
+  explanation: string;
+  topicName: string;
+  difficulty: string;
+  createdAt: string;
+  isCorrect: boolean;
+  userAnswer: string;
+  userId: string;
+  userName: string;
+  topicId?: number;
+}
+
 export const generateMathProblem = async (request: GenerateMathProblemRequest): Promise<GeneratedMathProblemResponse> => {
   try {
     const response = await api.post('/MathProblem/generate', request);
@@ -38,6 +65,76 @@ export const evaluateMathAnswer = async (request: EvaluateMathAnswerRequest): Pr
     return response.data;
   } catch (error) {
     console.error('Error evaluating math answer:', error);
+    throw error;
+  }
+};
+
+export const saveProblemAttempt = async (request: SaveProblemAttemptRequest): Promise<boolean> => {
+  try {
+    const response = await api.post('/MathProblem/save-attempt', request);
+    return response.data;
+  } catch (error) {
+    console.error('Error saving problem attempt:', error);
+    throw error;
+  }
+};
+
+export const saveUserMathProblem = async (request: SaveProblemAttemptRequest): Promise<UserMathProblemModel> => {
+  try {
+    const response = await api.post('/UserMathProblem/save-generated', request);
+    return response.data;
+  } catch (error) {
+    console.error('Error saving user math problem:', error);
+    throw error;
+  }
+};
+
+export const getUserMathProblems = async (): Promise<UserMathProblemModel[]> => {
+  try {
+    const response = await api.get('/UserMathProblem');
+    return response.data;
+  } catch (error) {
+    console.error('Error getting user math problems:', error);
+    throw error;
+  }
+};
+
+export const getUserMathProblemsByUserId = async (userId: string): Promise<UserMathProblemModel[]> => {
+  try {
+    const response = await api.get(`/UserMathProblem/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error getting user math problems for user ${userId}:`, error);
+    throw error;
+  }
+};
+
+export const deleteUserMathProblem = async (id: number): Promise<boolean> => {
+  try {
+    await api.delete(`/UserMathProblem/${id}`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting user math problem ${id}:`, error);
+    throw error;
+  }
+};
+
+export const getCurrentUserMathProblems = async (): Promise<UserMathProblemModel[]> => {
+  try {
+    const response = await api.get('/UserMathProblem/my-problems');
+    return response.data;
+  } catch (error) {
+    console.error('Error getting current user math problems:', error);
+    throw error;
+  }
+};
+
+export const retryUserMathProblem = async (id: number, userAnswer: string): Promise<UserMathProblemModel> => {
+  try {
+    const response = await api.post(`/UserMathProblem/retry/${id}`, { userAnswer });
+    return response.data;
+  } catch (error) {
+    console.error(`Error retrying user math problem ${id}:`, error);
     throw error;
   }
 }; 

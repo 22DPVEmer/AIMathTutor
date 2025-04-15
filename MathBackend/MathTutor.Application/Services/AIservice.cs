@@ -19,34 +19,26 @@ namespace MathTutor.Application.Services
         private readonly string _apiKey;
         private readonly HttpClient _httpClient;
 
-        public AIservice(IConfiguration configuration, ILogger<AIservice> logger, HttpClient httpClient)
+        public AIservice(
+            Kernel kernel,
+            IConfiguration configuration, 
+            ILogger<AIservice> logger, 
+            HttpClient httpClient)
         {
-            _logger = logger;
-            _httpClient = httpClient;
+            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             
             try
             {
                 _apiKey = configuration["AI:Gemini:ApiKey"] ?? 
                     throw new InvalidOperationException("Gemini API Key not found in configuration");
-
-                _logger.LogInformation("Initializing Semantic Kernel with Gemini API");
                 
-                // Configure Semantic Kernel with Gemini
-#pragma warning disable SKEXP0070 
-                _kernel = Kernel.CreateBuilder()
-                    .AddGoogleAIGeminiChatCompletion(
-                        modelId: "gemini-2.0-flash",
-                        apiKey: _apiKey,
-                        httpClient: _httpClient,
-                        serviceId: "gemini")
-                    .Build();
-#pragma warning restore SKEXP0070
-
-                _logger.LogInformation("Semantic Kernel initialized successfully");
+                _logger.LogInformation("AIService initialized with Semantic Kernel");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error initializing Semantic Kernel with Gemini: {Message}", ex.Message);
+                _logger.LogError(ex, "Error initializing AIService: {Message}", ex.Message);
                 throw;
             }
         }
@@ -111,7 +103,7 @@ namespace MathTutor.Application.Services
                     _logger.LogWarning("Response appears to be truncated. Attempting to fix.");
                     response = TryFixTruncatedJson(response);
                 }
-                
+
                 // Validate JSON format
                 try
                 {

@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MathProblem> MathProblems { get; set; } = null!;
     public DbSet<MathProblemAttempt> MathProblemAttempts { get; set; } = null!;
     public DbSet<StudentProgress> StudentProgress { get; set; } = null!;
+    public DbSet<UserMathProblem> UserMathProblems { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -34,6 +35,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasMany(u => u.ProblemAttempts)
             .WithOne(a => a.User)
             .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ApplicationUser>()
+            .HasMany(u => u.UserMathProblems)
+            .WithOne(p => p.User)
+            .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<MathCategory>()

@@ -73,6 +73,34 @@ api.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle token errors
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If the error is 401 Unauthorized and not a login request
+    if (error.response?.status === 401 && 
+        !originalRequest._retry && 
+        !originalRequest.url?.includes('/auth/login')) {
+      
+      originalRequest._retry = true;
+      
+      // Clear invalid token
+      localStorage.removeItem("token");
+      
+      // Redirect to login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // Utility function for handling errors
 const handleError = (error: AxiosError | Error): never => {
   console.error("API Error:", error);
@@ -186,11 +214,17 @@ export const updateUserProfile = async (
   userData: Partial<UserProfile>
 ): Promise<ApiResponse> => {
   try {
-    const response: AxiosResponse<ApiResponse> = await api.put(
-      "/user",
+    const response: AxiosResponse = await api.put(
+      "/user/profile",
       userData
     );
-    return response.data;
+    
+    // Transform the direct response into ApiResponse format
+    return {
+      success: true,
+      data: response.data,
+      message: "Profile updated successfully"
+    };
   } catch (error) {
     return handleError(error as AxiosError | Error);
   }

@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MathTutor.API.Controllers;
 
-[Authorize]
 public class UserController : BaseApiController
 {
     private readonly IUserService _userService;
@@ -70,30 +69,40 @@ public class UserController : BaseApiController
     /// Update user profile
     /// </summary>
     /// <param name="model">The updated user data</param>
-    /// <returns>Result of the update operation</returns>
-    [HttpPut]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    /// <returns>The updated user profile</returns>
+    [HttpPut("profile")]
+    [ProducesResponseType(typeof(UserModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update([FromBody] UserModel model)
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<UserModel>> Update([FromBody] UserModel model)
     {
-        // Ensure user can only update their own profile unless they're an admin
-        var userId = GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
+        try
+        {
+            // Ensure user can only update their own profile unless they're an admin
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
-        if (userId != model.Id && !User.IsInRole("Admin"))
-            return Forbid();
+            if (userId != model.Id && !User.IsInRole("Admin"))
+                return Forbid();
 
-        // Validate input
-        if (string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName))
-            return BadRequest("First name and last name are required");
+            // Validate input
+            if (string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName))
+                return BadRequest("First name and last name are required");
 
-        var success = await _userService.UpdateUserAsync(model);
-        if (!success)
-            return NotFound();
+            var updatedUser = await _userService.UpdateUserAsync(model);
+            if (updatedUser == null)
+                return NotFound("User not found or update failed");
 
-        return Ok();
+            _logger.LogInformation("User profile updated successfully for user ID: {UserId}", userId);
+            return Ok(updatedUser);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user profile for user ID: {UserId}", model.Id);
+            return StatusCode(500, "An error occurred while updating the user profile");
+        }
     }
 
     /// <summary>

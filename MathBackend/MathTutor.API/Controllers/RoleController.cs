@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
 using Microsoft.AspNetCore.Identity;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 
 namespace MathTutor.API.Controllers;
 
@@ -18,9 +22,9 @@ public class RoleController : BaseApiController
         IUserRepository userRepository,
         ILogger<RoleController> logger)
     {
-        _roleRepository = roleRepository;
-        _userRepository = userRepository;
-        _logger = logger;
+        _roleRepository = roleRepository ?? throw new ArgumentNullException(nameof(roleRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -32,7 +36,7 @@ public class RoleController : BaseApiController
     public async Task<IActionResult> GetAll()
     {
         var roles = await _roleRepository.GetAllRolesAsync();
-        return Ok(roles);
+        return HandleResult(roles);
     }
 
     /// <summary>
@@ -56,7 +60,8 @@ public class RoleController : BaseApiController
         if (!result.Succeeded)
             return BadRequest($"Failed to create role: {string.Join(", ", result.Errors.Select(e => e.Description))}");
 
-        return Ok();
+        _logger.LogInformation("Created new role: {RoleName}", roleName);
+        return Ok(new { Success = true, Message = $"Role '{roleName}' created successfully" });
     }
 
     /// <summary>
@@ -93,6 +98,7 @@ public class RoleController : BaseApiController
         if (!success)
             return BadRequest("Failed to add user to role");
 
-        return Ok();
+        _logger.LogInformation("Added user {UserId} to role {RoleName}", model.UserId, model.RoleName);
+        return Ok(new { Success = true, Message = $"User added to role '{model.RoleName}' successfully" });
     }
-} 
+}

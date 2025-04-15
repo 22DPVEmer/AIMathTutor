@@ -13,6 +13,8 @@ import Profile from "../views/Profile.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import MathProblemView from "../views/MathProblemView.vue";
+import TopicsView from "../views/TopicsView.vue";
+import MyProblemsView from "../views/MyProblemsView.vue";
 import store from "@/store";
 
 // Define the route meta types
@@ -76,7 +78,19 @@ const routes: AppRouteRecordRaw[] = [
     path: "/math-problems",
     name: "MathProblems",
     component: MathProblemView,
-    meta: { requiresAuth: true, title: "Math Problems" },
+    meta: { requiresAuth: true, title: "Math Problem Generator" },
+  },
+  {
+    path: "/topics",
+    name: "Topics",
+    component: TopicsView,
+    meta: { requiresAuth: true, title: "Math Topics" },
+  },
+  {
+    path: "/my-problems",
+    name: "MyProblems",
+    component: MyProblemsView,
+    meta: { requiresAuth: true, title: "My Problems" },
   },
   {
     path: "/logout",

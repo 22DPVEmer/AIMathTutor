@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Net.Http.Headers;
+using Microsoft.SemanticKernel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,9 +45,34 @@ builder.Services.AddHttpClient<IAIservice, AIservice>(client =>
 // Register AIService
 builder.Services.AddScoped<IAIservice, AIservice>();
 
+// Register Semantic Kernel
+builder.Services.AddSingleton<Kernel>(sp => {
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var apiKey = configuration["AI:Gemini:ApiKey"] ?? 
+        throw new InvalidOperationException("Gemini API Key not found in configuration");
+    
+    var httpClient = sp.GetRequiredService<HttpClient>();
+#pragma warning disable SKEXP0070    
+    return Kernel.CreateBuilder()
+        .AddGoogleAIGeminiChatCompletion(
+            modelId: "gemini-2.0-flash",
+            apiKey: apiKey,
+            httpClient: httpClient,
+            serviceId: "gemini")
+        .Build();
+});
+
 // Register Math Problem Services and Repository
 builder.Services.AddScoped<IMathProblemService, MathProblemService>();
 builder.Services.AddScoped<IMathProblemRepository, MathProblemRepository>();
+
+// Register Math Topic Repositories
+builder.Services.AddScoped<IMathTopicRepository, MathTopicRepository>();
+builder.Services.AddScoped<IMathProblemAttemptRepository, MathProblemAttemptRepository>();
+
+// Register User Math Problem Services and Repository
+builder.Services.AddScoped<IUserMathProblemService, UserMathProblemService>();
+builder.Services.AddScoped<IUserMathProblemRepository, UserMathProblemRepository>();
 
 // Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -122,6 +148,9 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 // Register infrastructure services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+// Add services to the container.
+builder.Services.AddScoped<MathKernelService>();
 
 // Add controllers
 builder.Services.AddControllers()

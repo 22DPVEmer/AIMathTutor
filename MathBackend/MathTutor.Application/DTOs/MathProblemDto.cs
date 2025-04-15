@@ -59,4 +59,17 @@ namespace MathTutor.Application.DTOs
         public bool IsCorrect { get; set; }
         public string Feedback { get; set; } = string.Empty;
     }
+
+    public class SaveProblemAttemptDto
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string Statement { get; set; } = string.Empty;
+        public string Solution { get; set; } = string.Empty;
+        public string Explanation { get; set; } = string.Empty;
+        public string UserAnswer { get; set; } = string.Empty;
+        public bool IsCorrect { get; set; }
+        public string Difficulty { get; set; } = string.Empty;
+        public string Topic { get; set; } = string.Empty;
+        public int? TopicId { get; set; }
+    }
 } 

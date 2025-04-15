@@ -27,6 +27,8 @@
         </div>
       </div>
       
+
+      
       <button 
         @click="generateProblem" 
         class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
@@ -55,21 +57,34 @@
         />
       </div>
       
-      <button 
-        @click="checkAnswer" 
-        class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 mr-2"
-        :disabled="!userAnswer || isChecking"
-      >
-        <span v-if="isChecking">Checking...</span>
-        <span v-else>Check Answer</span>
-      </button>
-      
-      <button 
-        @click="showSolution" 
-        class="bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600"
-      >
-        Show Solution
-      </button>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button 
+          @click="checkAnswer" 
+          class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+          :disabled="!userAnswer || isChecking"
+        >
+          <span v-if="isChecking">Checking...</span>
+          <span v-else>Check Answer</span>
+        </button>
+        
+        <button 
+          @click="showSolution" 
+          class="bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600"
+        >
+          Show Solution
+        </button>
+        
+        <button 
+          v-if="evaluation"
+          @click="saveAttempt" 
+          class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+          :disabled="isSaving || attemptSaved"
+        >
+          <span v-if="isSaving">Saving...</span>
+          <span v-else-if="attemptSaved">Saved!</span>
+          <span v-else>Save to Database</span>
+        </button>
+      </div>
       
       <div v-if="evaluation" class="mt-6 p-4 rounded-md" :class="evaluation.isCorrect ? 'bg-green-50' : 'bg-red-50'">
         <h4 class="font-semibold mb-2">Feedback:</h4>
@@ -89,7 +104,7 @@
 
 <script>
 import { ref, computed } from 'vue';
-import { generateMathProblem, evaluateMathAnswer } from '@/api/math';
+import { generateMathProblem, evaluateMathAnswer, saveUserMathProblem } from '@/api/math';
 
 export default {
   name: 'MathProblemGenerator',
@@ -97,11 +112,14 @@ export default {
   setup() {
     const formData = ref({
       topic: '',
-      difficulty: 'Medium'
+      difficulty: 'Medium',
+      saveToDatabase: false
     });
     
     const isLoading = ref(false);
     const isChecking = ref(false);
+    const isSaving = ref(false);
+    const attemptSaved = ref(false);
     const generatedProblem = ref(null);
     const userAnswer = ref('');
     const evaluation = ref(null);
@@ -129,11 +147,13 @@ export default {
       evaluation.value = null;
       userAnswer.value = '';
       solutionVisible.value = false;
+      attemptSaved.value = false;
       
       try {
         generatedProblem.value = await generateMathProblem({
           topic: formData.value.topic,
-          difficulty: formData.value.difficulty
+          difficulty: formData.value.difficulty,
+          saveToDatabase: formData.value.saveToDatabase
         });
       } catch (error) {
         console.error('Error generating problem:', error);
@@ -150,6 +170,7 @@ export default {
       }
       
       isChecking.value = true;
+      attemptSaved.value = false;
       
       try {
         evaluation.value = await evaluateMathAnswer({
@@ -173,10 +194,44 @@ export default {
       solutionVisible.value = true;
     }
     
+    async function saveAttempt() {
+      if (!evaluation.value) {
+        alert('You need to check your answer before saving');
+        return;
+      }
+      
+      isSaving.value = true;
+      
+      try {
+        const result = await saveUserMathProblem({
+          statement: generatedProblem.value.statement,
+          solution: generatedProblem.value.solution,
+          explanation: generatedProblem.value.explanation,
+          userAnswer: userAnswer.value,
+          isCorrect: evaluation.value.isCorrect,
+          difficulty: formData.value.difficulty,
+          topic: formData.value.topic
+        });
+        
+        if (result) {
+          attemptSaved.value = true;
+        } else {
+          alert('Failed to save the problem. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error saving problem:', error);
+        alert('Failed to save the problem. Please try again.');
+      } finally {
+        isSaving.value = false;
+      }
+    }
+    
     return {
       formData,
       isLoading,
       isChecking,
+      isSaving,
+      attemptSaved,
       generatedProblem,
       userAnswer,
       evaluation,
@@ -186,7 +241,8 @@ export default {
       formattedExplanation,
       generateProblem,
       checkAnswer,
-      showSolution
+      showSolution,
+      saveAttempt
     };
   }
 };

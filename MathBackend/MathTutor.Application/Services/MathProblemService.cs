@@ -15,18 +15,27 @@ namespace MathTutor.Application.Services
     public class MathProblemService : IMathProblemService
     {
         private readonly IMathProblemRepository _mathProblemRepository;
+        private readonly IMathTopicRepository _mathTopicRepository;
+        private readonly IMathProblemAttemptRepository _mathProblemAttemptRepository;
         private readonly IAIservice _aiService;
+        private readonly MathKernelService _mathKernelService;
         private readonly IMapper _mapper;
         private readonly ILogger<MathProblemService> _logger;
 
         public MathProblemService(
             IMathProblemRepository mathProblemRepository,
+            IMathTopicRepository mathTopicRepository,
+            IMathProblemAttemptRepository mathProblemAttemptRepository,
             IAIservice aiService,
+            MathKernelService mathKernelService,
             IMapper mapper,
             ILogger<MathProblemService> logger)
         {
             _mathProblemRepository = mathProblemRepository ?? throw new ArgumentNullException(nameof(mathProblemRepository));
+            _mathTopicRepository = mathTopicRepository ?? throw new ArgumentNullException(nameof(mathTopicRepository));
+            _mathProblemAttemptRepository = mathProblemAttemptRepository ?? throw new ArgumentNullException(nameof(mathProblemAttemptRepository));
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
+            _mathKernelService = mathKernelService ?? throw new ArgumentNullException(nameof(mathKernelService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -190,19 +199,39 @@ namespace MathTutor.Application.Services
                     throw new InvalidOperationException($"Math problem with ID {request.ProblemId} not found");
                 }
 
-                // Normalize both answers for comparison
+                // Check for non-answer responses
+                string[] nonAnswerResponses = { "i don't know", "idk", "dont know", "don't know", "no idea", "not sure", "unsure", "maybe", "probably", "perhaps" };
                 string normalizedUserAnswer = NormalizeAnswer(request.UserAnswer);
-                string normalizedSolution = NormalizeAnswer(problem.Solution);
-
-                bool isCorrect = string.Equals(normalizedUserAnswer, normalizedSolution, StringComparison.OrdinalIgnoreCase);
                 
-                string feedback = isCorrect 
+                if (nonAnswerResponses.Contains(normalizedUserAnswer))
+                {
+                    return new EvaluateMathAnswerResponseDto
+                    {
+                        IsCorrect = false,
+                        Feedback = "Please provide a mathematical answer. If you're unsure, try to work through the problem step by step."
+                    };
+                }
+
+                // Use MathKernelService to validate and check equivalence
+                bool isValidExpression = await _mathKernelService.ValidateMathExpressionAsync(normalizedUserAnswer);
+                if (!isValidExpression)
+                {
+                    return new EvaluateMathAnswerResponseDto
+                    {
+                        IsCorrect = false,
+                        Feedback = "Your answer is not a valid mathematical expression. Please check your input and try again."
+                    };
+                }
+
+                bool isEquivalent = await _mathKernelService.CheckExpressionEquivalenceAsync(normalizedUserAnswer, problem.Solution);
+                
+                string feedback = isEquivalent 
                     ? "Correct! " + problem.Explanation
                     : $"Incorrect. The correct answer is: {problem.Solution}. Here's why: {problem.Explanation}";
 
                 return new EvaluateMathAnswerResponseDto
                 {
-                    IsCorrect = isCorrect,
+                    IsCorrect = isEquivalent,
                     Feedback = feedback
                 };
             }
@@ -211,6 +240,15 @@ namespace MathTutor.Application.Services
                 _logger.LogError(ex, "Error evaluating answer");
                 throw;
             }
+        }
+
+        private bool ContainsMathematicalContent(string answer)
+        {
+            // Check for mathematical symbols, numbers, or variables
+            return answer.Any(c => char.IsDigit(c) || 
+                                 c == '+' || c == '-' || c == '*' || c == '/' || 
+                                 c == '^' || c == '√' || c == 'π' || c == 'x' || 
+                                 c == 'y' || c == 'z' || c == '=');
         }
 
         private string NormalizeAnswer(string answer)
@@ -231,32 +269,91 @@ namespace MathTutor.Application.Services
 
         private string MapDifficultyToString(string difficulty)
         {
-            // Normalize input by trimming and converting to lowercase
-            string normalizedDifficulty = difficulty?.Trim().ToLower() ?? "medium";
-            
-            return normalizedDifficulty switch
+            return difficulty.ToLower() switch
             {
-                "easy" or "beginner" or "1" => "Easy",
-                "medium" or "intermediate" or "2" => "Medium",
-                "hard" or "difficult" or "advanced" or "3" => "Hard",
-                "very hard" or "expert" or "4" => "Very Hard",
-                _ => "Medium" // Default to Medium if unknown
+                "easy" => "Easy",
+                "medium" => "Medium",
+                "hard" => "Hard",
+                _ => "Medium"
             };
         }
 
         private DifficultyLevel MapStringToDifficulty(string difficulty)
         {
-            // Normalize input by trimming and converting to lowercase
-            string normalizedDifficulty = difficulty?.Trim().ToLower() ?? "medium";
-            
-            return normalizedDifficulty switch
+            return difficulty.ToLower() switch
             {
-                "easy" or "beginner" or "1" => DifficultyLevel.Easy,
-                "medium" or "intermediate" or "2" => DifficultyLevel.Medium,
-                "hard" or "difficult" or "advanced" or "3" => DifficultyLevel.Hard,
-                "very hard" or "expert" or "4" => DifficultyLevel.Hard, // Map Very Hard to Hard since we only have 3 levels
-                _ => DifficultyLevel.Medium // Default to Medium if unknown
+                "easy" => DifficultyLevel.Easy,
+                "medium" => DifficultyLevel.Medium,
+                "hard" => DifficultyLevel.Hard,
+                _ => DifficultyLevel.Medium
             };
+        }
+
+        public async Task<bool> SaveProblemAttemptAsync(SaveProblemAttemptDto attemptDto)
+        {
+            try
+            {
+                _logger.LogInformation("Saving problem attempt for user {UserId}", attemptDto.UserId);
+                
+                // Create a MathProblem entity if it doesn't exist yet
+                MathProblem problem = null;
+                
+                // If a topicId is provided, we'll save this as a reusable problem
+                if (attemptDto.TopicId.HasValue && attemptDto.TopicId.Value > 0)
+                {
+                    // Check if topic exists
+                    var topic = await _mathTopicRepository.GetTopicByIdAsync(attemptDto.TopicId.Value);
+                    if (topic == null)
+                    {
+                        _logger.LogWarning("Topic with ID {TopicId} not found", attemptDto.TopicId.Value);
+                        return false;
+                    }
+                    
+                    // Save the problem
+                    problem = new MathProblem
+                    {
+                        Statement = attemptDto.Statement,
+                        Solution = attemptDto.Solution,
+                        Explanation = attemptDto.Explanation,
+                        Difficulty = MapStringToDifficulty(attemptDto.Difficulty),
+                        TopicId = attemptDto.TopicId.Value
+                    };
+                    
+                    problem = await _mathProblemRepository.CreateProblemAsync(problem);
+                    _logger.LogInformation("Problem created with ID {ProblemId}", problem.Id);
+                }
+                
+                // Save the attempt
+                var attempt = new MathProblemAttempt
+                {
+                    UserId = attemptDto.UserId,
+                    ProblemId = problem?.Id ?? 0,
+                    UserAnswer = attemptDto.UserAnswer,
+                    IsCorrect = attemptDto.IsCorrect,
+                    AttemptedAt = DateTime.UtcNow
+                };
+                
+                if (problem != null)
+                {
+                    // If we created a problem, associate the attempt with it
+                    await _mathProblemAttemptRepository.CreateAttemptAsync(attempt);
+                    _logger.LogInformation("Attempt saved with problem ID {ProblemId}", problem.Id);
+                }
+                else
+                {
+                    // For attempts without a saved problem, we still record the attempt but store the problem details in a different way
+                    // This could be extended to save the problem statement and other details in a JSON field or separate table
+                    await _mathProblemAttemptRepository.CreateAttemptWithoutProblemAsync(attempt, attemptDto.Statement);
+                    _logger.LogInformation("Attempt saved without persistent problem");
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving problem attempt");
+                return false;
+            }
         }
     }
 } 
