@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Text.Json;
 using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MathTutor.API.Controllers
 {
@@ -160,6 +161,17 @@ namespace MathTutor.API.Controllers
                 
                 // Ensure the ID is set correctly
                 model.Id = id;
+                
+                // If topicId has changed, update the topicName as well
+                if (model.TopicId.HasValue && model.TopicId != problem.TopicId)
+                {
+                    var mathTopicService = HttpContext.RequestServices.GetRequiredService<IMathTopicService>();
+                    var topic = await mathTopicService.GetTopicByIdAsync(model.TopicId.Value);
+                    if (topic != null)
+                    {
+                        model.TopicName = topic.Name;
+                    }
+                }
                 
                 var result = await _userMathProblemService.UpdateUserMathProblemAsync(id, model);
                 if (!result)

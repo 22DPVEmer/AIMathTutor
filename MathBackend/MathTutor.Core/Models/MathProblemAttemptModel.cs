@@ -9,5 +9,6 @@ public class MathProblemAttemptModel
     public string ProblemStatement { get; set; } = string.Empty;
     public string UserAnswer { get; set; } = string.Empty;
     public bool IsCorrect { get; set; }
+    public int PointsEarned { get; set; } = 0;
     public DateTime AttemptedAt { get; set; }
 } 

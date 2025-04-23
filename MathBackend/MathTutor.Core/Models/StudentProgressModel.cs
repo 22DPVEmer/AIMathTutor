@@ -10,6 +10,8 @@ public class StudentProgressModel
     public int TopicId { get; set; }
     public string TopicName { get; set; } = string.Empty;
     public int PercentageCompleted { get; set; }
+    public int PointsEarned { get; set; } = 0;
+    public int MaxPointsPossible { get; set; } = 0;
     public ProgressStatus Status { get; set; }
     public DateTime LastUpdated { get; set; }
 } 

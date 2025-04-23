@@ -66,9 +66,14 @@ builder.Services.AddSingleton<Kernel>(sp => {
 builder.Services.AddScoped<IMathProblemService, MathProblemService>();
 builder.Services.AddScoped<IMathProblemRepository, MathProblemRepository>();
 
-// Register Math Topic Repositories
+// Register Math Topic Services and Repository
+builder.Services.AddScoped<IMathTopicService, MathTopicService>();
 builder.Services.AddScoped<IMathTopicRepository, MathTopicRepository>();
 builder.Services.AddScoped<IMathProblemAttemptRepository, MathProblemAttemptRepository>();
+
+// Register Math Category Services and Repository
+builder.Services.AddScoped<IMathCategoryService, MathCategoryService>();
+builder.Services.AddScoped<IMathCategoryRepository, MathCategoryRepository>();
 
 // Register User Math Problem Services and Repository
 builder.Services.AddScoped<IUserMathProblemService, UserMathProblemService>();

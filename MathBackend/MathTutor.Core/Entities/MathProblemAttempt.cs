@@ -7,6 +7,7 @@ public class MathProblemAttempt
     public int ProblemId { get; set; }
     public string UserAnswer { get; set; } = string.Empty;
     public bool IsCorrect { get; set; }
+    public int PointsEarned { get; set; } = 0; // Points earned for this attempt
     public DateTime AttemptedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation properties

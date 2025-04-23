@@ -10,6 +10,7 @@ public class MathProblem
     public string Explanation { get; set; } = string.Empty;
     public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Medium;
     public int TopicId { get; set; }
+    public int PointValue { get; set; } = 1; // Points awarded for solving this problem
     
     // Navigation properties
     public virtual MathTopic Topic { get; set; } = null!;

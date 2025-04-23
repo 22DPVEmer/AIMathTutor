@@ -27,7 +27,11 @@ public class AutoMapperProfile : Profile
         // Math Topic mappings
         CreateMap<MathTopic, MathTopicModel>()
             .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
-            .ForMember(dest => dest.ProblemCount, opt => opt.MapFrom(src => src.Problems.Count));
+            .ForMember(dest => dest.ProblemCount, opt => opt.MapFrom(src => src.Problems.Count))
+            .ForMember(dest => dest.ParentTopicName, opt => opt.MapFrom(src => src.ParentTopic != null ? src.ParentTopic.Name : string.Empty))
+            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => src.GradeLevel))
+            .ForMember(dest => dest.TotalPointsPossible, opt => opt.MapFrom(src => src.TotalPointsPossible))
+            .ForMember(dest => dest.Subtopics, opt => opt.Ignore());
         CreateMap<MathTopicModel, MathTopic>();
 
         // Math Problem mappings

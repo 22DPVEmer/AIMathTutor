@@ -11,6 +11,7 @@ export interface UserState {
     lastName?: string;
     id?: string;
     token?: string;
+    roles?: string[];
     [key: string]: any;
   };
   loading: boolean;
@@ -49,7 +50,7 @@ const userModule: Module<UserState, RootState> = {
       if (userData.token) {
         localStorage.setItem("token", userData.token);
       }
-      
+
       // Cache user data if we have meaningful user information
       if (userData.firstName || userData.lastName || userData.id) {
         // Store a copy of user data without the token
@@ -171,7 +172,7 @@ const userModule: Module<UserState, RootState> = {
         return profileData;
       } catch (error) {
         commit("SET_LOADING", false);
-        
+
         // Check if this is an authentication error
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           // If unauthorized, clear user data and redirect to login
@@ -179,10 +180,12 @@ const userModule: Module<UserState, RootState> = {
           // Router redirect will be handled by the axios interceptor
         } else {
           const errorMessage =
-            error instanceof Error ? error.message : "Failed to get user profile";
+            error instanceof Error
+              ? error.message
+              : "Failed to get user profile";
           commit("SET_ERROR", errorMessage);
         }
-        
+
         throw error;
       }
     },
@@ -196,9 +199,8 @@ const userModule: Module<UserState, RootState> = {
 
       try {
         const response = await userApi.updateUserProfile(userData);
-        
-        if (response.success && response.data) {
 
+        if (response.success && response.data) {
           commit("SET_USER_DATA", response.data);
           console.log("Profile updated successfully", response.data);
         } else {
@@ -276,7 +278,7 @@ const userModule: Module<UserState, RootState> = {
       if (token) {
         // Set the token in state
         commit("SET_USER_DATA", { token });
-        
+
         // Try to recover any cached user data
         const cachedUserData = localStorage.getItem("userData");
         if (cachedUserData) {

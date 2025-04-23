@@ -11,4 +11,5 @@ public class MathProblemModel
     public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Medium;
     public int TopicId { get; set; }
     public string TopicName { get; set; } = string.Empty;
+    public int PointValue { get; set; } = 1;
 } 
