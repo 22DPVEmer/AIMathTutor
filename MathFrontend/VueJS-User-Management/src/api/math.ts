@@ -23,7 +23,19 @@ interface EvaluateMathAnswerResponse {
   feedback: string;
 }
 
+interface GuidanceRequest {
+  problem: string;
+  solution: string;
+  userAnswer: string;
+  question: string;
+}
+
+interface GuidanceResponse {
+  guidance: string;
+}
+
 interface SaveProblemAttemptRequest {
+  name?: string;
   statement: string;
   solution: string;
   explanation: string;
@@ -32,6 +44,26 @@ interface SaveProblemAttemptRequest {
   difficulty: string;
   topic: string;
   topicId?: number;
+}
+
+interface EvaluateAndSaveRequest {
+  problem: string;
+  userAnswer: string;
+  solution?: string;
+  explanation?: string;
+  name?: string;
+  difficulty?: string;
+  topic?: string;
+  topicId?: number;
+}
+
+interface EvaluateAndSaveResponse {
+  success: boolean;
+  isCorrect: boolean;
+  feedback: string;
+  hasExistingCorrectAttempt?: boolean;
+  problems?: any[];
+  attempts?: any[];
 }
 
 interface UserMathProblemModel {
@@ -54,9 +86,25 @@ interface MathTopicModel {
   name: string;
   description: string;
   difficulty: string;
-  categoryId: number;
-  categoryName: string;
+  schoolClassId: number;
+  schoolClassName: string;
   problemCount: number;
+  parentTopicId?: number;
+  parentTopicName?: string;
+  gradeLevel?: string;
+  subtopics?: MathTopicModel[];
+  // Completion data
+  totalPointsPossible?: number;
+  pointsEarned?: number;
+  percentageCompleted?: number;
+}
+
+interface TopicCompletionDto {
+  topicId: number;
+  topicName: string;
+  totalPointsPossible: number;
+  pointsEarned: number;
+  percentageCompleted: number;
 }
 
 export const generateMathProblem = async (
@@ -83,14 +131,76 @@ export const evaluateMathAnswer = async (
   }
 };
 
+export const getGuidance = async (
+  request: GuidanceRequest
+): Promise<GuidanceResponse> => {
+  try {
+    console.log("Sending guidance request:", request);
+    const response = await api.post("/MathProblem/get-guidance", request);
+    console.log("Guidance response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting guidance:", error);
+    // Log more details about the error
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      console.error("Error response headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("Error request:", error.request);
+    }
+    throw error;
+  }
+};
+
 export const saveProblemAttempt = async (
   request: SaveProblemAttemptRequest
 ): Promise<boolean> => {
   try {
-    const response = await api.post("/MathProblem/save-attempt", request);
+    // Ensure difficulty is a string
+    const formattedRequest = {
+      ...request,
+      difficulty:
+        typeof request.difficulty === "string"
+          ? request.difficulty
+          : String(request.difficulty),
+    };
+
+    // Send the request as the attemptDto field
+    const response = await api.post(
+      "/MathProblem/save-attempt",
+      formattedRequest
+    );
     return response.data;
   } catch (error) {
     console.error("Error saving problem attempt:", error);
+    throw error;
+  }
+};
+
+export const evaluateAndSave = async (
+  request: EvaluateAndSaveRequest
+): Promise<EvaluateAndSaveResponse> => {
+  try {
+    // Ensure difficulty is a string if provided
+    const formattedRequest = {
+      ...request,
+      difficulty:
+        request.difficulty && typeof request.difficulty === "string"
+          ? request.difficulty
+          : request.difficulty
+            ? String(request.difficulty)
+            : undefined,
+    };
+
+    // Call the combined endpoint
+    const response = await api.post(
+      "/MathProblem/evaluate-and-save",
+      formattedRequest
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error evaluating and saving math problem:", error);
     throw error;
   }
 };
@@ -195,6 +305,26 @@ export const getAllTopics = async (): Promise<MathTopicModel[]> => {
     return response.data;
   } catch (error) {
     console.error("Error getting math topics:", error);
+    throw error;
+  }
+};
+
+export const getTopicCompletion = async (): Promise<TopicCompletionDto[]> => {
+  try {
+    const response = await api.get("/MathTopic/user-progress");
+    return response.data;
+  } catch (error) {
+    console.error("Error getting topic completion data:", error);
+    return [];
+  }
+};
+
+export const publishUserMathProblem = async (id: number): Promise<any> => {
+  try {
+    const response = await api.post(`/UserMathProblem/publish/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error publishing user math problem ${id}:`, error);
     throw error;
   }
 };

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using MathTutor.Core.Models;
 using System.Threading.Tasks;
 
 namespace MathTutor.Application.Services
@@ -40,47 +41,47 @@ namespace MathTutor.Application.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<IEnumerable<MathProblemDto>> GetAllProblemsAsync()
+        public async Task<IEnumerable<MathProblemModel>> GetAllProblemsAsync()
         {
             var problems = await _mathProblemRepository.GetAllProblemsAsync();
-            return _mapper.Map<IEnumerable<MathProblemDto>>(problems);
+            return _mapper.Map<IEnumerable<MathProblemModel>>(problems);
         }
 
-        public async Task<MathProblemDto> GetProblemByIdAsync(int id)
+        public async Task<MathProblemModel> GetProblemByIdAsync(int id)
         {
             var problem = await _mathProblemRepository.GetProblemByIdAsync(id);
-            return _mapper.Map<MathProblemDto>(problem);
+            return _mapper.Map<MathProblemModel>(problem);
         }
 
-        public async Task<IEnumerable<MathProblemDto>> GetProblemsByTopicAsync(int topicId)
+        public async Task<IEnumerable<MathProblemModel>> GetProblemsByTopicAsync(int topicId)
         {
             var problems = await _mathProblemRepository.GetProblemsByTopicAsync(topicId);
-            return _mapper.Map<IEnumerable<MathProblemDto>>(problems);
+            return _mapper.Map<IEnumerable<MathProblemModel>>(problems);
         }
 
-        public async Task<IEnumerable<MathProblemDto>> GetProblemsByDifficultyAsync(DifficultyLevel difficulty)
+        public async Task<IEnumerable<MathProblemModel>> GetProblemsByDifficultyAsync(DifficultyLevel difficulty)
         {
             var problems = await _mathProblemRepository.GetProblemsByDifficultyAsync(difficulty);
-            return _mapper.Map<IEnumerable<MathProblemDto>>(problems);
+            return _mapper.Map<IEnumerable<MathProblemModel>>(problems);
         }
 
-        public async Task<IEnumerable<MathProblemDto>> GetProblemsByTopicAndDifficultyAsync(int topicId, DifficultyLevel difficulty)
+        public async Task<IEnumerable<MathProblemModel>> GetProblemsByTopicAndDifficultyAsync(int topicId, DifficultyLevel difficulty)
         {
             var problems = await _mathProblemRepository.GetProblemsByTopicAndDifficultyAsync(topicId, difficulty);
-            return _mapper.Map<IEnumerable<MathProblemDto>>(problems);
+            return _mapper.Map<IEnumerable<MathProblemModel>>(problems);
         }
 
-        public async Task<MathProblemDto> CreateProblemAsync(CreateMathProblemDto problemDto)
+        public async Task<MathProblemModel> CreateProblemAsync(CreateMathProblemDto problemDto)
         {
             var problem = _mapper.Map<MathProblem>(problemDto);
             var createdProblem = await _mathProblemRepository.CreateProblemAsync(problem);
-            return _mapper.Map<MathProblemDto>(createdProblem);
+            return _mapper.Map<MathProblemModel>(createdProblem);
         }
 
         public async Task<bool> UpdateProblemAsync(int id, UpdateMathProblemDto problemDto)
         {
             var existingProblem = await _mathProblemRepository.GetProblemByIdAsync(id);
-            
+
             if (existingProblem == null)
             {
                 return false;
@@ -101,9 +102,9 @@ namespace MathTutor.Application.Services
             {
                 string difficultyLevel = MapDifficultyToString(request.Difficulty);
                 string aiResponse = await _aiService.GenerateMathProblemAsync(request.Topic, difficultyLevel);
-                
+
                 _logger.LogDebug("Raw AI Response: {Response}", aiResponse);
-                
+
                 // Define serializer options with more permissive settings
                 var jsonOptions = new JsonSerializerOptions
                 {
@@ -111,10 +112,10 @@ namespace MathTutor.Application.Services
                     AllowTrailingCommas = true,
                     ReadCommentHandling = JsonCommentHandling.Skip
                 };
-                
+
                 GeneratedMathProblemResponseDto generatedProblem = null;
-                
-                try 
+
+                try
                 {
                     // Try to deserialize the response
                     generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(aiResponse, jsonOptions);
@@ -123,17 +124,17 @@ namespace MathTutor.Application.Services
                 catch (JsonException ex)
                 {
                     _logger.LogWarning(ex, "Initial deserialization failed, attempting fallback parsing");
-                    
+
                     // If direct deserialization fails, try to extract the JSON portion
                     // Gemini sometimes includes additional text around the JSON
                     var jsonStart = aiResponse.IndexOf('{');
                     var jsonEnd = aiResponse.LastIndexOf('}');
-                    
+
                     if (jsonStart >= 0 && jsonEnd > jsonStart)
                     {
                         var jsonPart = aiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
                         _logger.LogDebug("Extracted JSON part: {JsonPart}", jsonPart);
-                        
+
                         try {
                             generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(jsonPart, jsonOptions);
                         }
@@ -148,37 +149,38 @@ namespace MathTutor.Application.Services
                         throw new InvalidOperationException("Failed to generate a valid math problem");
                     }
                 }
-                
+
                 if (generatedProblem == null)
                 {
                     _logger.LogWarning("Deserialized problem is null");
                     throw new InvalidOperationException("Failed to generate a valid math problem");
                 }
-                
+
                 if (string.IsNullOrWhiteSpace(generatedProblem.Statement))
                 {
                     _logger.LogWarning("AI generated a problem with no statement");
                     throw new InvalidOperationException("Generated problem is missing a statement");
                 }
-                
+
                 // If TopicId is provided and SaveToDatabase is true, store the generated problem
                 if (request.TopicId > 0 && request.SaveToDatabase)
                 {
                     DifficultyLevel difficulty = MapStringToDifficulty(request.Difficulty);
-                    
+
                     var problemToCreate = new CreateMathProblemDto
                     {
+                        Name = generatedProblem.Name ?? $"{request.Topic} Problem",
                         Statement = generatedProblem.Statement,
                         Solution = generatedProblem.Solution,
                         Explanation = generatedProblem.Explanation,
                         Difficulty = difficulty,
                         TopicId = request.TopicId
                     };
-                    
+
                     await CreateProblemAsync(problemToCreate);
                     _logger.LogInformation("Generated problem saved to database with TopicId: {TopicId}", request.TopicId);
                 }
-                
+
                 return generatedProblem;
             }
             catch (Exception ex)
@@ -193,7 +195,7 @@ namespace MathTutor.Application.Services
             try
             {
                 var problem = await _mathProblemRepository.GetProblemByIdAsync(request.ProblemId);
-                
+
                 if (problem == null)
                 {
                     throw new InvalidOperationException($"Math problem with ID {request.ProblemId} not found");
@@ -202,7 +204,7 @@ namespace MathTutor.Application.Services
                 // Check for non-answer responses
                 string[] nonAnswerResponses = { "i don't know", "idk", "dont know", "don't know", "no idea", "not sure", "unsure", "maybe", "probably", "perhaps" };
                 string normalizedUserAnswer = NormalizeAnswer(request.UserAnswer);
-                
+
                 if (nonAnswerResponses.Contains(normalizedUserAnswer))
                 {
                     return new EvaluateMathAnswerResponseDto
@@ -224,8 +226,8 @@ namespace MathTutor.Application.Services
                 }
 
                 bool isEquivalent = await _mathKernelService.CheckExpressionEquivalenceAsync(normalizedUserAnswer, problem.Solution);
-                
-                string feedback = isEquivalent 
+
+                string feedback = isEquivalent
                     ? "Correct! " + problem.Explanation
                     : $"Incorrect. The correct answer is: {problem.Solution}. Here's why: {problem.Explanation}";
 
@@ -245,9 +247,9 @@ namespace MathTutor.Application.Services
         private bool ContainsMathematicalContent(string answer)
         {
             // Check for mathematical symbols, numbers, or variables
-            return answer.Any(c => char.IsDigit(c) || 
-                                 c == '+' || c == '-' || c == '*' || c == '/' || 
-                                 c == '^' || c == '√' || c == 'π' || c == 'x' || 
+            return answer.Any(c => char.IsDigit(c) ||
+                                 c == '+' || c == '-' || c == '*' || c == '/' ||
+                                 c == '^' || c == '√' || c == 'π' || c == 'x' ||
                                  c == 'y' || c == 'z' || c == '=');
         }
 
@@ -289,16 +291,41 @@ namespace MathTutor.Application.Services
             };
         }
 
+        private int GetPointsForDifficulty(string difficulty)
+        {
+            return difficulty.ToLower() switch
+            {
+                "easy" => 1,
+                "medium" => 2,
+                "hard" => 3,
+                _ => 1
+            };
+        }
+
+        public async Task<IEnumerable<MathProblemAttemptModel>> GetAttemptsByUserIdAsync(string userId)
+        {
+            try
+            {
+                var attempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(userId);
+                return _mapper.Map<IEnumerable<MathProblemAttemptModel>>(attempts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting attempts for user {UserId}", userId);
+                return new List<MathProblemAttemptModel>();
+            }
+        }
+
         public async Task<bool> SaveProblemAttemptAsync(SaveProblemAttemptDto attemptDto)
         {
             try
             {
                 _logger.LogInformation("Saving problem attempt for user {UserId}", attemptDto.UserId);
-                
-                // Create a MathProblem entity if it doesn't exist yet
+
+                // Find or create a MathProblem entity
                 MathProblem problem = null;
-                
-                // If a topicId is provided, we'll save this as a reusable problem
+
+                // If a topicId is provided, we'll try to find the existing problem or create a new one
                 if (attemptDto.TopicId.HasValue && attemptDto.TopicId.Value > 0)
                 {
                     // Check if topic exists
@@ -308,45 +335,100 @@ namespace MathTutor.Application.Services
                         _logger.LogWarning("Topic with ID {TopicId} not found", attemptDto.TopicId.Value);
                         return false;
                     }
-                    
-                    // Save the problem
-                    problem = new MathProblem
-                    {
-                        Statement = attemptDto.Statement,
-                        Solution = attemptDto.Solution,
-                        Explanation = attemptDto.Explanation,
-                        Difficulty = MapStringToDifficulty(attemptDto.Difficulty),
-                        TopicId = attemptDto.TopicId.Value
-                    };
-                    
-                    problem = await _mathProblemRepository.CreateProblemAsync(problem);
-                    _logger.LogInformation("Problem created with ID {ProblemId}", problem.Id);
+
+                    // Check if this problem already exists by matching statement and topicId
+                    // This prevents duplicate problems from being created
+                    var existingProblems = await _mathProblemRepository.GetProblemsByTopicAsync(attemptDto.TopicId.Value);
+                    problem = existingProblems.FirstOrDefault(p =>
+                        p.Statement.Equals(attemptDto.Statement, StringComparison.OrdinalIgnoreCase) &&
+                        p.TopicId == attemptDto.TopicId.Value);
                 }
-                
-                // Save the attempt
+
+                // If we have a problem ID, check if the user already has a correct attempt
+                if (problem != null)
+                {
+                    var existingAttempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAndProblemIdAsync(attemptDto.UserId, problem.Id);
+
+                    // Check if the user already has a correct attempt for this problem
+                    var hasCorrectAttempt = existingAttempts.Any(a => a.IsCorrect);
+
+                    if (hasCorrectAttempt)
+                    {
+                        _logger.LogInformation("User {UserId} already has a correct attempt for problem {ProblemId} - not saving new attempt",
+                            attemptDto.UserId, problem.Id);
+
+                        // Return true because we're successfully handling the request, even though we're not saving anything
+                        return true;
+                    }
+
+                    // If the user doesn't have a correct attempt, delete any existing incorrect attempts
+                    foreach (var existingAttempt in existingAttempts)
+                    {
+                        await _mathProblemAttemptRepository.DeleteAttemptAsync(existingAttempt.Id);
+                        _logger.LogInformation("Deleted previous incorrect attempt ID {AttemptId} for user {UserId} on problem {ProblemId}",
+                            existingAttempt.Id, attemptDto.UserId, problem.Id);
+                    }
+                }
+                else
+                {
+                    // For attempts without a persistent problem, we need to find attempts with matching statement
+                    // This is a bit more complex since we don't have a direct way to query by statement
+                    // We'll get all attempts for this user and filter them
+                    var allUserAttempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(attemptDto.UserId);
+
+                    // Find attempts that match the current problem statement
+                    // This is a simplification - in a real system, you might want to store the statement with the attempt
+                    // or have a more sophisticated way to match attempts to non-persistent problems
+                    var matchingAttempts = allUserAttempts.Where(a => a.ProblemId == 0).ToList();
+
+                    // Check if any of the matching attempts are correct
+                    var hasCorrectAttempt = matchingAttempts.Any(a => a.IsCorrect);
+
+                    if (hasCorrectAttempt)
+                    {
+                        _logger.LogInformation("User {UserId} already has a correct attempt for this non-persistent problem - not saving new attempt",
+                            attemptDto.UserId);
+
+                        // Return true because we're successfully handling the request, even though we're not saving anything
+                        return true;
+                    }
+
+                    // If no correct attempts, delete any existing incorrect attempts
+                    foreach (var existingAttempt in matchingAttempts)
+                    {
+                        await _mathProblemAttemptRepository.DeleteAttemptAsync(existingAttempt.Id);
+                        _logger.LogInformation("Deleted previous non-persistent attempt ID {AttemptId} for user {UserId}",
+                            existingAttempt.Id, attemptDto.UserId);
+                    }
+                }
+
+                // Now save the new attempt (whether correct or incorrect)
                 var attempt = new MathProblemAttempt
                 {
                     UserId = attemptDto.UserId,
                     ProblemId = problem?.Id ?? 0,
                     UserAnswer = attemptDto.UserAnswer,
                     IsCorrect = attemptDto.IsCorrect,
-                    AttemptedAt = DateTime.UtcNow
+                    AttemptedAt = DateTime.UtcNow,
+                    // Set points earned based on difficulty and correctness
+                    PointsEarned = attemptDto.IsCorrect ? GetPointsForDifficulty(attemptDto.Difficulty) : 0
                 };
-                
+
                 if (problem != null)
                 {
-                    // If we created a problem, associate the attempt with it
+                    // Associate the attempt with the problem
                     await _mathProblemAttemptRepository.CreateAttemptAsync(attempt);
-                    _logger.LogInformation("Attempt saved with problem ID {ProblemId}", problem.Id);
+                    _logger.LogInformation("New attempt saved with problem ID {ProblemId} for user {UserId}, IsCorrect={IsCorrect}",
+                        problem.Id, attemptDto.UserId, attemptDto.IsCorrect);
                 }
                 else
                 {
                     // For attempts without a saved problem, we still record the attempt but store the problem details in a different way
-                    // This could be extended to save the problem statement and other details in a JSON field or separate table
                     await _mathProblemAttemptRepository.CreateAttemptWithoutProblemAsync(attempt, attemptDto.Statement);
-                    _logger.LogInformation("Attempt saved without persistent problem");
+                    _logger.LogInformation("New attempt saved without persistent problem for user {UserId}, IsCorrect={IsCorrect}",
+                        attemptDto.UserId, attemptDto.IsCorrect);
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -356,4 +438,4 @@ namespace MathTutor.Application.Services
             }
         }
     }
-} 
+}

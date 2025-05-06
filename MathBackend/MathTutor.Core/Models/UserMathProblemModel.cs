@@ -17,6 +17,7 @@ namespace MathTutor.Core.Models
         public string UserId { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public int? TopicId { get; set; }
+        public int PointValue { get; set; } = 1;
     }
 
 

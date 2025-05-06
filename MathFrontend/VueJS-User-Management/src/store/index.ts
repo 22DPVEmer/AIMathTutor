@@ -1,6 +1,7 @@
 import { InjectionKey } from "vue";
 import { createStore, useStore as baseUseStore, Store } from "vuex";
 import user from "./modules/user";
+import math from "./modules/math";
 
 // Define your store state types
 export interface RootState {
@@ -20,6 +21,7 @@ export const store = createStore<RootState>({
   },
   modules: {
     user,
+    math,
   },
 });
 

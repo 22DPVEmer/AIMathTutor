@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;SKEXP0001;SKEXP0010;SKEXP0050</NoWarn>
+    <UserSecretsId>480782c7-6299-44bd-b0ab-5524fc6c2f19</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

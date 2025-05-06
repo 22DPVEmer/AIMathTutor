@@ -29,7 +29,8 @@ builder.Logging.AddDebug();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(MathTutor.Application.Services.AuthService).Assembly));
 
 // Register AutoMapper
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+builder.Services.AddAutoMapper(typeof(MathTutor.Core.Mappings.AutoMapperProfile).Assembly,
+                          typeof(MathTutor.Application.Mappings.ApplicationAutoMapperProfile).Assembly);
 
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -48,11 +49,12 @@ builder.Services.AddScoped<IAIservice, AIservice>();
 // Register Semantic Kernel
 builder.Services.AddSingleton<Kernel>(sp => {
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var apiKey = configuration["AI:Gemini:ApiKey"] ?? 
-        throw new InvalidOperationException("Gemini API Key not found in configuration");
-    
+
+    var apiKey = configuration["AI:Gemini:ApiKey"] ??
+        throw new InvalidOperationException("Gemini API Key not found in user secrets.");
+
     var httpClient = sp.GetRequiredService<HttpClient>();
-#pragma warning disable SKEXP0070    
+#pragma warning disable SKEXP0070
     return Kernel.CreateBuilder()
         .AddGoogleAIGeminiChatCompletion(
             modelId: "gemini-2.0-flash",
@@ -71,13 +73,14 @@ builder.Services.AddScoped<IMathTopicService, MathTopicService>();
 builder.Services.AddScoped<IMathTopicRepository, MathTopicRepository>();
 builder.Services.AddScoped<IMathProblemAttemptRepository, MathProblemAttemptRepository>();
 
-// Register Math Category Services and Repository
-builder.Services.AddScoped<IMathCategoryService, MathCategoryService>();
-builder.Services.AddScoped<IMathCategoryRepository, MathCategoryRepository>();
 
 // Register User Math Problem Services and Repository
 builder.Services.AddScoped<IUserMathProblemService, UserMathProblemService>();
 builder.Services.AddScoped<IUserMathProblemRepository, UserMathProblemRepository>();
+
+// Register School Class Services and Repository
+builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
+builder.Services.AddScoped<ISchoolClassRepository, SchoolClassRepository>();
 
 // Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -93,7 +96,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = true;
-        
+
         options.User.RequireUniqueEmail = true;
         options.SignIn.RequireConfirmedEmail = false; // Set to true in production
     })
@@ -145,6 +148,14 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials();
     });
+
+    // Add a more permissive policy for development
+    options.AddPolicy("DevCorsPolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
 });
 
 // Register repositories
@@ -172,7 +183,7 @@ builder.Services.AddSwaggerGen(c =>
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
-    
+
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -182,7 +193,7 @@ builder.Services.AddSwaggerGen(c =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "JWT Authorization header using the Bearer scheme."
     });
-    
+
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
@@ -206,7 +217,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    
+
     // Comment out HTTPS redirection in development
     // app.UseHttpsRedirection();
 }
@@ -216,7 +227,16 @@ else
 }
 
 // Apply CORS policy
-app.UseCors("CorsPolicy");
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("DevCorsPolicy");
+    Console.WriteLine("Using development CORS policy (AllowAnyOrigin)");
+}
+else
+{
+    app.UseCors("CorsPolicy");
+    Console.WriteLine("Using production CORS policy");
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

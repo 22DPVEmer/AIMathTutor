@@ -24,10 +24,46 @@
             aria-valuemax="100"
           ></div>
         </div>
-        <div class="d-flex justify-content-between small">
-          <span>Level {{ currentLevel }}</span>
-          <span>{{ pointsToNextLevel }} points to next level</span>
+        <!-- Topic Progress List -->
+        <div v-if="topicProgress && topicProgress.length > 0" class="mt-3">
+          <h6 class="mb-2">Topic Progress</h6>
+          <div class="topic-progress-list">
+            <div
+              v-for="(topic, index) in topicProgress"
+              :key="index"
+              class="topic-item mb-2"
+            >
+              <div class="d-flex justify-content-between mb-1">
+                <span
+                  class="small fw-medium topic-name-link"
+                  @click="navigateToTopic(topic)"
+                  >{{ topic.topicName }}</span
+                >
+                <span class="small text-muted"
+                  >{{ topic.pointsEarned }}/{{
+                    topic.totalPointsPossible
+                  }}
+                  points</span
+                >
+              </div>
+              <div class="progress" style="height: 8px">
+                <div
+                  class="progress-bar"
+                  :class="{ 'bg-success': topic.percentageCompleted >= 100 }"
+                  role="progressbar"
+                  :style="{ width: topic.percentageCompleted + '%' }"
+                  :aria-valuenow="topic.percentageCompleted"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+          </div>
         </div>
+        <div v-else class="mt-3 text-center py-2">
+          <p class="text-muted mb-0">No topics started yet</p>
+        </div>
+
         <div class="mt-3">
           <div class="row g-3">
             <div class="col-6">
@@ -48,8 +84,8 @@
       <div class="card-footer bg-light">
         <div class="d-flex justify-content-between align-items-center">
           <span>Last achievement: {{ lastAchievement }}</span>
-          <button class="btn btn-sm btn-primary" @click="viewLearningPath">
-            <i class="bi bi-mortarboard-fill me-1"></i> View Learning Path
+          <button class="btn btn-sm btn-primary" @click="viewTopics">
+            <i class="bi bi-grid-3x3-gap-fill me-1"></i> View All Topics
           </button>
         </div>
       </div>
@@ -67,29 +103,41 @@ export default defineComponent({
       type: Number,
       required: true,
     },
+    completedProblems: {
+      type: Number,
+      default: 0,
+    },
+    skillLevel: {
+      type: String,
+      default: "Beginner",
+    },
+    lastAchievement: {
+      type: String,
+      default: "None yet",
+    },
+    topicProgress: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
-    return {
-      completedProblems: 147,
-      skillLevel: "Intermediate",
-      lastAchievement: "Mastered Quadratic Equations",
-    };
+    return {};
   },
   methods: {
-    viewLearningPath() {
-      // Navigate to learning path view
-      console.log("View learning path clicked");
-      // this.$router.push('/learning-path');
+    viewTopics() {
+      // Navigate to topics view
+      console.log("View topics clicked");
+      this.$router.push("/topics");
+    },
+    navigateToTopic(topic: any) {
+      // Navigate directly to the topic problems view
+      const topicId = topic.topicId;
+      this.$router.push(`/topics/${topicId}/problems`);
+      console.log(`Navigating to topic problems for topic ID: ${topicId}`);
     },
   },
   computed: {
-    currentLevel(): number {
-      return Math.floor(this.progress / 20) + 1;
-    },
-    pointsToNextLevel(): number {
-      // Calculate points needed to reach next level (100 points per level)
-      return 100 - (this.progress % 20) * 5;
-    },
+    // No level-based computations needed
   },
 });
 </script>
@@ -101,5 +149,16 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.topic-name-link {
+  cursor: pointer;
+  color: #0d6efd;
+  transition: color 0.2s ease;
+}
+
+.topic-name-link:hover {
+  color: #0a58ca;
+  text-decoration: underline;
 }
 </style>

@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MathTutor.Core.Entities;
 using Microsoft.AspNetCore.Identity;
-using MathTutor.Core.Enums;
 using System;
+using MathTutor.Core.Enums;
 
 namespace MathTutor.Infrastructure.Persistence;
 
@@ -14,7 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
-    public DbSet<MathCategory> MathCategories { get; set; } = null!;
+    public DbSet<SchoolClass> SchoolClasses { get; set; } = null!;
     public DbSet<MathTopic> MathTopics { get; set; } = null!;
     public DbSet<MathProblem> MathProblems { get; set; } = null!;
     public DbSet<MathProblemAttempt> MathProblemAttempts { get; set; } = null!;
@@ -44,10 +44,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Entity<MathCategory>()
+        builder.Entity<SchoolClass>()
             .HasMany(c => c.Topics)
-            .WithOne(t => t.Category)
-            .HasForeignKey(t => t.CategoryId)
+            .WithOne(t => t.SchoolClass)
+            .HasForeignKey(t => t.SchoolClassId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<MathTopic>()
@@ -76,771 +76,157 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(a => a.ProblemId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Seed data for math categories
-        builder.Entity<MathCategory>().HasData(
-            new MathCategory { Id = 1, Name = "Algebra", Description = "Master algebraic expressions and equations" },
-            new MathCategory { Id = 2, Name = "Geometry", Description = "Explore shapes and spatial relationships" },
-            new MathCategory { Id = 3, Name = "Calculus", Description = "Learn about limits, derivatives, and integrals" },
-            new MathCategory { Id = 4, Name = "Statistics", Description = "Understand data analysis and probability" },
-            new MathCategory { Id = 5, Name = "Vectors and Physics", Description = "Study vectors and their applications in physics" },
-            new MathCategory { Id = 6, Name = "Probability and Statistics", Description = "Learn combinatorics, probability and statistical analysis" },
-            new MathCategory { Id = 7, Name = "Trigonometry", Description = "Study of triangles and trigonometric functions" }
+        // Configure relationship between MathProblem and ApplicationUser (Author)
+        builder.Entity<MathProblem>()
+            .HasOne(p => p.Author)
+            .WithMany()
+            .HasForeignKey(p => p.AuthorId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Seed data for school classes (grades 7-12)
+        builder.Entity<SchoolClass>().HasData(
+            new SchoolClass { Id = 7, Name = "Grade 7", Description = "7th grade mathematics course" },
+            new SchoolClass { Id = 8, Name = "Grade 8", Description = "8th grade mathematics course" },
+            new SchoolClass { Id = 9, Name = "Grade 9", Description = "9th grade mathematics course" },
+            new SchoolClass { Id = 10, Name = "Grade 10", Description = "10th grade mathematics course" },
+            new SchoolClass { Id = 11, Name = "Grade 11", Description = "11th grade mathematics course" },
+            new SchoolClass { Id = 12, Name = "Grade 12", Description = "12th grade mathematics course" }
         );
 
-        // Seed topics for the categories
+        // Seed topics for the classes
         // Parent topics
         builder.Entity<MathTopic>().HasData(
             // Vectors and Motion (parent topic)
-            new MathTopic { 
-                Id = 1, 
-                Name = "Vectors and Motion", 
-                Description = "Study of vectors and their applications in motion", 
-                CategoryId = 5, 
-                ParentTopicId = null, 
-                GradeLevel = 8 
+            new MathTopic {
+                Id = 1,
+                Name = "Vectors and Motion",
+                Description = "Study of vectors and their applications in motion",
+                SchoolClassId = 8,
+                ParentTopicId = null,
+                GradeLevel = 8
             },
-            
+
             // Combinatorics and Probability I (parent topic)
-            new MathTopic { 
-                Id = 20, 
-                Name = "Combinatorics and Probability I", 
-                Description = "Introduction to combinatorics and probability theory", 
-                CategoryId = 6, 
-                ParentTopicId = null, 
-                GradeLevel = 8 
+            new MathTopic {
+                Id = 20,
+                Name = "Combinatorics and Probability I",
+                Description = "Introduction to combinatorics and probability theory",
+                SchoolClassId = 8,
+                ParentTopicId = null,
+                GradeLevel = 8
             },
-            
+
             // Statistics I (parent topic)
-            new MathTopic { 
-                Id = 30, 
-                Name = "Statistics I", 
-                Description = "Introduction to statistical concepts and data analysis", 
-                CategoryId = 6, 
-                ParentTopicId = null, 
-                GradeLevel = 5 
+            new MathTopic {
+                Id = 30,
+                Name = "Statistics I",
+                Description = "Introduction to statistical concepts and data analysis",
+                SchoolClassId = 9,
+                ParentTopicId = null,
+                GradeLevel = 9
             },
-            
+
             // Fractional Functions and Algebraic Fractions (parent topic)
-            new MathTopic { 
-                Id = 40, 
-                Name = "Fractional Functions and Algebraic Fractions", 
-                Description = "Study of fractional functions and algebraic expressions", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 9 
+            new MathTopic {
+                Id = 40,
+                Name = "Fractional Functions and Algebraic Fractions",
+                Description = "Study of fractional functions and algebraic expressions",
+                SchoolClassId = 9,
+                ParentTopicId = null,
+                GradeLevel = 9
             },
-            
+
             // Sine and Cosine Functions (parent topic)
-            new MathTopic { 
-                Id = 60, 
-                Name = "Sine and Cosine Functions", 
-                Description = "Study of trigonometric functions and their properties", 
-                CategoryId = 7, 
-                ParentTopicId = null, 
-                GradeLevel = 10 
+            new MathTopic {
+                Id = 60,
+                Name = "Sine and Cosine Functions",
+                Description = "Study of trigonometric functions and their properties",
+                SchoolClassId = 10,
+                ParentTopicId = null,
+                GradeLevel = 10
             },
-            
+
             // Power with Rational Exponent, Geometric Progression (parent topic)
-            new MathTopic { 
-                Id = 70, 
-                Name = "Power with Rational Exponent, Geometric Progression", 
-                Description = "Study of powers with rational exponents and geometric progressions", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 10 
+            new MathTopic {
+                Id = 70,
+                Name = "Power with Rational Exponent, Geometric Progression",
+                Description = "Study of powers with rational exponents and geometric progressions",
+                SchoolClassId = 10,
+                ParentTopicId = null,
+                GradeLevel = 10
             },
-            
+
             // Exponential Function (parent topic)
-            new MathTopic { 
-                Id = 80, 
-                Name = "Exponential Function", 
-                Description = "Study of exponential functions and their applications", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 11 
+            new MathTopic {
+                Id = 80,
+                Name = "Exponential Function",
+                Description = "Study of exponential functions and their applications",
+                SchoolClassId = 11,
+                ParentTopicId = null,
+                GradeLevel = 11
             },
-            
+
             // Lines and Planes in Space. Polyhedra (parent topic)
-            new MathTopic { 
-                Id = 90, 
-                Name = "Lines and Planes in Space. Polyhedra", 
-                Description = "Study of 3D geometry, lines, planes and polyhedra", 
-                CategoryId = 2, 
-                ParentTopicId = null, 
-                GradeLevel = 11 
+            new MathTopic {
+                Id = 90,
+                Name = "Lines and Planes in Space. Polyhedra",
+                Description = "Study of 3D geometry, lines, planes, and polyhedra",
+                SchoolClassId = 11,
+                ParentTopicId = null,
+                GradeLevel = 11
             },
-            
+
             // Rotational Bodies (parent topic)
-            new MathTopic { 
-                Id = 100, 
-                Name = "Rotational Bodies", 
-                Description = "Study of bodies formed by rotation", 
-                CategoryId = 2, 
-                ParentTopicId = null, 
-                GradeLevel = 12 
+            new MathTopic {
+                Id = 100,
+                Name = "Rotational Bodies",
+                Description = "Study of bodies formed by rotation",
+                SchoolClassId = 12,
+                ParentTopicId = null,
+                GradeLevel = 12
             }
         );
 
         // Child topics for Vectors and Motion
         builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 2, 
-                Name = "Vector and its Magnitude. Vector Placement", 
-                Description = "Understanding vectors, their magnitude and placement in space", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 9 
+            new MathTopic {
+                Id = 2,
+                Name = "Vector and its Magnitude. Vector Placement",
+                Description = "Understanding vectors, their magnitude, and placement in space",
+                SchoolClassId = 8,
+                ParentTopicId = 1,
+                GradeLevel = 8
             },
-            
-            new MathTopic { 
-                Id = 3, 
-                Name = "Vector Addition Laws", 
-                Description = "Laws governing the addition of vectors", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 4, 
-                Name = "Vector Representation", 
-                Description = "Different ways to represent vectors", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 5, 
-                Name = "Vector Projection on an Axis", 
-                Description = "Projecting vectors onto coordinate axes", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 6, 
-                Name = "Distance Between Two Points", 
-                Description = "Calculating distance in vector spaces", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 7, 
-                Name = "Vectors in Coordinate Form on a Plane", 
-                Description = "Working with vectors in 2D coordinate systems", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 8, 
-                Name = "Vectors in Space", 
-                Description = "Working with vectors in 3D space", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 9, 
-                Name = "Line Equation", 
-                Description = "Equations of lines in vector form", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 10, 
-                Name = "Linear Function. Function and Argument Increment", 
-                Description = "Understanding linear functions and increments", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 11, 
-                Name = "Line Equation", 
-                Description = "Different forms of line equations", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 7 
-            },
-            
-            new MathTopic { 
-                Id = 12, 
-                Name = "Parallel and Perpendicular Lines", 
-                Description = "Properties of parallel and perpendicular lines", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 8 
-            },
-            
-            new MathTopic { 
-                Id = 13, 
-                Name = "Equation with 2 Variables. Circle Equation", 
-                Description = "Working with equations in two variables and circle equations", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 14, 
-                Name = "Inequality with 2 Variables", 
-                Description = "Solving and graphing inequalities with two variables", 
-                CategoryId = 5, 
-                ParentTopicId = 1, 
-                GradeLevel = 10 
-            }
-        );
 
-        // Child topics for Combinatorics and Probability I
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 21, 
-                Name = "Sets. Operations with Sets", 
-                Description = "Understanding sets and operations on sets", 
-                CategoryId = 6, 
-                ParentTopicId = 20, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 22, 
-                Name = "Introduction to Combinatorics", 
-                Description = "Basic principles of combinatorics", 
-                CategoryId = 6, 
-                ParentTopicId = 20, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 23, 
-                Name = "Combinatorics I", 
-                Description = "Counting principles, permutations and combinations", 
-                CategoryId = 6, 
-                ParentTopicId = 20, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 24, 
-                Name = "Elements of Probability Theory", 
-                Description = "Basic concepts of probability theory", 
-                CategoryId = 6, 
-                ParentTopicId = 20, 
-                GradeLevel = 6 
-            },
-            
-            new MathTopic { 
-                Id = 25, 
-                Name = "Sum Probability. Conditional Probability", 
-                Description = "Advanced probability concepts", 
-                CategoryId = 6, 
-                ParentTopicId = 20, 
-                GradeLevel = 10 
-            }
-        );
-
-        // Child topics for Statistics I
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 31, 
-                Name = "Population, Sample and Data. Mean Values", 
-                Description = "Understanding statistical populations, samples and central tendency", 
-                CategoryId = 6, 
-                ParentTopicId = 30, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 32, 
-                Name = "Measures of Dispersion, Graphical Representation of Data", 
-                Description = "Understanding variability in data and data visualization", 
-                CategoryId = 6, 
-                ParentTopicId = 30, 
-                GradeLevel = 3 
-            }
-        );
-
-        // Child topics for Fractional Functions and Algebraic Fractions
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 41, 
-                Name = "Rational Algebraic Expressions", 
-                Description = "Working with rational expressions in algebra", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 42, 
-                Name = "Algebraic Equations", 
-                Description = "Solving various types of algebraic equations", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 43, 
-                Name = "Algebraic Fractions. Domain of Definition", 
-                Description = "Understanding algebraic fractions and their domains", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 44, 
-                Name = "Simplification and Expansion of Algebraic Fractions", 
-                Description = "Techniques for simplifying and expanding algebraic fractions", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 45, 
-                Name = "Identity. Sign Change Rule", 
-                Description = "Understanding identities and sign changes in algebra", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 46, 
-                Name = "Multiplication, Division, Exponentiation of Algebraic Fractions", 
-                Description = "Operations with algebraic fractions", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 47, 
-                Name = "Addition and Subtraction of Algebraic Fractions", 
-                Description = "Techniques for adding and subtracting algebraic fractions", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 48, 
-                Name = "Fractional Function", 
-                Description = "Understanding and working with fractional functions", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 49, 
-                Name = "Fractional Equations and Inequalities", 
-                Description = "Solving equations and inequalities involving fractions", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 50, 
-                Name = "Fractional Equations", 
-                Description = "Methods for solving equations with fractions", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 51, 
-                Name = "Fractional Equations in Word Problems", 
-                Description = "Applying fractional equations to solve word problems", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 52, 
-                Name = "Review of Linear and Quadratic Inequality Solving", 
-                Description = "Revisiting methods for solving linear and quadratic inequalities", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 53, 
-                Name = "Fractional Inequalities. Interval Method", 
-                Description = "Solving inequalities with fractions using intervals", 
-                CategoryId = 1, 
-                ParentTopicId = 40, 
-                GradeLevel = 11 
-            }
-        );
-
-        // Child topics for Sine and Cosine Functions
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 61, 
-                Name = "Relationships in a Right Triangle. Review", 
-                Description = "Reviewing trigonometric relationships in right triangles", 
-                CategoryId = 7, 
-                ParentTopicId = 60, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 62, 
-                Name = "Sine and Cosine of a Rotation Angle", 
-                Description = "Understanding sine and cosine for any angle", 
-                CategoryId = 7, 
-                ParentTopicId = 60, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 63, 
-                Name = "Sine and Cosine Theorems", 
-                Description = "Applications of sine and cosine theorems in triangles", 
-                CategoryId = 7, 
-                ParentTopicId = 60, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 64, 
-                Name = "Trigonometric Functions and Their Properties", 
-                Description = "Study of trigonometric functions and their key properties", 
-                CategoryId = 7, 
-                ParentTopicId = 60, 
-                GradeLevel = 11 
-            }
-        );
-
-        // Child topics for Trigonometric Expressions and Equations
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 65, 
-                Name = "Trigonometric Expressions and Equations", 
-                Description = "Working with trigonometric expressions and solving equations", 
-                CategoryId = 7, 
-                ParentTopicId = 60, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 66, 
-                Name = "Trigonometric Expressions and Basic Identity", 
-                Description = "Understanding fundamental trigonometric identities", 
-                CategoryId = 7, 
-                ParentTopicId = 65, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 67, 
-                Name = "Sum of Arguments and Double Argument Formulas", 
-                Description = "Working with complex trigonometric formulas", 
-                CategoryId = 7, 
-                ParentTopicId = 65, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 68, 
-                Name = "Basic Trigonometric Equations", 
-                Description = "Solving fundamental trigonometric equations", 
-                CategoryId = 7, 
-                ParentTopicId = 65, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 69, 
-                Name = "Factorization and Substitution Method", 
-                Description = "Advanced techniques for solving trigonometric equations", 
-                CategoryId = 7, 
-                ParentTopicId = 65, 
-                GradeLevel = 11 
-            }
-        );
-
-        // Child topics for Power with Rational Exponent, Geometric Progression
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 71, 
-                Name = "Nth Degree Root", 
-                Description = "Understanding and calculating nth roots", 
-                CategoryId = 1, 
-                ParentTopicId = 70, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 72, 
-                Name = "Power with Rational Exponent", 
-                Description = "Working with powers that have rational exponents", 
-                CategoryId = 1, 
-                ParentTopicId = 70, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 73, 
-                Name = "Sequences", 
-                Description = "Understanding and working with numeric sequences", 
-                CategoryId = 1, 
-                ParentTopicId = 70, 
-                GradeLevel = 10 
-            },
-            
-            new MathTopic { 
-                Id = 74, 
-                Name = "Geometric Progression", 
-                Description = "Properties and applications of geometric progressions", 
-                CategoryId = 1, 
-                ParentTopicId = 70, 
-                GradeLevel = 10 
-            }
-        );
-
-        // Child topics for Exponential Function
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 81, 
-                Name = "Exponential Function", 
-                Description = "Understanding exponential functions and their graphs", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 82, 
-                Name = "Logarithm of a Number", 
-                Description = "Understanding logarithms and their properties", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 83, 
-                Name = "Exponential Processes", 
-                Description = "Applications of exponential functions in real-world processes", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 84, 
-                Name = "Power Properties. Review", 
-                Description = "Reviewing properties of powers", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 85, 
-                Name = "Basic Equations. Review", 
-                Description = "Reviewing methods for solving basic equations", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 86, 
-                Name = "Exponential Equations", 
-                Description = "Techniques for solving exponential equations", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 87, 
-                Name = "Basic Inequalities. Review", 
-                Description = "Reviewing methods for solving basic inequalities", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 88, 
-                Name = "Exponential Inequalities", 
-                Description = "Techniques for solving exponential inequalities", 
-                CategoryId = 1, 
-                ParentTopicId = 80, 
-                GradeLevel = 11 
-            }
-        );
-
-        // Child topics for Lines and Planes in Space. Polyhedra
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 91, 
-                Name = "Right Triangle Calculation. Review", 
-                Description = "Reviewing methods for solving right triangles", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 92, 
-                Name = "Lines and Planes in Space", 
-                Description = "Understanding geometric relationships in 3D space", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 93, 
-                Name = "Polyhedron Diagonals and Section with a Plane", 
-                Description = "Understanding polyhedron geometry and cross-sections", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 94, 
-                Name = "Prism Surface and Volume", 
-                Description = "Calculating surface area and volume of prisms", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 95, 
-                Name = "Regular Triangular Pyramid", 
-                Description = "Properties and calculations for regular triangular pyramids", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 96, 
-                Name = "Regular Quadrangular and Hexagonal Pyramid", 
-                Description = "Properties and calculations for regular quadrangular and hexagonal pyramids", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            },
-            
-            new MathTopic { 
-                Id = 97, 
-                Name = "Irregular Pyramid", 
-                Description = "Properties and calculations for irregular pyramids", 
-                CategoryId = 2, 
-                ParentTopicId = 90, 
-                GradeLevel = 11 
-            }
-        );
-
-        // Child topics for Rotational Bodies
-        builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 101, 
-                Name = "Cylinder", 
-                Description = "Properties and calculations for cylinders", 
-                CategoryId = 2, 
-                ParentTopicId = 100, 
-                GradeLevel = 12 
-            },
-            
-            new MathTopic { 
-                Id = 102, 
-                Name = "Cone", 
-                Description = "Properties and calculations for cones", 
-                CategoryId = 2, 
-                ParentTopicId = 100, 
-                GradeLevel = 12 
-            },
-            
-            new MathTopic { 
-                Id = 103, 
-                Name = "Sphere", 
-                Description = "Properties and calculations for spheres", 
-                CategoryId = 2, 
-                ParentTopicId = 100, 
-                GradeLevel = 12 
-            },
-            
-            new MathTopic { 
-                Id = 104, 
-                Name = "Cylinder and Prism Geometric Combinations", 
-                Description = "Working with geometric combinations of cylinders and prisms", 
-                CategoryId = 2, 
-                ParentTopicId = 100, 
-                GradeLevel = 12 
-            },
-            
-            new MathTopic { 
-                Id = 105, 
-                Name = "Sphere and Prism Geometric Combinations", 
-                Description = "Working with geometric combinations of spheres and prisms", 
-                CategoryId = 2, 
-                ParentTopicId = 100, 
-                GradeLevel = 12 
+            new MathTopic {
+                Id = 3,
+                Name = "Vector Addition Laws",
+                Description = "Laws of vector addition",
+                SchoolClassId = 8,
+                ParentTopicId = 1,
+                GradeLevel = 8
             }
         );
 
         // Add standard algebra topics as top-level topics (no parent)
         builder.Entity<MathTopic>().HasData(
-            new MathTopic { 
-                Id = 110, 
-                Name = "Linear Equations", 
-                Description = "Solve equations in the form ax + b = c", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 7 
+            new MathTopic {
+                Id = 110,
+                Name = "Linear Equations",
+                Description = "Solving equations in the form ax + b = c",
+                SchoolClassId = 7,
+                ParentTopicId = null,
+                GradeLevel = 7
             },
-            
-            new MathTopic { 
-                Id = 111, 
-                Name = "Quadratic Equations", 
-                Description = "Solve equations in the form ax² + bx + c = 0", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 8 
-            },
-            
-            new MathTopic { 
-                Id = 112, 
-                Name = "Systems of Equations", 
-                Description = "Solve multiple equations with multiple variables", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 9 
-            },
-            
-            new MathTopic { 
-                Id = 113, 
-                Name = "Inequalities", 
-                Description = "Solve and graph inequalities", 
-                CategoryId = 1, 
-                ParentTopicId = null, 
-                GradeLevel = 8 
+
+            new MathTopic {
+                Id = 111,
+                Name = "Quadratic Equations",
+                Description = "Solving equations in the form ax² + bx + c = 0",
+                SchoolClassId = 8,
+                ParentTopicId = null,
+                GradeLevel = 8
             }
         );
 
@@ -931,303 +317,461 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         // Seed MathProblems
         builder.Entity<MathProblem>().HasData(
-            // Linear Equations (Topic ID: 110)
-            new MathProblem { 
-                Id = 1, 
-                TopicId = 110, 
-                Statement = "Solve for x: 2x + 3 = 11", 
-                Solution = "x = 4", 
-                Explanation = "To solve this equation, subtract 3 from both sides: 2x = 8. Then divide both sides by 2: x = 4.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+            // Vector and its Magnitude (Topic ID: 2)
+            new MathProblem {
+                Id = 1001,
+                Name = "Vector Magnitude Calculation",
+                TopicId = 2,
+                Statement = "Calculate the magnitude of vector v⃗ = (3,4)",
+                Solution = "|v⃗| = 5",
+                Explanation = "Using the Pythagorean theorem: |v⃗| = √(3² + 4²) = √(9 + 16) = √25 = 5",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 2, 
-                TopicId = 110, 
-                Statement = "Solve for y: 3y - 7 = 14", 
-                Solution = "y = 7", 
-                Explanation = "Add 7 to both sides: 3y = 21. Then divide both sides by 3: y = 7.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+            new MathProblem {
+                Id = 1002,
+                Name = "3D Vector Magnitude",
+                TopicId = 2,
+                Statement = "Find the magnitude of vector a⃗ = (2,2,1)",
+                Solution = "|a⃗| = 3",
+                Explanation = "Using the 3D magnitude formula: |a⃗| = √(2² + 2² + 1²) = √(4 + 4 + 1) = √9 = 3",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 3, 
-                TopicId = 110, 
-                Statement = "Solve for x: 5x - 8 = 2x + 13", 
-                Solution = "x = 7", 
-                Explanation = "Subtract 2x from both sides: 3x - 8 = 13. Add 8 to both sides: 3x = 21. Divide both sides by 3: x = 7.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 1003,
+                Name = "Vector Components",
+                TopicId = 2,
+                Statement = "A vector has magnitude 5 and makes a 30° angle with the x-axis. Find its x and y components.",
+                Solution = "x ≈ 4.33, y = 2.5",
+                Explanation = "Using trigonometry: x = 5cos(30°), y = 5sin(30°)",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Quadratic Equations (Topic ID: 111)
-            new MathProblem { 
-                Id = 4, 
-                TopicId = 111, 
-                Statement = "Solve for x: x² - 9 = 0", 
-                Solution = "x = 3 or x = -3", 
-                Explanation = "This is a difference of squares: x² - 9 = (x+3)(x-3) = 0. Therefore x = 3 or x = -3.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+
+            // Additional Vector Magnitude problems (Topic ID: 2)
+            new MathProblem {
+                Id = 1004,
+                Name = "Unit Vector Calculation",
+                TopicId = 2,
+                Statement = "Find the unit vector in the direction of v⃗ = (6,8)",
+                Solution = "u⃗ = (0.6,0.8)",
+                Explanation = "First find |v⃗| = √(6² + 8²) = 10, then divide components by magnitude: (6/10, 8/10)",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 5, 
-                TopicId = 111, 
-                Statement = "Solve for x: x² + 6x + 9 = 0", 
-                Solution = "x = -3", 
-                Explanation = "This is a perfect square trinomial: x² + 6x + 9 = (x+3)² = 0. Therefore x = -3.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 1005,
+                Name = "Vector Direction Angle",
+                TopicId = 2,
+                Statement = "Find the angle that vector v⃗ = (4,-4) makes with the positive x-axis.",
+                Solution = "-45°",
+                Explanation = "Use arctan(y/x) = arctan(-4/4) = -45°",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 6, 
-                TopicId = 111, 
-                Statement = "Solve for x: 2x² - 5x - 3 = 0", 
-                Solution = "x = 3 or x = -1/2", 
-                Explanation = "Use the quadratic formula: x = [-b ± √(b² - 4ac)]/2a with a=2, b=-5, c=-3. This gives x = 3 or x = -1/2.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Hard,
-                PointValue = 3
+            new MathProblem {
+                Id = 1006,
+                Name = "3D Vector Components",
+                TopicId = 2,
+                Statement = "A vector has magnitude 6 and makes angles of 60° with x-axis and 60° with y-axis. Find its z-component.",
+                Solution = "z ≈ 3.46",
+                Explanation = "Using direction cosines: cos²α + cos²β + cos²γ = 1, cos(60°) = 0.5, z = 6cos(γ) ≈ 3.46",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
             },
-            
-            // Systems of Equations (Topic ID: 112)
-            new MathProblem { 
-                Id = 7, 
-                TopicId = 112, 
-                Statement = "Solve the system: x + y = 7, x - y = 3", 
-                Solution = "x = 5, y = 2", 
-                Explanation = "Add the equations: 2x = 10, so x = 5. Substitute back: 5 + y = 7, so y = 2.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 1007,
+                Name = "Vector Decomposition",
+                TopicId = 2,
+                Statement = "Decompose vector v⃗ with magnitude 10 into components along 30° and 120° from x-axis.",
+                Solution = "v₁ ≈ 8.66, v₂ ≈ 5",
+                Explanation = "Using vector decomposition formulas and the given angles",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 8, 
-                TopicId = 112, 
-                Statement = "Solve the system: 2x + 3y = 12, 4x - y = 5", 
-                Solution = "x = 2, y = 2.67", 
-                Explanation = "Multiply the second equation by 3: 12x - 3y = 15. Add to first equation: 14x = 27, so x = 27/14 = 1.93. Substitute back to find y.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Hard,
-                PointValue = 3
+            new MathProblem {
+                Id = 1008,
+                Name = "Equal Vectors",
+                TopicId = 2,
+                Statement = "When are two vectors equal if they start at different points?",
+                Solution = "When they have same magnitude and direction",
+                Explanation = "Vectors are equal when they have the same magnitude and direction, regardless of their position",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            
-            // Inequalities (Topic ID: 113)
-            new MathProblem { 
-                Id = 9, 
-                TopicId = 113, 
-                Statement = "Solve for x: 2x - 5 > 7", 
-                Solution = "x > 6", 
-                Explanation = "Add 5 to both sides: 2x > 12. Divide both sides by 2: x > 6.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+            new MathProblem {
+                Id = 1009,
+                Name = "Vector Position",
+                TopicId = 2,
+                Statement = "A vector starts at point A(1,2) and ends at B(4,6). Find its components and magnitude.",
+                Solution = "Components: (3,4), Magnitude: 5",
+                Explanation = "Components: B - A = (4-1,6-2) = (3,4). Magnitude: √(3² + 4²) = 5",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 10, 
-                TopicId = 113, 
-                Statement = "Solve for x: -3x + 2 ≤ -7", 
-                Solution = "x ≥ 3", 
-                Explanation = "Subtract 2 from both sides: -3x ≤ -9. Divide both sides by -3 (and reverse the inequality): x ≥ 3.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 1010,
+                Name = "Parallel Vectors",
+                TopicId = 2,
+                Statement = "Are vectors a⃗ = (6,8) and b⃗ = (3,4) parallel?",
+                Solution = "Yes",
+                Explanation = "Vectors are parallel if one is a scalar multiple of the other. Here b⃗ = ½a⃗",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Vectors (Topic ID: 1 - Vectors and Motion)
-            new MathProblem { 
-                Id = 11, 
-                TopicId = 1, 
-                Statement = "Find the magnitude of vector v = (3, 4).", 
-                Solution = "5", 
-                Explanation = "Use the Pythagorean theorem: |v| = √(3² + 4²) = √(9 + 16) = √25 = 5.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+
+            // Vector Addition Laws (Topic ID: 3)
+            new MathProblem {
+                Id = 2001,
+                Name = "Vector Addition",
+                TopicId = 3,
+                Statement = "Add vectors p⃗ = (2,3) and q⃗ = (-1,4)",
+                Solution = "p⃗ + q⃗ = (1,7)",
+                Explanation = "Add corresponding components: (2+(-1), 3+4) = (1,7)",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 12, 
-                TopicId = 2, 
-                Statement = "Find the unit vector in the direction of v = (6, 8).", 
-                Solution = "(0.6, 0.8)", 
-                Explanation = "First find |v| = √(6² + 8²) = √(36 + 64) = √100 = 10. Then v/|v| = (6/10, 8/10) = (0.6, 0.8).", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 2002,
+                Name = "Multiple Vector Addition",
+                TopicId = 3,
+                Statement = "Add three vectors: a⃗ = (1,1), b⃗ = (2,-1), and c⃗ = (-1,3)",
+                Solution = "a⃗ + b⃗ + c⃗ = (2,3)",
+                Explanation = "Add all x components and all y components: (1+2+(-1), 1+(-1)+3) = (2,3)",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Combinatorics (Topic ID: 20 - Combinatorics and Probability I)
-            new MathProblem { 
-                Id = 13, 
-                TopicId = 20, 
-                Statement = "How many ways can you arrange the letters in the word 'MATH'?", 
-                Solution = "24", 
-                Explanation = "This is a permutation of 4 distinct objects, which is 4! = 4 × 3 × 2 × 1 = 24.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+
+            // Additional Vector Addition problems (Topic ID: 3)
+            new MathProblem {
+                Id = 2003,
+                Name = "Vector Subtraction",
+                TopicId = 3,
+                Statement = "Subtract vector b⃗ = (3,4) from a⃗ = (5,7)",
+                Solution = "a⃗ - b⃗ = (2,3)",
+                Explanation = "Subtract corresponding components: (5-3,7-4) = (2,3)",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 14, 
-                TopicId = 23, 
-                Statement = "How many 3-digit numbers can be formed using digits 1 to 5 if no repetition is allowed?", 
-                Solution = "60", 
-                Explanation = "For the first position, we have 5 choices. For the second, 4 choices. For the third, 3 choices. Total: 5 × 4 × 3 = 60.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 2004,
+                Name = "Resultant Vector",
+                TopicId = 3,
+                Statement = "Find the magnitude of the resultant vector when a⃗ = (3,0) and b⃗ = (0,4) are added.",
+                Solution = "|r⃗| = 5",
+                Explanation = "Using Pythagorean theorem on the resultant: √(3² + 4²) = 5",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Statistics (Topic ID: 30 - Statistics I)
-            new MathProblem { 
-                Id = 15, 
-                TopicId = 30, 
-                Statement = "Find the mean of the data set: 4, 7, 9, 3, 8, 5.", 
-                Solution = "6", 
-                Explanation = "Add all values and divide by the number of items: (4 + 7 + 9 + 3 + 8 + 5) ÷ 6 = 36 ÷ 6 = 6.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+            new MathProblem {
+                Id = 2005,
+                Name = "Vector Triangle",
+                TopicId = 3,
+                Statement = "Three vectors form a triangle. If two vectors are a⃗ = (2,3) and b⃗ = (4,1), find the third vector c⃗.",
+                Solution = "c⃗ = (-6,-4)",
+                Explanation = "In a vector triangle, a⃗ + b⃗ + c⃗ = 0, so c⃗ = -(a⃗ + b⃗) = -(2+4,3+1) = (-6,-4)",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 16, 
-                TopicId = 31, 
-                Statement = "Find the standard deviation of the data set: 2, 4, 6, 8, 10.", 
-                Solution = "3.16", 
-                Explanation = "First find the mean: (2 + 4 + 6 + 8 + 10) ÷ 5 = 30 ÷ 5 = 6. Then find the variance: [(2-6)² + (4-6)² + (6-6)² + (8-6)² + (10-6)²] ÷ 5 = [16 + 4 + 0 + 4 + 16] ÷ 5 = 40 ÷ 5 = 8. Standard deviation = √8 ≈ 2.83.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Hard,
-                PointValue = 3
+            new MathProblem {
+                Id = 2006,
+                Name = "Parallel Vector Addition",
+                TopicId = 3,
+                Statement = "Add three parallel vectors: 2î, 3î, and -4î",
+                Solution = "î",
+                Explanation = "Add the scalar components: 2 + 3 + (-4) = 1, so result is 1î",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            
-            // Algebraic Fractions (Topic ID: 40)
-            new MathProblem { 
-                Id = 17, 
-                TopicId = 40, 
-                Statement = "Simplify: (x² - 4) ÷ (x - 2)", 
-                Solution = "x + 2", 
-                Explanation = "Factor the numerator: (x² - 4) ÷ (x - 2) = [(x - 2)(x + 2)] ÷ (x - 2) = x + 2.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 2007,
+                Name = "Force Vectors",
+                TopicId = 3,
+                Statement = "Two forces of 3N and 4N act at right angles. Find their resultant.",
+                Solution = "5N",
+                Explanation = "Using Pythagorean theorem: √(3² + 4²) = 5N",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 18, 
-                TopicId = 49, 
-                Statement = "Solve for x: (x + 1)/(x - 2) = 3", 
-                Solution = "x = 7", 
-                Explanation = "Cross multiply: x + 1 = 3(x - 2). Expand: x + 1 = 3x - 6. Subtract 3x from both sides: -2x + 1 = -6. Subtract 1 from both sides: -2x = -7. Divide by -2: x = 7/2.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Hard,
-                PointValue = 3
+            new MathProblem {
+                Id = 2008,
+                Name = "Zero Vector",
+                TopicId = 3,
+                Statement = "What vector should be added to a⃗ = (2,3) to get zero vector?",
+                Solution = "(-2,-3)",
+                Explanation = "The negative of the vector: -(2,3) = (-2,-3)",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            
-            // Trigonometry (Topic ID: 60 - Sine and Cosine Functions)
-            new MathProblem { 
-                Id = 19, 
-                TopicId = 60, 
-                Statement = "Find the value of sin(30°).", 
-                Solution = "0.5", 
-                Explanation = "sin(30°) = 1/2 = 0.5", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+            new MathProblem {
+                Id = 2009,
+                Name = "Vector Chain",
+                TopicId = 3,
+                Statement = "A person walks 3m east, 4m north, then 6m west. Find the resultant displacement.",
+                Solution = "5m at 37° south of west",
+                Explanation = "Final position: (-3,4). Magnitude = 5m, angle = arctan(4/3) from west direction",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 20, 
-                TopicId = 64, 
-                Statement = "Solve for x in the equation: sin(x) = cos(x).", 
-                Solution = "x = π/4 + nπ", 
-                Explanation = "When sin(x) = cos(x), then sin(x)/cos(x) = 1, so tan(x) = 1. This occurs when x = π/4 + nπ, where n is an integer.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Hard,
-                PointValue = 3
+            new MathProblem {
+                Id = 2010,
+                Name = "Equilibrium Vectors",
+                TopicId = 3,
+                Statement = "Three forces act on a point: 2N at 0°, 2N at 120°, and 2N at 240°. Are they in equilibrium?",
+                Solution = "Yes",
+                Explanation = "Sum of vectors = 0 due to symmetric 120° angles and equal magnitudes",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
             },
-            
-            // Exponents (Topic ID: 70)
-            new MathProblem { 
-                Id = 21, 
-                TopicId = 70, 
-                Statement = "Simplify: (x^3)^2 × x^4", 
-                Solution = "x^10", 
-                Explanation = "(x^3)^2 = x^6, so x^6 × x^4 = x^10.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+
+            // Linear Equations (Topic ID: 110) - Additional problems to existing ones
+            new MathProblem {
+                Id = 7001,
+                Name = "Linear Equation with Parentheses",
+                TopicId = 110,
+                Statement = "Solve: 3(x - 2) = 15",
+                Solution = "x = 7",
+                Explanation = "First distribute: 3x - 6 = 15. Add 6 to both sides: 3x = 21. Divide by 3: x = 7",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 22, 
-                TopicId = 72, 
-                Statement = "Convert to a single expression with a rational exponent: ∛(x^5)", 
-                Solution = "x^(5/3)", 
-                Explanation = "∛(x^5) = (x^5)^(1/3) = x^(5/3).", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7002,
+                Name = "Linear Equation with Variables on Both Sides",
+                TopicId = 110,
+                Statement = "Solve: 4x + 3 = 2x + 11",
+                Solution = "x = 4",
+                Explanation = "Subtract 2x from both sides: 2x + 3 = 11. Subtract 3: 2x = 8. Divide by 2: x = 4",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Exponential Functions (Topic ID: 80)
-            new MathProblem { 
-                Id = 23, 
-                TopicId = 80, 
-                Statement = "Solve for x: 2^x = 8", 
-                Solution = "x = 3", 
-                Explanation = "We can rewrite 8 as 2^3. So, 2^x = 2^3, which means x = 3.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+
+            // Additional Linear Equations problems (Topic ID: 110)
+            new MathProblem {
+                Id = 7003,
+                Name = "Linear Equation with Fractions",
+                TopicId = 110,
+                Statement = "Solve: x/2 + x/3 = 5",
+                Solution = "x = 6",
+                Explanation = "Find common denominator: (3x + 2x)/6 = 5, 5x/6 = 5, x = 6",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 24, 
-                TopicId = 82, 
-                Statement = "Simplify: log₄(64)", 
-                Solution = "3", 
-                Explanation = "log₄(64) = log₄(4^3) = 3", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7004,
+                Name = "Word Problem - Age",
+                TopicId = 110,
+                Statement = "In 5 years, John will be twice as old as he was 7 years ago. How old is he now?",
+                Solution = "19 years old",
+                Explanation = "Let x be current age. x + 5 = 2(x - 7), solve for x",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Geometry (Topic ID: 90 - Lines and Planes in Space)
-            new MathProblem { 
-                Id = 25, 
-                TopicId = 90, 
-                Statement = "Find the distance between points (1, 2, 3) and (4, 6, 8).", 
-                Solution = "√50 ≈ 7.07", 
-                Explanation = "Use the 3D distance formula: d = √[(4-1)² + (6-2)² + (8-3)²] = √[9 + 16 + 25] = √50 ≈ 7.07.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7005,
+                Name = "Linear Inequalities",
+                TopicId = 110,
+                Statement = "Solve: 2x + 1 < 7",
+                Solution = "x < 3",
+                Explanation = "Subtract 1 from both sides: 2x < 6, divide by 2: x < 3",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 26, 
-                TopicId = 94, 
-                Statement = "Find the volume of a rectangular prism with dimensions 3 cm × 4 cm × 5 cm.", 
-                Solution = "60 cm³", 
-                Explanation = "Volume = length × width × height = 3 cm × 4 cm × 5 cm = 60 cm³.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Easy,
-                PointValue = 1
+            new MathProblem {
+                Id = 7006,
+                Name = "Distance Problem",
+                TopicId = 110,
+                Statement = "A car travels 120 km at constant speed. If it takes 2 hours, find the speed.",
+                Solution = "60 km/h",
+                Explanation = "Use distance = speed × time: 120 = x × 2, x = 60",
+                Difficulty = DifficultyLevel.Easy,
+                PointValue = 1,
+                AuthorId = "3"
             },
-            
-            // Rotational Bodies (Topic ID: 100)
-            new MathProblem { 
-                Id = 27, 
-                TopicId = 100, 
-                Statement = "Find the volume of a sphere with radius 3 cm.", 
-                Solution = "113.1 cm³", 
-                Explanation = "Volume of a sphere = (4/3) × π × r³ = (4/3) × π × 3³ = (4/3) × π × 27 ≈ 113.1 cm³.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7007,
+                Name = "Mixture Problem",
+                TopicId = 110,
+                Statement = "How much 80% solution should be mixed with 50% solution to get 200ml of 60% solution?",
+                Solution = "66.67ml of 80% solution",
+                Explanation = "Use mixture equation: 0.8x + 0.5(200-x) = 0.6(200)",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 28, 
-                TopicId = 102, 
-                Statement = "Find the volume of a cone with radius 4 cm and height 9 cm.", 
-                Solution = "150.8 cm³", 
-                Explanation = "Volume of a cone = (1/3) × π × r² × h = (1/3) × π × 4² × 9 = (1/3) × π × 16 × 9 = 48π ≈ 150.8 cm³.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7008,
+                Name = "Linear System",
+                TopicId = 110,
+                Statement = "Solve: x + y = 5, x - y = 1",
+                Solution = "x = 3, y = 2",
+                Explanation = "Add equations: 2x = 6, x = 3. Substitute to find y = 2",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            
-            // Additional algebra problems
-            new MathProblem { 
-                Id = 29, 
-                TopicId = 110, 
-                Statement = "Solve for x: 7x - 2 = 4x + 10", 
-                Solution = "x = 4", 
-                Explanation = "Subtract 4x from both sides: 3x - 2 = 10. Add 2 to both sides: 3x = 12. Divide by 3: x = 4.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7009,
+                Name = "Investment Problem",
+                TopicId = 110,
+                Statement = "Find investment at 5% to earn $1000 annual interest.",
+                Solution = "$20,000",
+                Explanation = "Use I = Pr: 1000 = x(0.05), x = 20000",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
             },
-            new MathProblem { 
-                Id = 30, 
-                TopicId = 111, 
-                Statement = "Find the solutions to x² - 7x + 12 = 0.", 
-                Solution = "x = 3 or x = 4", 
-                Explanation = "Factor the expression: x² - 7x + 12 = (x - 3)(x - 4) = 0. Therefore, x = 3 or x = 4.", 
-                Difficulty = MathTutor.Core.Enums.DifficultyLevel.Medium,
-                PointValue = 2
+            new MathProblem {
+                Id = 7010,
+                Name = "Motion Problem",
+                TopicId = 110,
+                Statement = "A train travels 300km. Going is 2h faster than return due to 20km/h speed difference. Find speeds.",
+                Solution = "60km/h and 40km/h",
+                Explanation = "Let x be slower speed: 300/x = 300/(x+20) + 2",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
+            },
+
+            // Quadratic Equations (Topic ID: 111) - Additional problems to existing ones
+            new MathProblem {
+                Id = 8001,
+                Name = "Complex Quadratic Equation",
+                TopicId = 111,
+                Statement = "Solve: 3x² - 12x + 12 = 0",
+                Solution = "x = 2 or x = 2",
+                Explanation = "This is a perfect square trinomial: 3(x² - 4x + 4) = 0, 3(x - 2)² = 0, x = 2 (double root)",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8002,
+                Name = "Quadratic with Complex Roots",
+                TopicId = 111,
+                Statement = "Solve: x² + 1 = 0",
+                Solution = "x = i or x = -i",
+                Explanation = "This equation has no real solutions. The solutions are the complex numbers i and -i",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
+            },
+
+            // Additional Quadratic Equations problems (Topic ID: 111)
+            new MathProblem {
+                Id = 8003,
+                Name = "Factoring Quadratic",
+                TopicId = 111,
+                Statement = "Solve by factoring: x² - 5x + 6 = 0",
+                Solution = "x = 2 or x = 3",
+                Explanation = "Factor as (x-2)(x-3) = 0, use zero product property",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8004,
+                Name = "Completing Square",
+                TopicId = 111,
+                Statement = "Solve by completing square: x² + 6x + 5 = 0",
+                Solution = "x = -1 or x = -5",
+                Explanation = "(x² + 6x + 9) - 9 + 5 = 0, (x + 3)² = 4",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8005,
+                Name = "Area Problem",
+                TopicId = 111,
+                Statement = "Rectangle's length is 2 more than width. Area is 48. Find dimensions.",
+                Solution = "8 by 6",
+                Explanation = "Let w be width: w(w+2) = 48, w² + 2w - 48 = 0",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8006,
+                Name = "Quadratic Inequalities",
+                TopicId = 111,
+                Statement = "Solve: x² - x - 6 > 0",
+                Solution = "x < -2 or x > 3",
+                Explanation = "Factor: (x+2)(x-3) > 0, test intervals",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8007,
+                Name = "Projectile Motion",
+                TopicId = 111,
+                Statement = "Ball thrown up at 20m/s. When does it reach 15m? (g=10m/s²)",
+                Solution = "t = 1 or t = 3",
+                Explanation = "-5t² + 20t = 15, solve quadratic",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8008,
+                Name = "Sum and Product",
+                TopicId = 111,
+                Statement = "Find two numbers whose sum is 7 and product is 12.",
+                Solution = "x = 3 or x = 4",
+                Explanation = "x + y = 7, xy = 12, substitute: x² - 7x + 12 = 0",
+                Difficulty = DifficultyLevel.Medium,
+                PointValue = 2,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8009,
+                Name = "Quadratic System",
+                TopicId = 111,
+                Statement = "Solve: x² + y = 4, x + y = 2",
+                Solution = "x = 0, y = 2 or x = 2, y = 0",
+                Explanation = "Substitute y = 2-x: x² + 2-x = 4",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
+            },
+            new MathProblem {
+                Id = 8010,
+                Name = "Complex Roots Pattern",
+                TopicId = 111,
+                Statement = "For what values of k are roots of x² + kx + 1 = 0 complex?",
+                Solution = "|k| < 2",
+                Explanation = "Using discriminant: k² - 4 < 0",
+                Difficulty = DifficultyLevel.Hard,
+                PointValue = 3,
+                AuthorId = "3"
             }
         );
     }
-} 
+}

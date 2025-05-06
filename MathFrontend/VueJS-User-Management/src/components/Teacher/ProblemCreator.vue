@@ -256,8 +256,8 @@ export default {
 
     // Function to organize topics for hierarchical display
     function organizeTopics() {
-      // First sort by category ID
-      topics.value.sort((a, b) => a.categoryId - b.categoryId);
+      // First sort by school class ID
+      topics.value.sort((a, b) => a.schoolClassId - b.schoolClassId);
 
       // Then ensure parent topics come before their children
       const parentTopics = topics.value.filter((t) => !t.parentTopicId);
@@ -270,7 +270,8 @@ export default {
 
       // Sort by depth
       topics.value.sort((a, b) => {
-        if (a.categoryId !== b.categoryId) return a.categoryId - b.categoryId;
+        if (a.schoolClassId !== b.schoolClassId)
+          return a.schoolClassId - b.schoolClassId;
         return a.depth - b.depth;
       });
     }

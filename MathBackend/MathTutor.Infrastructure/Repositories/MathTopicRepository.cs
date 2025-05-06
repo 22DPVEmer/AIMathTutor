@@ -26,7 +26,8 @@ namespace MathTutor.Infrastructure.Repositories
             try
             {
                 return await _context.MathTopics
-                    .Include(t => t.Category)
+                    .Include(t => t.SchoolClass)
+                    .Include(t => t.ParentTopic)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -41,7 +42,8 @@ namespace MathTutor.Infrastructure.Repositories
             try
             {
                 return await _context.MathTopics
-                    .Include(t => t.Category)
+                    .Include(t => t.SchoolClass)
+                    .Include(t => t.ParentTopic)
                     .FirstOrDefaultAsync(t => t.Id == id);
             }
             catch (Exception ex)
@@ -51,18 +53,19 @@ namespace MathTutor.Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<MathTopic>> GetTopicsByCategoryAsync(int categoryId)
+        public async Task<IEnumerable<MathTopic>> GetTopicsBySchoolClassAsync(int schoolClassId)
         {
             try
             {
                 return await _context.MathTopics
-                    .Where(t => t.CategoryId == categoryId)
-                    .Include(t => t.Category)
+                    .Where(t => t.SchoolClassId == schoolClassId)
+                    .Include(t => t.SchoolClass)
+                    .Include(t => t.ParentTopic)
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving topics for category ID {CategoryId}", categoryId);
+                _logger.LogError(ex, "Error retrieving topics for school class ID {SchoolClassId}", schoolClassId);
                 return Enumerable.Empty<MathTopic>();
             }
         }

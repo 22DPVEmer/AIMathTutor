@@ -5,6 +5,7 @@ namespace MathTutor.Core.Models;
 public class MathProblemModel
 {
     public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string Statement { get; set; } = string.Empty;
     public string Solution { get; set; } = string.Empty;
     public string Explanation { get; set; } = string.Empty;
@@ -12,4 +13,4 @@ public class MathProblemModel
     public int TopicId { get; set; }
     public string TopicName { get; set; } = string.Empty;
     public int PointValue { get; set; } = 1;
-} 
+}

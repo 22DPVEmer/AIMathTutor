@@ -1,6 +1,16 @@
 <template>
   <div class="my-problems-view p-6">
-    <h1 class="text-3xl font-bold mb-6">My Math Problems</h1>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">My Math Problems</h1>
+      <button
+        @click="refreshProblems"
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+        :disabled="isRefreshing"
+      >
+        <span v-if="isRefreshing">Refreshing...</span>
+        <span v-else>Refresh</span>
+      </button>
+    </div>
 
     <!-- Filters -->
     <div class="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -146,6 +156,7 @@
                 v-model="problem.retryAnswer"
                 class="w-full p-2 border rounded-md"
                 placeholder="Enter your new answer"
+                @keyup.enter="submitRetry(problem)"
               />
             </div>
 
@@ -171,7 +182,11 @@
             <div
               v-if="problem.feedback"
               class="mt-4 p-4 rounded-md"
-              :class="problem.isCorrect ? 'bg-green-50' : 'bg-red-50'"
+              :class="{
+                'bg-green-50': problem.isCorrect === true,
+                'bg-red-50': problem.isCorrect === false,
+                'bg-yellow-50': problem.isCorrect === undefined,
+              }"
             >
               <h4 class="font-semibold mb-2">Feedback:</h4>
               <p>{{ problem.feedback }}</p>
@@ -182,140 +197,15 @@
     </div>
 
     <!-- Edit Problem Dialog -->
-    <div
-      v-if="editingProblem"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-      >
-        <div class="p-6">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">Edit Math Problem</h2>
-            <button
-              @click="cancelEdit"
-              class="text-gray-500 hover:text-gray-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 gap-6">
-            <div>
-              <label for="topicName" class="block mb-2 font-medium"
-                >Topic</label
-              >
-              <div class="flex gap-2">
-                <select
-                  id="topicName"
-                  v-model="editedProblem.topicId"
-                  class="flex-grow p-2 border rounded-md"
-                >
-                  <option
-                    v-for="topic in topics"
-                    :key="topic.id"
-                    :value="topic.id"
-                  >
-                    {{ topic.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label for="statement" class="block mb-2 font-medium"
-                >Problem Statement</label
-              >
-              <textarea
-                id="statement"
-                v-model="editedProblem.statement"
-                rows="4"
-                class="w-full p-2 border rounded-md"
-                placeholder="Enter the problem statement"
-              ></textarea>
-            </div>
-
-            <div>
-              <label for="solution" class="block mb-2 font-medium"
-                >Solution</label
-              >
-              <input
-                id="solution"
-                v-model="editedProblem.solution"
-                class="w-full p-2 border rounded-md"
-                placeholder="Enter the correct solution"
-              />
-            </div>
-
-            <div>
-              <label for="explanation" class="block mb-2 font-medium"
-                >Explanation</label
-              >
-              <textarea
-                id="explanation"
-                v-model="editedProblem.explanation"
-                rows="4"
-                class="w-full p-2 border rounded-md"
-                placeholder="Enter the explanation"
-              ></textarea>
-            </div>
-
-            <div>
-              <label class="block mb-2 font-medium">Correct?</label>
-              <div class="flex gap-4">
-                <label class="inline-flex items-center">
-                  <input
-                    type="radio"
-                    v-model="editedProblem.isCorrect"
-                    :value="true"
-                    class="form-radio"
-                  />
-                  <span class="ml-2">Correct</span>
-                </label>
-                <label class="inline-flex items-center">
-                  <input
-                    type="radio"
-                    v-model="editedProblem.isCorrect"
-                    :value="false"
-                    class="form-radio"
-                  />
-                  <span class="ml-2">Incorrect</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 mt-6">
-            <button
-              @click="cancelEdit"
-              class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              @click="saveProblem"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              :disabled="isSaving"
-            >
-              {{ isSaving ? "Saving..." : "Save Changes" }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <EditMathProblem
+      v-model:show="editingProblem"
+      :problem="editedProblem"
+      :topics="topics"
+      :is-teacher-or-admin="isTeacherOrAdmin"
+      @problem-saved="handleProblemSaved"
+      @problem-published="handleProblemPublished"
+      @cancel="cancelEdit"
+    />
   </div>
 </template>
 
@@ -324,22 +214,25 @@ import { ref, computed, onMounted } from "vue";
 import {
   getCurrentUserMathProblems,
   retryUserMathProblem,
-  updateUserMathProblem,
   getAllTopics,
 } from "@/api/math";
 import { useStore } from "@/store";
+import EditMathProblem from "@/components/EditMathProblem.vue";
 
 export default {
   name: "MyProblemsView",
+  components: {
+    EditMathProblem,
+  },
 
   setup() {
     const store = useStore();
     const problems = ref([]);
     const isLoading = ref(true);
+    const isRefreshing = ref(false);
     const topics = ref([]);
     const editingProblem = ref(false);
     const editedProblem = ref({});
-    const isSaving = ref(false);
 
     // Define filters
     const filters = ref({
@@ -382,6 +275,46 @@ export default {
         problems.value = [];
       } finally {
         isLoading.value = false;
+      }
+    };
+
+    // Refresh problems (for manual refresh button)
+    const refreshProblems = async () => {
+      if (isRefreshing.value) return;
+
+      isRefreshing.value = true;
+      try {
+        const data = await getCurrentUserMathProblems();
+        if (Array.isArray(data)) {
+          // Preserve retry state for problems that are currently being retried
+          problems.value = data.map((newProblem) => {
+            const existingProblem = problems.value.find(
+              (p) => p.id === newProblem.id
+            );
+            if (existingProblem && existingProblem.isRetrying) {
+              return {
+                ...newProblem,
+                isRetrying: true,
+                retryAnswer: existingProblem.retryAnswer || "",
+                isSubmitting: false,
+                feedback: existingProblem.feedback || "",
+              };
+            }
+            return {
+              ...newProblem,
+              isRetrying: false,
+              retryAnswer: "",
+              isSubmitting: false,
+              feedback: "",
+            };
+          });
+        } else {
+          console.error("Unexpected data format:", data);
+        }
+      } catch (error) {
+        console.error("Error refreshing problems:", error);
+      } finally {
+        isRefreshing.value = false;
       }
     };
 
@@ -472,24 +405,59 @@ export default {
           problem.retryAnswer
         );
 
+        console.log("Retry response:", response);
+
         // Update the problem with the new data
         const index = problems.value.findIndex((p) => p.id === problem.id);
-        if (index !== -1) {
-          const updatedProblem = {
-            ...response.problem,
-            isRetrying: problem.isCorrect ? false : true,
-            retryAnswer: "",
-            isSubmitting: false,
-            feedback: response.feedback,
-          };
+        if (index !== -1 && response) {
+          // Check if we have a response with isCorrect and feedback
+          if (response.isCorrect !== undefined && response.feedback) {
+            // Update the existing problem with the new data
+            const updatedProblem = {
+              ...problems.value[index],
+              isCorrect: response.isCorrect,
+              userAnswer: problem.retryAnswer,
+              isRetrying: !response.isCorrect, // Keep retry mode open if answer is incorrect
+              retryAnswer: "",
+              isSubmitting: false,
+              feedback: response.feedback,
+            };
 
-          problems.value[index] = updatedProblem;
+            // Replace the problem in the array
+            problems.value[index] = updatedProblem;
+          } else if (response.problem) {
+            // Handle the case where the backend returns a complete problem object
+            const updatedProblem = {
+              ...response.problem,
+              isRetrying: !response.isCorrect,
+              retryAnswer: "",
+              isSubmitting: false,
+              feedback: response.feedback,
+            };
+
+            problems.value[index] = updatedProblem;
+          } else {
+            console.error("Invalid response format", response);
+            problem.isSubmitting = false;
+            problem.feedback = "Failed to update problem. Please try again.";
+          }
+        } else {
+          console.error(
+            "Problem not found in list or invalid response",
+            response
+          );
+          problem.isSubmitting = false;
+          problem.feedback = "Failed to update problem. Please try again.";
         }
       } catch (error) {
         console.error("Error retrying problem:", error);
         problem.feedback = "Failed to submit your answer. Please try again.";
-      } finally {
         problem.isSubmitting = false;
+
+        // Try to refresh the problems list after a short delay
+        setTimeout(() => {
+          fetchProblems();
+        }, 2000);
       }
     };
 
@@ -504,41 +472,29 @@ export default {
       editedProblem.value = {};
     };
 
-    const saveProblem = async () => {
-      isSaving.value = true;
+    // Handler for when a problem is saved in the EditMathProblem component
+    const handleProblemSaved = (savedProblem) => {
+      // Update the problem in the list
+      const index = problems.value.findIndex((p) => p.id === savedProblem.id);
+      if (index !== -1) {
+        problems.value[index] = {
+          ...problems.value[index],
+          ...savedProblem,
+        };
+      }
+    };
 
-      try {
-        await updateUserMathProblem(
-          editedProblem.value.id,
-          editedProblem.value
-        );
-
-        // Update the problem in the list
-        const index = problems.value.findIndex(
-          (p) => p.id === editedProblem.value.id
-        );
-        if (index !== -1) {
-          // Update topic name based on selected topic ID
-          const selectedTopic = topics.value.find(
-            (t) => t.id === editedProblem.value.topicId
-          );
-          if (selectedTopic) {
-            editedProblem.value.topicName = selectedTopic.name;
-          }
-
-          problems.value[index] = {
-            ...problems.value[index],
-            ...editedProblem.value,
-          };
-        }
-
-        // Close the edit dialog
-        editingProblem.value = false;
-      } catch (error) {
-        console.error("Error saving problem:", error);
-        alert("Failed to save changes. Please try again.");
-      } finally {
-        isSaving.value = false;
+    // Handler for when a problem is published in the EditMathProblem component
+    const handleProblemPublished = (publishedProblem) => {
+      // Update the problem in the list
+      const index = problems.value.findIndex(
+        (p) => p.id === publishedProblem.id
+      );
+      if (index !== -1) {
+        problems.value[index] = {
+          ...problems.value[index],
+          ...publishedProblem,
+        };
       }
     };
 
@@ -558,6 +514,8 @@ export default {
     return {
       problems,
       isLoading,
+      isRefreshing,
+      refreshProblems,
       filters,
       availableTopics,
       filteredProblems,
@@ -571,8 +529,8 @@ export default {
       editingProblem,
       editedProblem,
       cancelEdit,
-      saveProblem,
-      isSaving,
+      handleProblemSaved,
+      handleProblemPublished,
       topics,
     };
   },

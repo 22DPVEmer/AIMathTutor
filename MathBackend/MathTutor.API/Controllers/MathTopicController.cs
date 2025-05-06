@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using MathTutor.Application.DTOs;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MathTutor.API.Controllers
@@ -36,11 +38,11 @@ namespace MathTutor.API.Controllers
             return HandleResult(topic);
         }
 
-        [HttpGet("category/{categoryId}")]
+        [HttpGet("schoolclass/{schoolClassId}")]
         [ProducesResponseType(typeof(IEnumerable<MathTopicModel>), 200)]
-        public async Task<IActionResult> GetTopicsByCategory(int categoryId)
+        public async Task<IActionResult> GetTopicsBySchoolClass(int schoolClassId)
         {
-            var topics = await _mathTopicService.GetTopicsByCategoryAsync(categoryId);
+            var topics = await _mathTopicService.GetTopicsBySchoolClassAsync(schoolClassId);
             return HandleResult(topics);
         }
 
@@ -57,7 +59,7 @@ namespace MathTutor.API.Controllers
                 {
                     return BadRequest("Failed to create topic");
                 }
-                
+
                 return CreatedAtAction(nameof(GetTopicById), new { id = result.Id }, result);
             }
             catch (Exception ex)
@@ -80,16 +82,16 @@ namespace MathTutor.API.Controllers
                 {
                     return NotFound();
                 }
-                
+
                 // Ensure the ID is set correctly
                 model.Id = id;
-                
+
                 var result = await _mathTopicService.UpdateTopicAsync(id, model);
                 if (!result)
                 {
                     return BadRequest("Failed to update topic");
                 }
-                
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -112,13 +114,13 @@ namespace MathTutor.API.Controllers
                 {
                     return NotFound();
                 }
-                
+
                 var result = await _mathTopicService.DeleteTopicAsync(id);
                 if (!result)
                 {
                     return BadRequest("Failed to delete topic");
                 }
-                
+
                 return NoContent();
             }
             catch (Exception ex)
@@ -126,5 +128,28 @@ namespace MathTutor.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("user-progress")]
+        [Authorize]
+        [ProducesResponseType(typeof(IEnumerable<TopicCompletionDto>), 200)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetUserTopicProgress()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var result = await _mathTopicService.GetTopicCompletionForUserAsync(userId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
-} 
+}

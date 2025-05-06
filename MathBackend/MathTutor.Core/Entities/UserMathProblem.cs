@@ -15,11 +15,14 @@ public class UserMathProblem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsCorrect { get; set; }
     public string UserAnswer { get; set; } = string.Empty;
-    
+
     // Optional relationship with a curated topic
     public int? TopicId { get; set; }
-    
+
+    // Points awarded for solving this problem
+    public int PointValue { get; set; } = 1;
+
     // Navigation properties
     public virtual ApplicationUser User { get; set; } = null!;
     public virtual MathTopic? Topic { get; set; }
-} 
+}

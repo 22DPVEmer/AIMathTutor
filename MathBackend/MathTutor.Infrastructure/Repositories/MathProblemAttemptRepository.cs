@@ -25,11 +25,30 @@ namespace MathTutor.Infrastructure.Repositories
         {
             try
             {
-                return await _context.MathProblemAttempts
+                _logger.LogInformation("Retrieving attempts for user {UserId}", userId);
+
+                var attempts = await _context.MathProblemAttempts
                     .Where(a => a.UserId == userId)
                     .Include(a => a.Problem)
+                    .Include(a => a.User)
                     .OrderByDescending(a => a.AttemptedAt)
                     .ToListAsync();
+
+                _logger.LogInformation("Found {Count} attempts for user {UserId}", attempts.Count(), userId);
+
+                // Log some details about the attempts for debugging
+                foreach (var attempt in attempts.Take(5))
+                {
+                    _logger.LogDebug("Attempt {Id}: ProblemId={ProblemId}, IsCorrect={IsCorrect}, PointsEarned={Points}, HasProblem={HasProblem}, ProblemStatement={Statement}",
+                        attempt.Id,
+                        attempt.ProblemId,
+                        attempt.IsCorrect,
+                        attempt.PointsEarned,
+                        attempt.Problem != null,
+                        attempt.Problem?.Statement?.Substring(0, Math.Min(20, attempt.Problem?.Statement?.Length ?? 0)) ?? "null");
+                }
+
+                return attempts;
             }
             catch (Exception ex)
             {
@@ -42,15 +61,48 @@ namespace MathTutor.Infrastructure.Repositories
         {
             try
             {
-                return await _context.MathProblemAttempts
+                _logger.LogInformation("Retrieving attempts for problem {ProblemId}", problemId);
+
+                var attempts = await _context.MathProblemAttempts
                     .Where(a => a.ProblemId == problemId)
                     .Include(a => a.User)
+                    .Include(a => a.Problem)
                     .OrderByDescending(a => a.AttemptedAt)
                     .ToListAsync();
+
+                _logger.LogInformation("Found {Count} attempts for problem {ProblemId}", attempts.Count(), problemId);
+
+                return attempts;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving attempts for problem {ProblemId}", problemId);
+                return Enumerable.Empty<MathProblemAttempt>();
+            }
+        }
+
+        public async Task<IEnumerable<MathProblemAttempt>> GetAttemptsByUserIdAndProblemIdAsync(string userId, int problemId)
+        {
+            try
+            {
+                _logger.LogInformation("Retrieving attempts for user {UserId} and problem {ProblemId}", userId, problemId);
+
+                var attempts = await _context.MathProblemAttempts
+                    .Where(a => a.UserId == userId && a.ProblemId == problemId)
+                    .Include(a => a.User)
+                    .Include(a => a.Problem)
+                    .OrderByDescending(a => a.AttemptedAt)
+                    .ToListAsync();
+
+                _logger.LogInformation("Found {Count} attempts for user {UserId} and problem {ProblemId}",
+                    attempts.Count(), userId, problemId);
+
+                return attempts;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving attempts for user {UserId} and problem {ProblemId}",
+                    userId, problemId);
                 return Enumerable.Empty<MathProblemAttempt>();
             }
         }
@@ -81,28 +133,28 @@ namespace MathTutor.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating attempt for user {UserId} and problem {ProblemId}", 
+                _logger.LogError(ex, "Error creating attempt for user {UserId} and problem {ProblemId}",
                     attempt.UserId, attempt.ProblemId);
                 return null;
             }
         }
-        
+
         public async Task<bool> CreateAttemptWithoutProblemAsync(MathProblemAttempt attempt, string problemStatement)
         {
             try
             {
                 // Set the problem ID to 0 to indicate it's not linked to a persistent problem
                 attempt.ProblemId = 0;
-                
+
                 // Store the attempt
                 _context.MathProblemAttempts.Add(attempt);
                 await _context.SaveChangesAsync();
-                
+
                 // Here you could also save the problem statement in another table or as metadata
                 // For now, we'll just log it
-                _logger.LogInformation("Saved attempt without persistent problem. Problem statement: {Statement}", 
+                _logger.LogInformation("Saved attempt without persistent problem. Problem statement: {Statement}",
                     problemStatement);
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -148,4 +200,4 @@ namespace MathTutor.Infrastructure.Repositories
             }
         }
     }
-} 
+}

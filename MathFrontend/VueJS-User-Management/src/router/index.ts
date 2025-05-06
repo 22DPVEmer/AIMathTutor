@@ -82,9 +82,37 @@ const routes: AppRouteRecordRaw[] = [
   },
   {
     path: "/topics",
-    name: "Topics",
-    component: TopicsView,
+    component: () => import("../views/TopicsView.vue"),
     meta: { requiresAuth: true, title: "Math Topics" },
+    children: [
+      {
+        path: "",
+        name: "TopicsList",
+        component: () => import("../components/MathProblems/TopicsList.vue"),
+        meta: { title: "Math Topics" }
+      },
+      {
+        path: "parent/:parentId",
+        name: "SubtopicsList",
+        component: () => import("../components/MathProblems/SubtopicsList.vue"),
+        meta: { title: "Subtopics" },
+        props: true
+      },
+      {
+        path: ":topicId/problems",
+        name: "TopicProblems",
+        component: () => import("../components/MathProblems/ProblemsList.vue"),
+        meta: { title: "Topic Problems" },
+        props: true
+      },
+      {
+        path: ":topicId/problem/:problemId",
+        name: "ProblemView",
+        component: () => import("../components/MathProblems/ProblemView.vue"),
+        meta: { title: "Problem" },
+        props: true
+      }
+    ]
   },
   {
     path: "/my-problems",
@@ -119,7 +147,7 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
   // Check if route requires authentication
   if (to.meta?.requiresAuth) {
     const isAuthenticated = store.getters["user/isAuthenticated"];
-    
+
     if (!isAuthenticated) {
       // Try to restore auth state
       const token = localStorage.getItem("token");
@@ -127,7 +155,7 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
         try {
           await store.dispatch("user/checkAuth");
           await store.dispatch("user/getUserProfile");
-          
+
           // If we successfully restored auth, proceed
           if (store.getters["user/isAuthenticated"]) {
             return next();
@@ -137,12 +165,12 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
           localStorage.removeItem("token");
         }
       }
-      
+
       // If we couldn't restore auth, redirect to login
       return next({ name: "Login", query: { redirect: to.fullPath } });
     }
   }
-  
+
   next();
 });
 

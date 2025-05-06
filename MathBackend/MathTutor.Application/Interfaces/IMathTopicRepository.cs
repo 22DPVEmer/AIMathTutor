@@ -8,7 +8,7 @@ namespace MathTutor.Application.Interfaces
     {
         Task<IEnumerable<MathTopic>> GetAllTopicsAsync();
         Task<MathTopic> GetTopicByIdAsync(int id);
-        Task<IEnumerable<MathTopic>> GetTopicsByCategoryAsync(int categoryId);
+        Task<IEnumerable<MathTopic>> GetTopicsBySchoolClassAsync(int schoolClassId);
         Task<MathTopic> CreateTopicAsync(MathTopic topic);
         Task<bool> UpdateTopicAsync(MathTopic topic);
         Task<bool> DeleteTopicAsync(int id);

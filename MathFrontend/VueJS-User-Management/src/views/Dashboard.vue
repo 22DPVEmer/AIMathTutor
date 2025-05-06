@@ -25,17 +25,43 @@
 
         <!-- Progress Overview -->
         <div class="row mb-4">
-          <ProgressWidget :progress="overallProgress" />
-          <div class="col-12 col-md-4 mb-4">
-            <div class="card bg-light p-3 rounded shadow-sm">
-              <p class="text-muted">Topics Mastered</p>
-              <h4>{{ masteredTopics }}/{{ totalTopics }}</h4>
+          <ProgressWidget
+            :progress="overallProgress"
+            :completed-problems="problemsSolved"
+            :skill-level="getSkillLevel"
+            :last-achievement="getLastAchievement"
+            :topic-progress="topicCompletion"
+          />
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">Topics Mastered</h6>
+              </div>
+              <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                  <i
+                    class="bi bi-check-circle-fill text-success me-2"
+                    style="font-size: 1.5rem"
+                  ></i>
+                  <h4 class="mb-0">{{ masteredTopics }}/{{ totalTopics }}</h4>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="col-12 col-md-4 mb-4">
-            <div class="card bg-light p-3 rounded shadow-sm">
-              <p class="text-muted">Problems Solved</p>
-              <h4>{{ problemsSolved }}</h4>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">Problems Solved</h6>
+              </div>
+              <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                  <i
+                    class="bi bi-lightning-fill text-warning me-2"
+                    style="font-size: 1.5rem"
+                  ></i>
+                  <h4 class="mb-0">{{ problemsSolved }}</h4>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -44,22 +70,59 @@
         <div class="row mb-4">
           <div class="col-12">
             <h3 class="mb-3">Quick Access</h3>
-            <div class="row">
+            <div v-if="isLoading || loading" class="text-center py-4">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div v-else-if="recentTopics.length === 0" class="alert alert-info">
+              <p class="mb-0">
+                You haven't started any topics yet. Explore the Topics section
+                to get started!
+              </p>
+            </div>
+            <div v-else class="row">
               <div
                 class="col-md-4 mb-3"
                 v-for="(topic, index) in recentTopics"
                 :key="index"
               >
                 <div class="card h-100">
+                  <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">{{ topic.name }}</h5>
+                  </div>
                   <div class="card-body">
-                    <h5 class="card-title">{{ topic.name }}</h5>
                     <p class="card-text">{{ topic.description }}</p>
-                    <button
-                      class="btn btn-primary"
-                      @click="startTopic(topic.id)"
+                    <div class="progress mb-2" style="height: 8px">
+                      <div
+                        class="progress-bar"
+                        role="progressbar"
+                        :style="{ width: topic.progress + '%' }"
+                        :class="{ 'bg-success': topic.progress >= 100 }"
+                        :aria-valuenow="topic.progress"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div>
+                    <div
+                      class="d-flex justify-content-between align-items-center mb-3"
                     >
-                      Continue Learning
-                    </button>
+                      <small class="text-muted"
+                        >{{ topic.progress }}% complete</small
+                      >
+                      <small class="badge bg-light text-dark">
+                        {{ topic.pointsEarned }}/{{ topic.totalPointsPossible }}
+                        points
+                      </small>
+                    </div>
+                    <div class="d-grid">
+                      <button
+                        class="btn btn-primary"
+                        @click="startTopic(topic.id)"
+                      >
+                        Continue Learning
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -73,7 +136,7 @@
             <h3 class="mb-3">AI Recommendations</h3>
             <div class="card">
               <div class="card-body">
-                <div v-if="loading" class="text-center">
+                <div v-if="isLoading || loading" class="text-center py-4">
                   <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
@@ -82,9 +145,9 @@
                   <div
                     v-for="(rec, index) in recommendations"
                     :key="index"
-                    class="mb-3"
+                    class="mb-4 p-3 border-bottom"
                   >
-                    <h5>{{ rec.title }}</h5>
+                    <h5 class="text-primary">{{ rec.title }}</h5>
                     <p>{{ rec.description }}</p>
                     <button
                       class="btn btn-outline-primary"
@@ -94,8 +157,17 @@
                     </button>
                   </div>
                 </div>
-                <div v-else>
-                  <p>No recommendations available at the moment.</p>
+                <div v-else class="text-center py-4">
+                  <div class="mb-3">
+                    <i
+                      class="bi bi-lightbulb text-warning"
+                      style="font-size: 2rem"
+                    ></i>
+                  </div>
+                  <h5>No recommendations yet</h5>
+                  <p class="text-muted">
+                    Complete more problems to get personalized recommendations.
+                  </p>
                 </div>
               </div>
             </div>
@@ -119,52 +191,117 @@ export default {
   },
   data() {
     return {
-      overallProgress: 0,
-      masteredTopics: 0,
-      totalTopics: 10,
-      problemsSolved: 0,
-      recentTopics: [
-        {
-          id: 1,
-          name: "Algebra Basics",
-          description: "Master the fundamentals of algebraic expressions",
-        },
-        {
-          id: 2,
-          name: "Geometry",
-          description: "Explore shapes, angles, and spatial relationships",
-        },
-        {
-          id: 3,
-          name: "Calculus",
-          description: "Dive into limits, derivatives, and integrals",
-        },
-      ],
+      isLoading: false,
     };
   },
   computed: {
     ...mapState("user", ["userData"]),
-    ...mapState("math", ["loading", "recommendations"]),
+    ...mapState("math", [
+      "loading",
+      "recommendations",
+      "topics",
+      "topicCompletion",
+    ]),
+    ...mapGetters("math", [
+      "getOverallProgress",
+      "getMasteredTopics",
+      "getTotalTopics",
+      "getProblemsSolved",
+      "getRecentTopics",
+    ]),
+
+    overallProgress() {
+      return this.getOverallProgress;
+    },
+
+    masteredTopics() {
+      return this.getMasteredTopics;
+    },
+
+    totalTopics() {
+      return this.getTotalTopics;
+    },
+
+    problemsSolved() {
+      return this.getProblemsSolved;
+    },
+
+    recentTopics() {
+      return this.getRecentTopics;
+    },
+
+    getSkillLevel() {
+      // Determine skill level based on overall progress
+      if (this.overallProgress >= 80) return "Advanced";
+      if (this.overallProgress >= 40) return "Intermediate";
+      return "Beginner";
+    },
+
+    getLastAchievement() {
+      // Find the most recently completed topic (100% progress)
+      const completedTopics = this.topicCompletion
+        .filter((topic) => topic.percentageCompleted >= 100)
+        .sort((a, b) => b.pointsEarned - a.pointsEarned);
+
+      if (completedTopics.length > 0) {
+        return `Mastered ${completedTopics[0].topicName}`;
+      }
+
+      // If no topics are 100% complete, find the one with highest progress
+      const inProgressTopics = this.topicCompletion
+        .filter((topic) => topic.percentageCompleted > 0)
+        .sort((a, b) => b.percentageCompleted - a.percentageCompleted);
+
+      if (inProgressTopics.length > 0) {
+        return `Working on ${inProgressTopics[0].topicName}`;
+      }
+
+      return "Just getting started";
+    },
   },
   methods: {
-    ...mapActions("math", ["fetchRecommendations"]),
+    ...mapActions("math", [
+      "fetchRecommendations",
+      "fetchTopics",
+      "fetchTopicCompletion",
+      "fetchUserProblems",
+    ]),
+
     startPractice() {
       this.$router.push("/practice");
     },
+
     startTopic(topicId) {
       this.$router.push({ path: "/practice", query: { topic: topicId } });
     },
+
     followRecommendation(rec) {
-      // Implement recommendation action
-      console.log("Following recommendation:", rec);
+      if (rec.link) {
+        this.$router.push(rec.link);
+      } else {
+        console.log("Following recommendation:", rec);
+      }
+    },
+
+    async loadData() {
+      this.isLoading = true;
+      try {
+        // Load all required data in parallel
+        await Promise.all([
+          this.fetchTopics(),
+          this.fetchTopicCompletion(),
+          this.fetchUserProblems(),
+          this.fetchRecommendations(),
+        ]);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        this.isLoading = false;
+      }
     },
   },
   async created() {
-    await this.fetchRecommendations();
-    // In a real app, these would come from the backend
-    this.overallProgress = 65;
-    this.masteredTopics = 4;
-    this.problemsSolved = 127;
+    await this.loadData();
   },
 };
 </script>

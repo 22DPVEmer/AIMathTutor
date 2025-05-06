@@ -20,17 +20,16 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.IsVerified, opt => opt.MapFrom(src => src.IsVerified));
 
         // Math Category mappings
-        CreateMap<MathCategory, MathCategoryModel>()
+        CreateMap<SchoolClass, SchoolClassModel>()
             .ForMember(dest => dest.Topics, opt => opt.MapFrom(src => src.Topics));
-        CreateMap<MathCategoryModel, MathCategory>();
+        CreateMap<SchoolClassModel, SchoolClass>();
 
         // Math Topic mappings
         CreateMap<MathTopic, MathTopicModel>()
-            .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
+            .ForMember(dest => dest.SchoolClassName, opt => opt.MapFrom(src => src.SchoolClass.Name))
             .ForMember(dest => dest.ProblemCount, opt => opt.MapFrom(src => src.Problems.Count))
             .ForMember(dest => dest.ParentTopicName, opt => opt.MapFrom(src => src.ParentTopic != null ? src.ParentTopic.Name : string.Empty))
             .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => src.GradeLevel))
-            .ForMember(dest => dest.TotalPointsPossible, opt => opt.MapFrom(src => src.TotalPointsPossible))
             .ForMember(dest => dest.Subtopics, opt => opt.Ignore());
         CreateMap<MathTopicModel, MathTopic>();
 
@@ -50,10 +49,10 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"))
             .ForMember(dest => dest.TopicName, opt => opt.MapFrom(src => src.Topic.Name));
         CreateMap<StudentProgressModel, StudentProgress>();
-        
+
         // User Math Problem mappings
         CreateMap<UserMathProblem, UserMathProblemModel>()
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
         CreateMap<UserMathProblemModel, UserMathProblem>();
     }
-} 
+}
