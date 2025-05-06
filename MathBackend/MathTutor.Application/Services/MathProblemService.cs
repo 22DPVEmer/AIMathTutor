@@ -371,17 +371,13 @@ namespace MathTutor.Application.Services
                 }
                 else
                 {
-                    // For attempts without a persistent problem, we need to find attempts with matching statement
-                    // This is a bit more complex since we don't have a direct way to query by statement
-                    // We'll get all attempts for this user and filter them
+
                     var allUserAttempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(attemptDto.UserId);
 
-                    // Find attempts that match the current problem statement
-                    // This is a simplification - in a real system, you might want to store the statement with the attempt
-                    // or have a more sophisticated way to match attempts to non-persistent problems
+
                     var matchingAttempts = allUserAttempts.Where(a => a.ProblemId == 0).ToList();
 
-                    // Check if any of the matching attempts are correct
+
                     var hasCorrectAttempt = matchingAttempts.Any(a => a.IsCorrect);
 
                     if (hasCorrectAttempt)
@@ -389,11 +385,11 @@ namespace MathTutor.Application.Services
                         _logger.LogInformation("User {UserId} already has a correct attempt for this non-persistent problem - not saving new attempt",
                             attemptDto.UserId);
 
-                        // Return true because we're successfully handling the request, even though we're not saving anything
+
                         return true;
                     }
 
-                    // If no correct attempts, delete any existing incorrect attempts
+
                     foreach (var existingAttempt in matchingAttempts)
                     {
                         await _mathProblemAttemptRepository.DeleteAttemptAsync(existingAttempt.Id);
@@ -402,7 +398,7 @@ namespace MathTutor.Application.Services
                     }
                 }
 
-                // Now save the new attempt (whether correct or incorrect)
+
                 var attempt = new MathProblemAttempt
                 {
                     UserId = attemptDto.UserId,
@@ -410,20 +406,20 @@ namespace MathTutor.Application.Services
                     UserAnswer = attemptDto.UserAnswer,
                     IsCorrect = attemptDto.IsCorrect,
                     AttemptedAt = DateTime.UtcNow,
-                    // Set points earned based on difficulty and correctness
+
                     PointsEarned = attemptDto.IsCorrect ? GetPointsForDifficulty(attemptDto.Difficulty) : 0
                 };
 
                 if (problem != null)
                 {
-                    // Associate the attempt with the problem
+
                     await _mathProblemAttemptRepository.CreateAttemptAsync(attempt);
                     _logger.LogInformation("New attempt saved with problem ID {ProblemId} for user {UserId}, IsCorrect={IsCorrect}",
                         problem.Id, attemptDto.UserId, attemptDto.IsCorrect);
                 }
                 else
                 {
-                    // For attempts without a saved problem, we still record the attempt but store the problem details in a different way
+
                     await _mathProblemAttemptRepository.CreateAttemptWithoutProblemAsync(attempt, attemptDto.Statement);
                     _logger.LogInformation("New attempt saved without persistent problem for user {UserId}, IsCorrect={IsCorrect}",
                         attemptDto.UserId, attemptDto.IsCorrect);

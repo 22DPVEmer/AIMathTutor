@@ -293,13 +293,11 @@ export default {
       attemptSaved.value = false;
 
       try {
-        // Use the evaluate-direct endpoint for the math generator
         evaluation.value = await evaluateMathAnswer({
           problem: generatedProblem.value.statement,
           userAnswer: userAnswer.value,
         });
 
-        // Automatically show solution if answer is incorrect
         if (!evaluation.value.isCorrect) {
           solutionVisible.value = true;
         }
@@ -324,7 +322,6 @@ export default {
       isSaving.value = true;
 
       try {
-        // Create the save request
         const saveRequest = {
           statement: generatedProblem.value.statement,
           solution: generatedProblem.value.solution,
@@ -335,16 +332,12 @@ export default {
           topic: formData.value.topic,
         };
 
-        // Add topicId if using an existing topic
         if (topicSelectionType.value === "existing" && selectedTopicId.value) {
-          // Use Object.assign to add the topicId property
           Object.assign(saveRequest, {
             topicId: parseInt(selectedTopicId.value),
           });
         }
 
-        // This saves to UserMathProblems, which is separate from MathProblemAttempts
-        // used in the regular math section
         const result = await saveUserMathProblem(saveRequest);
 
         if (result) {

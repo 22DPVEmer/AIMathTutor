@@ -244,8 +244,6 @@ export default {
             ? problem.value.difficulty
             : getDifficultyLabel(problem.value.difficulty);
 
-        // Use the combined evaluate-and-save endpoint for regular math section problems
-        // This ensures attempts are properly tracked and saved in MathProblemAttempts
         const result = await evaluateAndSave({
           problem: problem.value.statement,
           userAnswer: userAnswer.value,
@@ -263,84 +261,27 @@ export default {
           feedback: result.feedback,
         };
 
-        // If the user already had a correct attempt, add a note to the feedback
         if (result.hasExistingCorrectAttempt) {
           evaluation.value.feedback +=
             "\n\nNote: You've already correctly solved this problem before.";
         }
 
-        // Automatically show solution if answer is incorrect
         if (!result.isCorrect) {
           solutionVisible.value = true;
         }
 
-        // Mark the problem as attempted regardless of correctness
         if (problem.value) {
           problem.value.attempted = true;
 
-          // If the answer is correct or there was an existing correct attempt,
-          // update the completed status and points earned
           if (result.isCorrect || result.hasExistingCorrectAttempt) {
             problem.value.completed = true;
             problem.value.pointsEarned = problem.value.pointValue || 1;
           }
         }
-
-        // If we received updated problems and attempts, we could update the UI here
-        // This would require state management, which is beyond the scope of this change
       } catch (error) {
         console.error("Error checking answer:", error);
 
-        // Fallback to the old approach if the combined endpoint fails
-        try {
-          console.log("Falling back to separate evaluate and save calls");
-
-          // First, evaluate the answer
-          evaluation.value = await evaluateMathAnswer({
-            problem: problem.value.statement,
-            userAnswer: userAnswer.value,
-          });
-
-          // Automatically show solution if answer is incorrect
-          if (!evaluation.value.isCorrect) {
-            solutionVisible.value = true;
-          }
-
-          // Mark the problem as attempted regardless of correctness
-          if (problem.value) {
-            problem.value.attempted = true;
-          }
-
-          // Save the attempt to create a MathProblemAttempt entity
-          if (problem.value.id) {
-            // Convert difficulty to string if it's a number
-            const difficultyStr =
-              typeof problem.value.difficulty === "string"
-                ? problem.value.difficulty
-                : getDifficultyLabel(problem.value.difficulty);
-
-            // If the answer is correct, update the completed status and points earned
-            if (evaluation.value.isCorrect) {
-              problem.value.completed = true;
-              problem.value.pointsEarned = problem.value.pointValue || 1;
-            }
-
-            await saveProblemAttempt({
-              name: problem.value.name || `${topicName.value} Problem`,
-              statement: problem.value.statement,
-              solution: problem.value.solution,
-              explanation: problem.value.explanation,
-              userAnswer: userAnswer.value,
-              isCorrect: evaluation.value.isCorrect,
-              difficulty: difficultyStr,
-              topic: topicName.value,
-              topicId: problem.value.topicId,
-            });
-          }
-        } catch (fallbackError) {
-          console.error("Fallback also failed:", fallbackError);
-          alert("Failed to check answer. Please try again.");
-        }
+        alert("Failed to check answer. Please try again.");
       } finally {
         isChecking.value = false;
       }

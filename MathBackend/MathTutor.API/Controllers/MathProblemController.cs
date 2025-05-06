@@ -397,9 +397,7 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                // Log the incoming request for debugging
-                Console.WriteLine($"Received evaluate-and-save request: Problem={request?.Problem?.Length ?? 0} chars, " +
-                                 $"UserAnswer={request?.UserAnswer?.Length ?? 0} chars");
+
 
                 if (request == null)
                 {
@@ -418,22 +416,19 @@ namespace MathTutor.API.Controllers
                     return Unauthorized("User not authenticated");
                 }
 
-                // Step 1: Evaluate the answer
+
                 EvaluateMathAnswerResponseDto evaluationResult;
 
                 // Special case handling for quadratic equations
                 if (IsQuadraticEquation(request.Problem))
                 {
-                    Console.WriteLine("Detected quadratic equation. Using special evaluation logic.");
                     var specialResult = EvaluateQuadraticEquation(request.Problem, request.UserAnswer);
                     if (specialResult != null)
                     {
-                        Console.WriteLine($"Used special quadratic equation evaluation. Result: isCorrect={specialResult.IsCorrect}");
                         evaluationResult = specialResult;
                     }
                     else
                     {
-                        Console.WriteLine("Special evaluation didn't produce a result, falling back to AI evaluation.");
                         string aiResponse = await _aiService.EvaluateAnswerAsync(request.Problem, request.UserAnswer);
 
                         if (string.IsNullOrEmpty(aiResponse))
@@ -470,32 +465,32 @@ namespace MathTutor.API.Controllers
                     evaluationResult = result;
                 }
 
-                // Step 2: Check if the user already has a correct attempt for this problem
+
                 bool hasExistingCorrectAttempt = false;
 
                 if (request.TopicId.HasValue && request.TopicId.Value > 0)
                 {
-                    // Get existing attempts for this user and topic
+
                     var attempts = await _mathProblemService.GetAttemptsByUserIdAsync(userId);
 
-                    // Check if any of the attempts for this problem are correct
+
                     if (attempts != null && attempts.Any())
                     {
-                        // Find the problem in the topic
+
                         var problems = await _mathProblemService.GetProblemsByTopicAsync(request.TopicId.Value);
                         var matchingProblem = problems.FirstOrDefault(p =>
                             p.Statement.Equals(request.Problem, StringComparison.OrdinalIgnoreCase));
 
                         if (matchingProblem != null)
                         {
-                            // Check if there's a correct attempt for this problem
+
                             hasExistingCorrectAttempt = attempts.Any(a =>
                                 a.ProblemId == matchingProblem.Id && a.IsCorrect);
                         }
                     }
                 }
 
-                // Create the attempt DTO
+
                 var attemptDto = new SaveProblemAttemptDto
                 {
                     UserId = userId,
@@ -510,10 +505,10 @@ namespace MathTutor.API.Controllers
                     TopicId = request.TopicId
                 };
 
-                // Save the attempt (the service will handle the logic of whether to actually save it)
+
                 var saveResult = await _mathProblemService.SaveProblemAttemptAsync(attemptDto);
 
-                // Step 3: Prepare the response
+
                 var response = new EvaluateAndSaveResponseDto
                 {
                     Success = saveResult,
@@ -522,16 +517,16 @@ namespace MathTutor.API.Controllers
                     HasExistingCorrectAttempt = hasExistingCorrectAttempt
                 };
 
-                // Step 4: If a topic was specified, get updated problems and attempts
+
                 if (saveResult && request.TopicId.HasValue)
                 {
-                    // Get updated problems for this topic to reflect the new attempt
+
                     var problems = await _mathProblemService.GetProblemsByTopicAsync(request.TopicId.Value);
 
-                    // Get user attempts for these problems
+
                     var attempts = await _mathProblemService.GetAttemptsByUserIdAsync(userId);
 
-                    // Add to the response
+
                     response.Problems = problems;
                     response.Attempts = attempts;
                 }
@@ -540,7 +535,7 @@ namespace MathTutor.API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in EvaluateAndSave: {ex.Message}");
+
                 return BadRequest(ex.Message);
             }
         }
