@@ -21,5 +21,27 @@ namespace MathTutor.Application.Interfaces
         Task<EvaluateMathAnswerResponseDto> EvaluateAnswerAsync(EvaluateMathAnswerRequestDto request);
         Task<bool> SaveProblemAttemptAsync(SaveProblemAttemptDto attemptDto);
         Task<IEnumerable<MathProblemAttemptModel>> GetAttemptsByUserIdAsync(string userId);
+
+        /// <summary>
+        /// Evaluates a math problem answer and saves the attempt
+        /// </summary>
+        /// <param name="request">The evaluation and save request</param>
+        /// <param name="userId">The ID of the user making the attempt</param>
+        /// <returns>The evaluation result with additional information</returns>
+        Task<EvaluateAndSaveResultDto> EvaluateAndSaveAsync(EvaluateAndSaveRequestDto request, string userId);
+
+        /// <summary>
+        /// Checks if a problem is a quadratic equation
+        /// </summary>
+        /// <param name="problem">The problem statement</param>
+        /// <returns>True if the problem is a quadratic equation</returns>
+        bool IsQuadraticEquation(string problem);
+
+        /// <summary>
+        /// Sanitizes an answer by removing whitespace and normalizing
+        /// </summary>
+        /// <param name="answer">The answer to sanitize</param>
+        /// <returns>The sanitized answer</returns>
+        string SanitizeAnswer(string answer);
     }
 }

@@ -2,12 +2,22 @@
   <div class="problem-view">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">{{ topicName }}</h2>
-      <button
-        @click="goBackToProblems"
-        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center"
-      >
-        <span class="mr-1">←</span> Back to Problems
-      </button>
+      <div class="flex gap-2">
+        <button
+          @click="goBackToProblems"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center"
+        >
+          <span class="mr-1">←</span> Back to Problems
+        </button>
+        <button
+          v-if="hasNextProblem"
+          @click="goToNextProblem"
+          @mousedown="console.log('Next button mousedown')"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center"
+        >
+          Next Problem <span class="ml-1"> →</span>
+        </button>
+      </div>
     </div>
 
     <!-- Loading Indicator -->
@@ -19,112 +29,162 @@
     </div>
 
     <!-- Problem Display -->
-    <div v-else-if="problem" class="bg-white shadow-md rounded-lg p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold">Problem</h3>
-        <span
-          class="px-3 py-1 rounded-full text-sm"
-          :class="getDifficultyClass(problem.difficulty)"
-        >
-          {{ getDifficultyLabel(problem.difficulty) }}
-        </span>
-      </div>
-
-      <div class="mb-6">
-        <h4 class="font-semibold mb-2">Problem Statement:</h4>
-        <div
-          class="p-4 bg-gray-50 rounded-md"
-          v-html="formattedStatement"
-        ></div>
-      </div>
-
-      <div class="mb-4">
-        <label for="answer" class="block mb-2 font-medium">Your Answer:</label>
-        <input
-          id="answer"
-          v-model="userAnswer"
-          class="w-full p-2 border rounded-md"
-          placeholder="Enter your answer here"
-        />
-      </div>
-
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button
-          @click="checkAnswer"
-          class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-          :disabled="!userAnswer || isChecking"
-        >
-          <span v-if="isChecking">Checking...</span>
-          <span v-else>Check Answer</span>
-        </button>
-      </div>
-
-      <div
-        v-if="evaluation"
-        class="mt-6 p-4 rounded-md"
-        :class="evaluation.isCorrect ? 'bg-green-50' : 'bg-red-50'"
-      >
-        <h4 class="font-semibold mb-2">Feedback:</h4>
-        <p>{{ evaluation.feedback }}</p>
-      </div>
-
-      <div v-if="solutionVisible" class="mt-6">
-        <h4 class="font-semibold mb-2">Solution:</h4>
-        <div class="p-4 bg-gray-50 rounded-md" v-html="formattedSolution"></div>
-
-        <h4 class="font-semibold mt-4 mb-2">Explanation:</h4>
-        <div
-          class="p-4 bg-gray-50 rounded-md"
-          v-html="formattedExplanation"
-        ></div>
-      </div>
-
-      <!-- Ask for Guidance section -->
-      <div v-if="evaluation" class="mt-6 border-t pt-6">
-        <h4 class="font-semibold mb-4">Need Additional Help?</h4>
-        <div class="mb-4">
-          <textarea
-            v-model="guidanceQuestion"
-            class="w-full p-3 border rounded-md"
-            rows="3"
-            placeholder="Ask a specific question about this problem or request additional guidance..."
-          ></textarea>
+    <div
+      v-else-if="problem"
+      class="bg-white shadow-md rounded-lg overflow-hidden"
+    >
+      <!-- Task/Assignment Header - Before Evaluation -->
+      <div v-if="!evaluation" class="bg-blue-600 text-white p-4 w-full">
+        <div class="flex justify-between items-center w-full">
+          <h3 class="text-xl font-bold">{{ problem.name }}</h3>
+          <span class="font-bold">{{ problem.pointValue || 1 }} p.</span>
         </div>
-        <div class="flex gap-2">
-          <button
-            @click="askForGuidance"
-            class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-            :disabled="!guidanceQuestion || isRequestingGuidance"
+      </div>
+
+      <!-- Results Header - After Evaluation -->
+      <div v-if="evaluation" class="bg-blue-600 text-white p-4 w-full">
+        <div class="flex justify-between items-center w-full">
+          <h3 class="text-xl font-bold">Results:</h3>
+          <span class="font-bold"
+            >{{ evaluation.pointsEarned }} / {{ evaluation.maxPoints }} p.</span
           >
-            <span v-if="isRequestingGuidance">Requesting...</span>
-            <span v-else>Ask for Guidance</span>
+        </div>
+      </div>
+
+      <!-- Results Details - After Evaluation -->
+      <div v-if="evaluation" class="border-b border-gray-300 p-4">
+        <div class="flex items-center">
+          <span v-if="evaluation.isCorrect" class="text-green-600 mr-2">✓</span>
+          <span v-else class="text-red-600 mr-2">✗</span>
+          <span class="font-medium">
+            {{
+              evaluation.isCorrect
+                ? "Problem solved correctly!"
+                : "Problem solved incorrectly, try again!"
+            }}
+          </span>
+        </div>
+        <div
+          v-if="evaluation.isCorrect"
+          class="flex items-center text-green-600 mt-2"
+        >
+          <span class="mr-1">✓</span>
+          <span>Maximum points earned</span>
+          <span class="ml-1 text-gray-400">ⓘ</span>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold">Problem</h3>
+          <span
+            class="px-3 py-1 rounded-full text-sm"
+            :class="getDifficultyClass(problem.difficulty)"
+          >
+            {{ getDifficultyLabel(problem.difficulty) }}
+          </span>
+        </div>
+
+        <div class="mb-6">
+          <div class="p-4 rounded-md" v-html="formattedStatement"></div>
+        </div>
+
+        <div class="mb-4">
+          <label for="answer" class="block mb-2 font-medium"
+            >Your Answer:</label
+          >
+          <input
+            id="answer"
+            v-model="userAnswer"
+            class="w-full p-2 border rounded-md"
+            placeholder="Enter your answer here"
+          />
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button
+            @click="checkAnswer"
+            class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+            :disabled="!userAnswer || isChecking"
+          >
+            <span v-if="isChecking">Checking...</span>
+            <span v-else>Check Answer</span>
           </button>
         </div>
 
-        <div v-if="guidance" class="mt-4 p-4 bg-blue-50 rounded-md">
-          <h5 class="font-semibold mb-2">Guidance:</h5>
-          <div v-html="formattedGuidance"></div>
+        <div
+          v-if="evaluation && evaluation.feedback"
+          class="mt-6 p-4 rounded-md"
+          :class="evaluation.isCorrect ? 'bg-green-50' : 'bg-red-50'"
+        >
+          <h4 class="font-semibold mb-2">Feedback:</h4>
+          <p>{{ evaluation.feedback }}</p>
+        </div>
+
+        <div v-if="solutionVisible" class="mt-6">
+          <div class="bg-green-600 text-white p-4 rounded-t-lg">
+            <h3 class="text-xl font-bold">Solution:</h3>
+          </div>
+          <div class="border border-t-0 border-gray-300 p-4 rounded-b-lg">
+            <div
+              class="p-4 bg-gray-50 rounded-md"
+              v-html="formattedSolution"
+            ></div>
+
+            <h4 class="font-semibold mt-4 mb-2">Explanation:</h4>
+            <div
+              class="p-4 bg-gray-50 rounded-md"
+              v-html="formattedExplanation"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Ask for Guidance section -->
+        <div v-if="evaluation" class="mt-6">
+          <div class="bg-green-600 text-white p-4 rounded-t-lg">
+            <h3 class="text-xl font-bold">Need Additional Help?</h3>
+          </div>
+          <div class="border border-t-0 border-gray-300 p-4 rounded-b-lg">
+            <div class="mb-4">
+              <textarea
+                v-model="guidanceQuestion"
+                class="w-full p-3 border rounded-md"
+                rows="3"
+                placeholder="Ask a specific question about this problem or request additional guidance..."
+              ></textarea>
+            </div>
+            <div class="flex gap-2">
+              <button
+                @click="askForGuidance"
+                class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                :disabled="!guidanceQuestion || isRequestingGuidance"
+              >
+                <span v-if="isRequestingGuidance">Requesting...</span>
+                <span v-else>Ask for Guidance</span>
+              </button>
+            </div>
+
+            <div v-if="guidance" class="mt-4 p-4 bg-blue-50 rounded-md">
+              <h5 class="font-semibold mb-2">Guidance:</h5>
+              <div v-html="formattedGuidance"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- No Problem Found Message -->
-    <div v-else class="text-center py-8 text-gray-500">
+    <div v-if="!loading && !problem" class="text-center py-8 text-gray-500">
       Problem not found. Please go back and select a different problem.
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { api } from "@/api/user";
-import {
-  evaluateMathAnswer,
-  saveProblemAttempt,
-  getGuidance,
-  evaluateAndSave,
-} from "@/api/math";
+import { getGuidance, evaluateAndSave } from "@/api/math";
 
 export default {
   name: "ProblemView",
@@ -141,6 +201,7 @@ export default {
 
   setup(props) {
     const router = useRouter();
+    const route = useRoute();
     const loading = ref(true);
     const problem = ref(null);
     const topicName = ref("");
@@ -151,6 +212,22 @@ export default {
     const guidanceQuestion = ref("");
     const guidance = ref(null);
     const isRequestingGuidance = ref(false);
+    const topicProblems = ref([]);
+    const currentProblemIndex = ref(-1);
+    const hasNextProblem = computed(() => {
+      const result =
+        currentProblemIndex.value >= 0 &&
+        currentProblemIndex.value < topicProblems.value.length - 1;
+      console.log(
+        "hasNextProblem:",
+        result,
+        "currentIndex:",
+        currentProblemIndex.value,
+        "total problems:",
+        topicProblems.value.length
+      );
+      return result;
+    });
 
     const formattedStatement = computed(() => {
       return problem.value?.statement.replace(/\n/g, "<br>");
@@ -168,12 +245,77 @@ export default {
       return guidance.value?.replace(/\n/g, "<br>");
     });
 
+    // Helper function to get difficulty value for sorting
+    function getDifficultyValue(difficulty) {
+      if (typeof difficulty === "string") {
+        switch (difficulty.toLowerCase()) {
+          case "easy":
+            return 1;
+          case "medium":
+            return 2;
+          case "hard":
+            return 3;
+          default:
+            return 0;
+        }
+      } else {
+        return difficulty || 0;
+      }
+    }
+
     async function fetchProblem() {
       loading.value = true;
+      // Reset user input and evaluation when loading a new problem
+      userAnswer.value = "";
+      evaluation.value = null;
+      solutionVisible.value = false;
+      guidance.value = null;
+      guidanceQuestion.value = "";
+
       try {
         // Fetch topic details to get the name
         const topicResponse = await api.get(`/mathtopic/${props.topicId}`);
         topicName.value = topicResponse.data.name;
+
+        // Fetch all problems for this topic
+        const problemsResponse = await api.get(
+          `/mathproblem/topic/${props.topicId}`
+        );
+        console.log("Problems fetched:", problemsResponse.data.length);
+
+        // Sort problems by difficulty
+        const sortedProblems = problemsResponse.data.sort((a, b) => {
+          return (
+            getDifficultyValue(a.difficulty) - getDifficultyValue(b.difficulty)
+          );
+        });
+        topicProblems.value = sortedProblems;
+        console.log(
+          "Problems sorted by difficulty:",
+          topicProblems.value.map((p) => ({
+            id: p.id,
+            difficulty: p.difficulty,
+          }))
+        );
+
+        // Debug problem ID types
+        topicProblems.value.forEach((p, i) => {
+          console.log(`Problem ${i}: id=${p.id} (${typeof p.id})`);
+        });
+        console.log(
+          `Current problemId from route: ${props.problemId} (${typeof props.problemId})`
+        );
+
+        // Find the index of the current problem in the list
+        currentProblemIndex.value = topicProblems.value.findIndex(
+          (p) => String(p.id) === String(props.problemId)
+        );
+        console.log(
+          "Current problem ID:",
+          props.problemId,
+          "Found at index:",
+          currentProblemIndex.value
+        );
 
         // Fetch the specific problem
         const response = await api.get(`/mathproblem/${props.problemId}`);
@@ -259,6 +401,8 @@ export default {
         evaluation.value = {
           isCorrect: result.isCorrect,
           feedback: result.feedback,
+          pointsEarned: result.isCorrect ? problem.value.pointValue || 1 : 0,
+          maxPoints: problem.value.pointValue || 1,
         };
 
         if (result.hasExistingCorrectAttempt) {
@@ -350,9 +494,55 @@ export default {
       });
     }
 
+    function goToNextProblem() {
+      console.log("goToNextProblem called");
+      console.log("hasNextProblem:", hasNextProblem.value);
+      console.log("currentProblemIndex:", currentProblemIndex.value);
+      console.log("topicProblems length:", topicProblems.value.length);
+
+      if (!hasNextProblem.value) {
+        console.log("No next problem available");
+        return;
+      }
+
+      const nextProblem = topicProblems.value[currentProblemIndex.value + 1];
+      console.log("Next problem:", nextProblem);
+
+      if (nextProblem) {
+        console.log("Navigating to next problem ID:", nextProblem.id);
+
+        // Force navigation with replacement to ensure a clean state
+        router.replace({
+          name: "ProblemView",
+          params: {
+            topicId: String(props.topicId),
+            problemId: String(nextProblem.id),
+          },
+        });
+      } else {
+        console.log("No next problem found, going back to problems list");
+        // If no next problem, go back to problems list
+        goBackToProblems();
+      }
+    }
+
     onMounted(() => {
+      console.log("Component mounted, fetching problem");
       fetchProblem();
     });
+
+    // Watch for route parameter changes to reload problem when navigating
+    watch(
+      () => route.params.problemId,
+      (newProblemId, oldProblemId) => {
+        if (newProblemId !== oldProblemId) {
+          console.log(
+            `Route changed: problemId changed from ${oldProblemId} to ${newProblemId}`
+          );
+          fetchProblem();
+        }
+      }
+    );
 
     return {
       loading,
@@ -375,6 +565,8 @@ export default {
       showSolution,
       askForGuidance,
       goBackToProblems,
+      goToNextProblem,
+      hasNextProblem,
     };
   },
 };

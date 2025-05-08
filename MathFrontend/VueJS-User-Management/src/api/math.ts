@@ -328,3 +328,24 @@ export const publishUserMathProblem = async (id: number): Promise<any> => {
     throw error;
   }
 };
+
+export const updateMathProblem = async (
+  id: number,
+  problemData: {
+    name?: string;
+    statement?: string;
+    solution?: string;
+    explanation?: string;
+    difficulty?: string | number;
+    topicId?: number;
+    pointValue?: number;
+  }
+): Promise<any> => {
+  try {
+    const response = await api.put(`/MathProblem/${id}`, problemData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating math problem ${id}:`, error);
+    throw error;
+  }
+};

@@ -22,6 +22,12 @@ namespace MathTutor.Application.Services
         private readonly MathKernelService _mathKernelService;
         private readonly IMapper _mapper;
         private readonly ILogger<MathProblemService> _logger;
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+            ReadCommentHandling = JsonCommentHandling.Skip
+        };
 
         public MathProblemService(
             IMathProblemRepository mathProblemRepository,
@@ -105,20 +111,14 @@ namespace MathTutor.Application.Services
 
                 _logger.LogDebug("Raw AI Response: {Response}", aiResponse);
 
-                // Define serializer options with more permissive settings
-                var jsonOptions = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip
-                };
+                // Use the shared JsonSerializerOptions
 
                 GeneratedMathProblemResponseDto generatedProblem = null;
 
                 try
                 {
                     // Try to deserialize the response
-                    generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(aiResponse, jsonOptions);
+                    generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(aiResponse, _jsonOptions);
                     _logger.LogDebug("Deserialized problem: {Problem}", JsonSerializer.Serialize(generatedProblem));
                 }
                 catch (JsonException ex)
@@ -136,7 +136,7 @@ namespace MathTutor.Application.Services
                         _logger.LogDebug("Extracted JSON part: {JsonPart}", jsonPart);
 
                         try {
-                            generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(jsonPart, jsonOptions);
+                            generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(jsonPart, _jsonOptions);
                         }
                         catch (JsonException innerEx) {
                             _logger.LogWarning(innerEx, "Fallback parsing also failed");
@@ -253,7 +253,7 @@ namespace MathTutor.Application.Services
                                  c == 'y' || c == 'z' || c == '=');
         }
 
-        private string NormalizeAnswer(string answer)
+        public string SanitizeAnswer(string answer)
         {
             if (string.IsNullOrWhiteSpace(answer))
                 return string.Empty;
@@ -267,6 +267,12 @@ namespace MathTutor.Application.Services
                 .Replace("~", "")
                 .Replace("pi", "π")
                 .Replace("sqrt", "√");
+        }
+
+        // Kept for backward compatibility
+        private string NormalizeAnswer(string answer)
+        {
+            return SanitizeAnswer(answer);
         }
 
         private string MapDifficultyToString(string difficulty)
@@ -316,6 +322,307 @@ namespace MathTutor.Application.Services
             }
         }
 
+        public bool IsQuadraticEquation(string problem)
+        {
+            // Normalize the problem text using our SanitizeAnswer method
+            string normalizedProblem = SanitizeAnswer(problem);
+
+            // Check for common quadratic equation patterns
+            return normalizedProblem.Contains("x²") ||
+                   normalizedProblem.Contains("x^2") ||
+                   (normalizedProblem.Contains("quadratic") && normalizedProblem.Contains("equation")) ||
+                   (normalizedProblem.Contains("solve") &&
+                    (normalizedProblem.Contains("x²") || normalizedProblem.Contains("x^2")));
+        }
+
+        private EvaluateMathAnswerResponseDto? EvaluateQuadraticEquation(string problem, string userAnswer)
+        {
+            try
+            {
+                _logger.LogDebug("Evaluating quadratic equation answer: Problem={Problem}, UserAnswer={UserAnswer}", problem, userAnswer);
+
+                // Normalize the user answer using our SanitizeAnswer method
+                string normalizedAnswer = SanitizeAnswer(userAnswer);
+
+                // Extract numbers from the answer
+                var numbers = ExtractNumbersFromAnswer(normalizedAnswer);
+
+                if (numbers.Count == 0)
+                {
+                    _logger.LogDebug("No numbers found in answer, falling back to AI evaluation");
+                    return null; // Fall back to AI evaluation
+                }
+
+                // Check if the answer contains any of the expected solutions
+                if (problem.Contains("x² - 9 = 0") || problem.Contains("x^2 - 9 = 0"))
+                {
+                    // The solutions are x = 3 or x = -3
+                    if (numbers.Contains(3) || numbers.Contains(-3))
+                    {
+                        string feedback = numbers.Contains(3) && numbers.Contains(-3)
+                            ? "Correct! The solutions are x = 3 and x = -3."
+                            : numbers.Contains(3)
+                                ? "Correct! x = 3 is one of the solutions. The other solution is x = -3."
+                                : "Correct! x = -3 is one of the solutions. The other solution is x = 3.";
+
+                        return new EvaluateMathAnswerResponseDto
+                        {
+                            IsCorrect = true,
+                            Feedback = feedback
+                        };
+                    }
+                }
+
+                // Add more special cases for common quadratic equations here
+
+                // If we couldn't determine the answer with our special logic, fall back to AI
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in quadratic equation evaluation");
+                return null; // Fall back to AI evaluation
+            }
+        }
+
+        // Extract numbers from an answer string
+        private static List<int> ExtractNumbersFromAnswer(string answer)
+        {
+            var result = new List<int>();
+            var numberStrings = System.Text.RegularExpressions.Regex.Matches(answer, @"-?\d+");
+
+            foreach (System.Text.RegularExpressions.Match match in numberStrings)
+            {
+                if (int.TryParse(match.Value, out int number))
+                {
+                    result.Add(number);
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<EvaluateAndSaveResultDto> EvaluateAndSaveAsync(EvaluateAndSaveRequestDto request, string userId)
+        {
+            try
+            {
+                _logger.LogInformation("Evaluating and saving math problem for user {UserId}", userId);
+
+                // Sanitize user answer and solution by removing whitespace and normalizing
+                string sanitizedUserAnswer = SanitizeAnswer(request.UserAnswer);
+                string sanitizedSolution = string.IsNullOrWhiteSpace(request.Solution) ? string.Empty : SanitizeAnswer(request.Solution);
+
+                EvaluateMathAnswerResponseDto evaluationResult;
+
+                // If we have a solution, first try direct comparison with sanitized strings
+                // This will be our ground truth for correctness
+                bool isActuallyCorrect = false;
+                if (!string.IsNullOrWhiteSpace(sanitizedSolution) && !string.IsNullOrWhiteSpace(sanitizedUserAnswer))
+                {
+                    // Check if the answer contains the correct number
+                    bool containsCorrectNumber = false;
+
+                    // Try to extract numbers from both the solution and user answer
+                    var solutionNumbers = ExtractNumbersFromAnswer(sanitizedSolution);
+                    var userNumbers = ExtractNumbersFromAnswer(sanitizedUserAnswer);
+
+                    // Check if any of the user's numbers match any of the solution numbers
+                    if (solutionNumbers.Count > 0 && userNumbers.Count > 0)
+                    {
+                        containsCorrectNumber = solutionNumbers.Intersect(userNumbers).Any();
+                    }
+
+                    // Check for exact match
+                    bool isDirectMatch = sanitizedUserAnswer.Equals(sanitizedSolution, StringComparison.OrdinalIgnoreCase);
+
+                    // Set the actual correctness based on direct match or containing the correct number
+                    isActuallyCorrect = isDirectMatch || containsCorrectNumber;
+
+                    if (isDirectMatch)
+                    {
+                        _logger.LogInformation("Direct match found between sanitized user answer and solution");
+                        evaluationResult = new EvaluateMathAnswerResponseDto
+                        {
+                            IsCorrect = true,
+                            Feedback = "Correct! " + (string.IsNullOrWhiteSpace(request.Explanation) ?
+                                "Your answer matches the expected solution." : request.Explanation)
+                        };
+
+                        // Skip other evaluation methods
+                        goto SaveAttempt;
+                    }
+                    else if (containsCorrectNumber)
+                    {
+                        _logger.LogInformation("User answer contains the correct number but not exact match");
+                        evaluationResult = new EvaluateMathAnswerResponseDto
+                        {
+                            IsCorrect = true,
+                            Feedback = "Correct! The answer is " + sanitizedSolution + ". " +
+                                (string.IsNullOrWhiteSpace(request.Explanation) ?
+                                    "Your answer contains the correct value." : request.Explanation)
+                        };
+
+                        // Skip other evaluation methods
+                        goto SaveAttempt;
+                    }
+                }
+
+                // Special case handling for quadratic equations
+                if (IsQuadraticEquation(request.Problem))
+                {
+                    var specialResult = EvaluateQuadraticEquation(request.Problem, request.UserAnswer);
+                    if (specialResult != null)
+                    {
+                        evaluationResult = specialResult;
+                    }
+                    else
+                    {
+                        string aiResponse = await _aiService.EvaluateAnswerAsync(request.Problem, request.UserAnswer);
+
+                        if (string.IsNullOrEmpty(aiResponse))
+                        {
+                            throw new InvalidOperationException("Failed to get a valid response from the AI service");
+                        }
+
+                        try
+                        {
+                            // Parse the AI response using the shared JsonSerializerOptions
+                            var aiEvaluation = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse, _jsonOptions)
+                                ?? throw new InvalidOperationException("Failed to parse the AI evaluation response");
+
+                            // Override the AI's correctness determination with our ground truth if we have a solution
+                            if (!string.IsNullOrWhiteSpace(sanitizedSolution))
+                            {
+                                // Keep the AI's feedback but use our correctness determination
+                                evaluationResult = new EvaluateMathAnswerResponseDto
+                                {
+                                    IsCorrect = isActuallyCorrect,
+                                    Feedback = isActuallyCorrect
+                                        ? "Correct! The answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
+                                        : "Incorrect. The correct answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
+                                };
+                            }
+                            else
+                            {
+                                // If we don't have a solution, trust the AI's evaluation
+                                evaluationResult = aiEvaluation;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error parsing AI response");
+                            throw new InvalidOperationException("Failed to parse the AI evaluation response");
+                        }
+                    }
+                }
+                else
+                {
+                    string aiResponse = await _aiService.EvaluateAnswerAsync(request.Problem, request.UserAnswer);
+
+                    if (string.IsNullOrEmpty(aiResponse))
+                    {
+                        throw new InvalidOperationException("Failed to get a valid response from the AI service");
+                    }
+
+                    try
+                    {
+                        // Parse the AI response using the shared JsonSerializerOptions
+                        var aiEvaluation = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse, _jsonOptions)
+                            ?? throw new InvalidOperationException("Failed to parse the AI evaluation response");
+
+                        // Override the AI's correctness determination with our ground truth if we have a solution
+                        if (!string.IsNullOrWhiteSpace(sanitizedSolution))
+                        {
+                            // Keep the AI's feedback but use our correctness determination
+                            evaluationResult = new EvaluateMathAnswerResponseDto
+                            {
+                                IsCorrect = isActuallyCorrect,
+                                Feedback = isActuallyCorrect
+                                    ? "Correct! The answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
+                                    : "Incorrect. The correct answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
+                            };
+                        }
+                        else
+                        {
+                            // If we don't have a solution, trust the AI's evaluation
+                            evaluationResult = aiEvaluation;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error parsing AI response");
+                        throw new InvalidOperationException("Failed to parse the AI evaluation response");
+                    }
+                }
+
+                SaveAttempt:
+
+                // Check if the user already has a correct attempt for this problem
+                bool hasExistingCorrectAttempt = false;
+
+                if (request.TopicId.HasValue && request.TopicId.Value > 0)
+                {
+                    var attempts = await GetAttemptsByUserIdAsync(userId);
+
+                    if (attempts.Any())
+                    {
+                        var problems = await GetProblemsByTopicAsync(request.TopicId.Value);
+                        var matchingProblem = problems.FirstOrDefault(p =>
+                            p.Statement.Equals(request.Problem, StringComparison.OrdinalIgnoreCase));
+
+                        if (matchingProblem != null)
+                        {
+                            hasExistingCorrectAttempt = attempts.Any(a =>
+                                a.ProblemId == matchingProblem.Id && a.IsCorrect);
+                        }
+                    }
+                }
+
+                // Create and save the attempt
+                var attemptDto = new SaveProblemAttemptDto
+                {
+                    UserId = userId,
+                    Name = request.Name,
+                    Statement = request.Problem,
+                    Solution = request.Solution,
+                    Explanation = request.Explanation,
+                    UserAnswer = request.UserAnswer, // Keep original answer for display purposes
+                    IsCorrect = evaluationResult.IsCorrect,
+                    Difficulty = request.Difficulty,
+                    Topic = request.Topic,
+                    TopicId = request.TopicId
+                };
+
+                var saveResult = await SaveProblemAttemptAsync(attemptDto);
+
+                // Create the response
+                var response = new EvaluateAndSaveResultDto
+                {
+                    Success = saveResult,
+                    IsCorrect = evaluationResult.IsCorrect,
+                    Feedback = evaluationResult.Feedback,
+                    HasExistingCorrectAttempt = hasExistingCorrectAttempt
+                };
+
+                // If the save was successful and we have a topic ID, get updated problems and attempts
+                if (saveResult && request.TopicId.HasValue)
+                {
+                    var problems = await GetProblemsByTopicAsync(request.TopicId.Value);
+                    var attempts = await GetAttemptsByUserIdAsync(userId);
+
+                    response.Problems = problems;
+                    response.Attempts = attempts;
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error evaluating and saving math problem");
+                throw;
+            }
+        }
+
         public async Task<bool> SaveProblemAttemptAsync(SaveProblemAttemptDto attemptDto)
         {
             try
@@ -323,7 +630,7 @@ namespace MathTutor.Application.Services
                 _logger.LogInformation("Saving problem attempt for user {UserId}", attemptDto.UserId);
 
                 // Find or create a MathProblem entity
-                MathProblem problem = null;
+                MathProblem? problem = null;
 
                 // If a topicId is provided, we'll try to find the existing problem or create a new one
                 if (attemptDto.TopicId.HasValue && attemptDto.TopicId.Value > 0)
@@ -354,6 +661,8 @@ namespace MathTutor.Application.Services
 
                     if (hasCorrectAttempt)
                     {
+                        // If the current attempt is correct, we don't need to save it
+                        // If it's incorrect, we still don't save it, but we want to preserve the user's points
                         _logger.LogInformation("User {UserId} already has a correct attempt for problem {ProblemId} - not saving new attempt",
                             attemptDto.UserId, problem.Id);
 
@@ -382,9 +691,10 @@ namespace MathTutor.Application.Services
 
                     if (hasCorrectAttempt)
                     {
+                        // If the current attempt is correct, we don't need to save it
+                        // If it's incorrect, we still don't save it, but we want to preserve the user's points
                         _logger.LogInformation("User {UserId} already has a correct attempt for this non-persistent problem - not saving new attempt",
                             attemptDto.UserId);
-
 
                         return true;
                     }

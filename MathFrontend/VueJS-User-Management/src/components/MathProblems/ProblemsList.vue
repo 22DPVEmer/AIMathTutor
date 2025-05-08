@@ -21,9 +21,7 @@
     <!-- Problems List -->
     <div v-else>
       <div v-if="problems.length > 0">
-        <h3 class="font-bold mb-4">
-          Available Problems for {{ topicName }}
-        </h3>
+        <h3 class="font-bold mb-4">Available Problems for {{ topicName }}</h3>
 
         <div class="overflow-x-auto">
           <table class="min-w-full bg-white rounded-lg overflow-hidden">
@@ -82,12 +80,21 @@
                   </span>
                 </td>
                 <td class="py-3 px-4">
-                  <button
-                    @click="solveProblem(problem)"
-                    class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs"
-                  >
-                    Solve
-                  </button>
+                  <div class="flex space-x-2">
+                    <button
+                      @click="solveProblem(problem)"
+                      class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs"
+                    >
+                      Solve
+                    </button>
+                    <button
+                      v-if="isTeacherOrAdmin"
+                      @click="editProblem(problem)"
+                      class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -98,28 +105,77 @@
         No problems available for this topic.
       </div>
     </div>
+
+    <!-- Edit Problem Dialog -->
+    <EditMathProblem
+      v-model:show="editingProblem"
+      :problem="editedProblem"
+      :topics="topics"
+      :is-teacher-or-admin="isTeacherOrAdmin"
+      :is-published-problem="true"
+      @problem-saved="handleProblemSaved"
+      @cancel="cancelEdit"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/api/user";
+import { useStore } from "@/store";
+import EditMathProblem from "@/components/EditMathProblem.vue";
+import { getAllTopics, updateMathProblem } from "@/api/math";
 
 export default {
   name: "ProblemsList",
+  components: {
+    EditMathProblem,
+  },
   props: {
     topicId: {
       type: [Number, String],
-      required: true
-    }
+      required: true,
+    },
   },
 
   setup(props) {
     const router = useRouter();
+    const store = useStore();
     const loading = ref(true);
     const problems = ref([]);
     const topicName = ref("");
+    const topics = ref([]);
+    const editingProblem = ref(false);
+    const editedProblem = ref({});
+
+    // Check if user is teacher or admin
+    const isTeacherOrAdmin = computed(() => {
+      const userData = store.getters["user/userData"];
+      return (
+        userData &&
+        userData.roles &&
+        (userData.roles.includes("Teacher") || userData.roles.includes("Admin"))
+      );
+    });
+
+    // Helper function to get difficulty value for sorting
+    function getDifficultyValue(difficulty) {
+      if (typeof difficulty === "string") {
+        switch (difficulty.toLowerCase()) {
+          case "easy":
+            return 1;
+          case "medium":
+            return 2;
+          case "hard":
+            return 3;
+          default:
+            return 0;
+        }
+      } else {
+        return difficulty || 0;
+      }
+    }
 
     async function fetchProblems() {
       loading.value = true;
@@ -130,7 +186,16 @@ export default {
 
         // Fetch problems for this topic
         const response = await api.get(`/mathproblem/topic/${props.topicId}`);
-        problems.value = response.data;
+        let fetchedProblems = response.data;
+
+        // Sort problems by difficulty (easy → medium → hard)
+        fetchedProblems.sort((a, b) => {
+          return (
+            getDifficultyValue(a.difficulty) - getDifficultyValue(b.difficulty)
+          );
+        });
+
+        problems.value = fetchedProblems;
 
         try {
           // Check if user is logged in before trying to fetch attempts
@@ -339,11 +404,11 @@ export default {
 
     function solveProblem(problem) {
       router.push({
-        name: 'ProblemView',
+        name: "ProblemView",
         params: {
           topicId: props.topicId,
-          problemId: problem.id
-        }
+          problemId: problem.id,
+        },
       });
     }
 
@@ -356,21 +421,92 @@ export default {
         if (topic.parentTopicId) {
           // If it has a parent, go back to the subtopics view
           router.push({
-            name: 'SubtopicsList',
-            params: { parentId: topic.parentTopicId }
+            name: "SubtopicsList",
+            params: { parentId: topic.parentTopicId },
           });
         } else {
           // If it's a parent topic, go back to the main topics list
-          router.push({ name: 'TopicsList' });
+          router.push({ name: "TopicsList" });
         }
       } catch (error) {
         console.error("Error fetching topic details:", error);
         // Fallback to main topics list if there's an error
-        router.push({ name: 'TopicsList' });
+        router.push({ name: "TopicsList" });
       }
     }
 
-    onMounted(() => {
+    // Edit problem functions
+    const editProblem = (problem) => {
+      // Fetch topics if not already loaded
+      if (topics.value.length === 0) {
+        fetchTopics();
+      }
+
+      // Convert the problem to the format expected by EditMathProblem
+      editedProblem.value = {
+        id: problem.id,
+        statement: problem.statement,
+        solution: problem.solution,
+        explanation: problem.explanation,
+        difficulty: problem.difficulty,
+        topicId: problem.topicId,
+        topicName: problem.topicName,
+        pointValue: problem.pointValue || 1,
+      };
+
+      editingProblem.value = true;
+    };
+
+    const cancelEdit = () => {
+      editingProblem.value = false;
+      editedProblem.value = {};
+    };
+
+    const handleProblemSaved = async (savedProblem) => {
+      try {
+        // Convert to the format expected by the API
+        const updateData = {
+          name: savedProblem.name || savedProblem.topicName + " Problem",
+          statement: savedProblem.statement,
+          solution: savedProblem.solution,
+          explanation: savedProblem.explanation,
+          difficulty: savedProblem.difficulty,
+          topicId: savedProblem.topicId,
+          pointValue: savedProblem.pointValue || 1,
+        };
+
+        // Update the problem in the database
+        await updateMathProblem(savedProblem.id, updateData);
+
+        // Refresh the problems list
+        fetchProblems();
+
+        // Close the edit dialog
+        editingProblem.value = false;
+      } catch (error) {
+        console.error("Error saving problem:", error);
+        alert("Failed to save changes. Please try again.");
+      }
+    };
+
+    // Fetch all topics for the edit form
+    const fetchTopics = async () => {
+      try {
+        topics.value = await getAllTopics();
+      } catch (error) {
+        console.error("Error fetching topics:", error);
+        topics.value = [];
+      }
+    };
+
+    onMounted(async () => {
+      // Make sure user profile is loaded to check roles
+      try {
+        await store.dispatch("user/getUserProfile");
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+
       fetchProblems();
     });
 
@@ -381,7 +517,14 @@ export default {
       getDifficultyClass,
       getDifficultyLabel,
       solveProblem,
-      goBackToTopics
+      goBackToTopics,
+      isTeacherOrAdmin,
+      editProblem,
+      editingProblem,
+      editedProblem,
+      cancelEdit,
+      handleProblemSaved,
+      topics,
     };
   },
 };

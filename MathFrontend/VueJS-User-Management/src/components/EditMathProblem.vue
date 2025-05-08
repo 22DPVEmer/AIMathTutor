@@ -9,10 +9,7 @@
       <div class="p-6">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold">Edit Math Problem</h2>
-          <button
-            @click="cancel"
-            class="text-gray-500 hover:text-gray-700"
-          >
+          <button @click="cancel" class="text-gray-500 hover:text-gray-700">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-6 w-6"
@@ -32,9 +29,7 @@
 
         <div class="grid grid-cols-1 gap-6">
           <div>
-            <label for="topicName" class="block mb-2 font-medium"
-              >Topic</label
-            >
+            <label for="topicName" class="block mb-2 font-medium">Topic</label>
             <div class="flex gap-2">
               <select
                 id="topicName"
@@ -122,7 +117,8 @@
             ></textarea>
           </div>
 
-          <div>
+          <!-- Only show Correct? for user math problems, not published problems -->
+          <div v-if="!isPublished">
             <label class="block mb-2 font-medium">Correct?</label>
             <div class="flex gap-4">
               <label class="inline-flex items-center">
@@ -148,17 +144,15 @@
         </div>
 
         <div class="flex justify-between gap-2 mt-6">
-          <!-- Publish button for teachers -->
-          <div v-if="isTeacherOrAdmin">
+          <!-- Publish button for teachers (only for user math problems, not published problems) -->
+          <div v-if="isTeacherOrAdmin && !isPublished">
             <div class="flex gap-2">
               <button
                 @click="publish"
                 class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 :disabled="isPublishing || isSaving"
               >
-                {{
-                  isPublishing ? "Publishing..." : "Publish as Math Problem"
-                }}
+                {{ isPublishing ? "Publishing..." : "Publish as Math Problem" }}
               </button>
             </div>
           </div>
@@ -187,27 +181,36 @@
 
 <script>
 import { ref, computed, watch } from "vue";
-import { updateUserMathProblem, publishUserMathProblem } from "@/api/math";
+import {
+  updateUserMathProblem,
+  publishUserMathProblem,
+  updateMathProblem,
+} from "@/api/math";
 
 export default {
   name: "EditMathProblem",
   props: {
     show: {
       type: Boolean,
-      default: false
+      default: false,
     },
     problem: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     topics: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     isTeacherOrAdmin: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
+    // Flag to indicate if this is a published math problem (vs user math problem)
+    isPublishedProblem: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ["update:show", "problem-saved", "problem-published", "cancel"],
   setup(props, { emit }) {
@@ -215,12 +218,21 @@ export default {
     const isSaving = ref(false);
     const isPublishing = ref(false);
 
+    // Computed property to determine if this is a published problem
+    const isPublished = computed(() => {
+      return props.isPublishedProblem || false;
+    });
+
     // Watch for changes in the problem prop to update the local copy
-    watch(() => props.problem, (newProblem) => {
-      if (newProblem && Object.keys(newProblem).length > 0) {
-        editedProblem.value = { ...newProblem };
-      }
-    }, { immediate: true, deep: true });
+    watch(
+      () => props.problem,
+      (newProblem) => {
+        if (newProblem && Object.keys(newProblem).length > 0) {
+          editedProblem.value = { ...newProblem };
+        }
+      },
+      { immediate: true, deep: true }
+    );
 
     const cancel = () => {
       emit("update:show", false);
@@ -231,17 +243,35 @@ export default {
       isSaving.value = true;
 
       try {
-        await updateUserMathProblem(
-          editedProblem.value.id,
-          editedProblem.value
-        );
-
         // Update topic name based on selected topic ID
         const selectedTopic = props.topics.find(
           (t) => t.id === editedProblem.value.topicId
         );
         if (selectedTopic) {
           editedProblem.value.topicName = selectedTopic.name;
+        }
+
+        if (isPublished.value) {
+          // For published math problems, use the updateMathProblem API
+          const updateData = {
+            name:
+              editedProblem.value.name ||
+              editedProblem.value.topicName + " Problem",
+            statement: editedProblem.value.statement,
+            solution: editedProblem.value.solution,
+            explanation: editedProblem.value.explanation,
+            difficulty: editedProblem.value.difficulty,
+            topicId: editedProblem.value.topicId,
+            pointValue: editedProblem.value.pointValue || 1,
+          };
+
+          await updateMathProblem(editedProblem.value.id, updateData);
+        } else {
+          // For user math problems, use the updateUserMathProblem API
+          await updateUserMathProblem(
+            editedProblem.value.id,
+            editedProblem.value
+          );
         }
 
         emit("problem-saved", editedProblem.value);
@@ -301,10 +331,11 @@ export default {
       editedProblem,
       isSaving,
       isPublishing,
+      isPublished,
       cancel,
       save,
-      publish
+      publish,
     };
-  }
+  },
 };
 </script>
