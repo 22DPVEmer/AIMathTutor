@@ -321,7 +321,15 @@ export const getTopicCompletion = async (): Promise<TopicCompletionDto[]> => {
 
 export const publishUserMathProblem = async (id: number): Promise<any> => {
   try {
-    const response = await api.post(`/UserMathProblem/publish/${id}`);
+    // Get the name from localStorage if available
+    const savedName = localStorage.getItem(`userMathProblem_${id}_name`);
+
+    // If we have a saved name, pass it as a query parameter
+    const url = savedName
+      ? `UserMathProblem/publish/${id}?name=${encodeURIComponent(savedName)}`
+      : `UserMathProblem/publish/${id}`;
+
+    const response = await api.post(url);
     return response.data;
   } catch (error) {
     console.error(`Error publishing user math problem ${id}:`, error);

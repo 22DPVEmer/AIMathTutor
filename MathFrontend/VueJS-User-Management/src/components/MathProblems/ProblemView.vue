@@ -110,6 +110,33 @@
             <span v-if="isChecking">Checking...</span>
             <span v-else>Check Answer</span>
           </button>
+
+          <button
+            v-if="evaluation || solutionVisible"
+            @click="showSolution"
+            class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 flex items-center"
+          >
+            <span>{{
+              solutionVisible ? "Hide Solution" : "Show Solution"
+            }}</span>
+            <svg
+              class="ml-1"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline
+                points="6 9 12 15 18 9"
+                v-if="!solutionVisible"
+              ></polyline>
+              <polyline points="18 15 12 9 6 15" v-else></polyline>
+            </svg>
+          </button>
         </div>
 
         <div
@@ -432,7 +459,8 @@ export default {
     }
 
     function showSolution() {
-      solutionVisible.value = true;
+      // Toggle solution visibility
+      solutionVisible.value = !solutionVisible.value;
     }
 
     async function askForGuidance() {

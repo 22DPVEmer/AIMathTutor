@@ -113,7 +113,10 @@
           </div>
         </div>
 
-        <h3 class="text-lg font-bold mt-2 mb-1">{{ problem.topicName }}</h3>
+        <h3 class="text-lg font-bold mt-2 mb-1">
+          {{ getProblemName(problem) }}
+        </h3>
+        <div class="text-sm text-gray-600 mb-2">{{ problem.topicName }}</div>
         <div
           class="mb-4 p-4 bg-gray-50 rounded-md"
           v-html="formatText(problem.statement)"
@@ -121,22 +124,25 @@
 
         <div class="mb-4">
           <div class="flex items-center">
-            <span class="font-semibold mr-2">Your Answer:</span>
+            <span class="font-semibold mr-2">Your Previous Answer:</span>
             <span>{{ problem.userAnswer }}</span>
           </div>
 
-          <div class="flex items-center mt-2">
-            <span class="font-semibold mr-2">Correct Solution:</span>
-            <span>{{ problem.solution }}</span>
-          </div>
-        </div>
+          <!-- Only show solution and explanation if the answer is correct -->
+          <div v-if="problem.isCorrect" class="mt-4">
+            <div class="flex items-center mt-2">
+              <span class="font-semibold mr-2">Correct Solution:</span>
+              <span>{{ problem.solution }}</span>
+            </div>
 
-        <div class="mb-4">
-          <h4 class="font-semibold mb-2">Explanation:</h4>
-          <div
-            class="p-4 bg-gray-50 rounded-md"
-            v-html="formatText(problem.explanation)"
-          ></div>
+            <div class="mt-4">
+              <h4 class="font-semibold mb-2">Explanation:</h4>
+              <div
+                class="p-4 bg-gray-50 rounded-md"
+                v-html="formatText(problem.explanation)"
+              ></div>
+            </div>
+          </div>
         </div>
 
         <!-- Retry section for incorrect answers -->
@@ -149,30 +155,46 @@
             Retry This Problem
           </button>
 
-          <div v-else class="border-t pt-4 mt-4">
-            <h4 class="font-semibold mb-3">Try Again:</h4>
+          <div v-else class="mt-4 p-6 bg-white shadow-md rounded-lg">
+            <div
+              class="problem-header flex justify-between items-center mb-4 pb-2 border-b"
+            >
+              <h3 class="font-bold text-xl">Retry Problem</h3>
+              <span
+                class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold"
+              >
+                {{ problem.difficulty }}
+              </span>
+            </div>
+
             <div class="mb-4">
+              <label
+                for="retryAnswer"
+                class="block mb-2 font-medium text-gray-700"
+                >Your Answer:</label
+              >
               <input
+                id="retryAnswer"
                 v-model="problem.retryAnswer"
-                class="w-full p-2 border rounded-md"
-                placeholder="Enter your new answer"
+                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your answer here"
                 @keyup.enter="submitRetry(problem)"
               />
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-3">
               <button
                 @click="submitRetry(problem)"
-                class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+                class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
                 :disabled="!problem.retryAnswer || problem.isSubmitting"
               >
-                <span v-if="problem.isSubmitting">Submitting...</span>
-                <span v-else>Submit</span>
+                <span v-if="problem.isSubmitting">Checking...</span>
+                <span v-else>Check Answer</span>
               </button>
 
               <button
                 @click="cancelRetry(problem)"
-                class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+                class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
                 :disabled="problem.isSubmitting"
               >
                 Cancel
@@ -181,7 +203,7 @@
 
             <div
               v-if="problem.feedback"
-              class="mt-4 p-4 rounded-md"
+              class="mt-6 p-4 rounded-md"
               :class="{
                 'bg-green-50': problem.isCorrect === true,
                 'bg-red-50': problem.isCorrect === false,
@@ -190,6 +212,24 @@
             >
               <h4 class="font-semibold mb-2">Feedback:</h4>
               <p>{{ problem.feedback }}</p>
+            </div>
+
+            <!-- Show solution only if the retry was correct -->
+            <div v-if="problem.isCorrect" class="mt-6 solution-content">
+              <div class="bg-green-600 text-white p-4 rounded-t-lg">
+                <h3 class="text-xl font-bold">Solution:</h3>
+              </div>
+              <div class="border border-t-0 border-gray-300 p-4 rounded-b-lg">
+                <div class="p-4 bg-gray-50 rounded-md">
+                  {{ problem.solution }}
+                </div>
+
+                <h4 class="font-semibold mt-4 mb-2">Explanation:</h4>
+                <div
+                  class="p-4 bg-gray-50 rounded-md"
+                  v-html="formatText(problem.explanation)"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -265,6 +305,8 @@ export default {
             retryAnswer: "",
             isSubmitting: false,
             feedback: "",
+            // Initialize solutionVisible based on whether the answer is correct
+            solutionVisible: problem.isCorrect,
           }));
         } else {
           console.error("Unexpected data format:", data);
@@ -298,6 +340,11 @@ export default {
                 retryAnswer: existingProblem.retryAnswer || "",
                 isSubmitting: false,
                 feedback: existingProblem.feedback || "",
+                // Preserve solutionVisible state if it exists, otherwise set based on correctness
+                solutionVisible:
+                  existingProblem.solutionVisible !== undefined
+                    ? existingProblem.solutionVisible
+                    : newProblem.isCorrect,
               };
             }
             return {
@@ -306,6 +353,8 @@ export default {
               retryAnswer: "",
               isSubmitting: false,
               feedback: "",
+              // Initialize solutionVisible based on whether the answer is correct
+              solutionVisible: newProblem.isCorrect,
             };
           });
         } else {
@@ -382,11 +431,31 @@ export default {
       return text?.replace(/\n/g, "<br>") || "";
     };
 
+    // Get problem name from localStorage or generate a default one
+    const getProblemName = (problem) => {
+      // Try to get the name from localStorage
+      const savedName = localStorage.getItem(
+        `userMathProblem_${problem.id}_name`
+      );
+      if (savedName) {
+        return savedName;
+      }
+
+      // If no saved name, generate a default one
+      return `${problem.topicName} Problem`;
+    };
+
     // Retry functions
     const startRetry = (problem) => {
+      // Reset the problem state for retry
       problem.isRetrying = true;
       problem.retryAnswer = "";
       problem.feedback = "";
+
+      // Hide any previous solution or feedback
+      if (!problem.isCorrect) {
+        problem.solutionVisible = false;
+      }
     };
 
     const cancelRetry = (problem) => {
@@ -421,10 +490,19 @@ export default {
               retryAnswer: "",
               isSubmitting: false,
               feedback: response.feedback,
+              // Show solution only if the answer is correct
+              solutionVisible: response.isCorrect,
             };
 
             // Replace the problem in the array
             problems.value[index] = updatedProblem;
+
+            // If the answer is correct, refresh the problems list to get the updated data
+            if (response.isCorrect) {
+              setTimeout(() => {
+                fetchProblems();
+              }, 1000);
+            }
           } else if (response.problem) {
             // Handle the case where the backend returns a complete problem object
             const updatedProblem = {
@@ -433,9 +511,18 @@ export default {
               retryAnswer: "",
               isSubmitting: false,
               feedback: response.feedback,
+              // Show solution only if the answer is correct
+              solutionVisible: response.isCorrect,
             };
 
             problems.value[index] = updatedProblem;
+
+            // If the answer is correct, refresh the problems list to get the updated data
+            if (response.isCorrect) {
+              setTimeout(() => {
+                fetchProblems();
+              }, 1000);
+            }
           } else {
             console.error("Invalid response format", response);
             problem.isSubmitting = false;
@@ -521,6 +608,7 @@ export default {
       filteredProblems,
       formatDate,
       formatText,
+      getProblemName,
       startRetry,
       cancelRetry,
       submitRetry,

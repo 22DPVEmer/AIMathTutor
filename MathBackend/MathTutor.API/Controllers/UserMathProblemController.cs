@@ -292,12 +292,12 @@ namespace MathTutor.API.Controllers
             }
         }
 
-        [HttpPost("publish/{id}")]
+        [HttpPost("publish/{id:int}")]
         [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> PublishUserMathProblem(int id)
+        public async Task<IActionResult> PublishUserMathProblem(int id, [FromQuery] string? name = null)
         {
             try
             {
@@ -318,7 +318,8 @@ namespace MathTutor.API.Controllers
                 var mathProblemService = HttpContext.RequestServices.GetRequiredService<IMathProblemService>();
                 var createProblemDto = new CreateMathProblemDto
                 {
-                    Name = $"{userProblem.TopicName} Problem",
+                    // Use the provided name if available, otherwise use the default
+                    Name = !string.IsNullOrWhiteSpace(name) ? name : $"{userProblem.TopicName} Problem",
                     Statement = userProblem.Statement,
                     Solution = userProblem.Solution,
                     Explanation = userProblem.Explanation,
@@ -354,22 +355,49 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                // Evaluate the new answer using the AI service
-                string aiResponse = await _aiService.EvaluateAnswerAsync(problem.Statement, userAnswer);
+                // DIRECT COMPARISON: Compare user answer with the solution
+                // Normalize both strings by trimming whitespace and converting to lowercase
+                string normalizedUserAnswer = userAnswer?.Trim() ?? string.Empty;
+                string normalizedSolution = problem.Solution?.Trim() ?? string.Empty;
 
-                // Parse the AI response
-                var parsedResponse = await ParseAiResponseAsync<EvaluateMathAnswerResponseDto>(aiResponse);
+                // Direct comparison - if user answer matches solution exactly, it's correct
+                bool isCorrect = string.Equals(normalizedUserAnswer, normalizedSolution, StringComparison.OrdinalIgnoreCase);
 
-                // If the response is not successful, return it directly
-                if (parsedResponse is not OkObjectResult okResult ||
-                    okResult.Value is not EvaluateMathAnswerResponseDto evaluationResult)
+                // Generate appropriate feedback
+                string feedback;
+                if (isCorrect)
                 {
-                    return parsedResponse;
+                    feedback = "Your answer is correct!";
+                }
+                else
+                {
+                    // Only use AI for feedback if the answer is incorrect
+                    try
+                    {
+                        // Ensure userAnswer is not null for AI service
+                        string safeUserAnswer = userAnswer ?? string.Empty;
+                        string aiResponse = await _aiService.EvaluateAnswerAsync(problem.Statement, safeUserAnswer);
+                        var parsedResponse = await ParseAiResponseAsync<EvaluateMathAnswerResponseDto>(aiResponse);
+
+                        if (parsedResponse is OkObjectResult okResult &&
+                            okResult.Value is EvaluateMathAnswerResponseDto evaluationResult)
+                        {
+                            feedback = evaluationResult.Feedback;
+                        }
+                        else
+                        {
+                            feedback = "Your answer is incorrect. Please try again.";
+                        }
+                    }
+                    catch
+                    {
+                        feedback = "Your answer is incorrect. Please try again.";
+                    }
                 }
 
                 // Update the problem with the new answer and result
-                problem.UserAnswer = userAnswer;
-                problem.IsCorrect = evaluationResult.IsCorrect;
+                problem.UserAnswer = userAnswer ?? string.Empty;
+                problem.IsCorrect = isCorrect;
 
                 // Save the updated problem
                 var result = await _userMathProblemService.UpdateUserMathProblemAsync(problem.Id, problem);
@@ -383,8 +411,8 @@ namespace MathTutor.API.Controllers
 
                 // Return both the evaluation result and the updated problem
                 return Ok(new {
-                    feedback = evaluationResult.Feedback,
-                    isCorrect = evaluationResult.IsCorrect,
+                    feedback = feedback,
+                    isCorrect = isCorrect,
                     problem = updatedProblem
                 });
             }

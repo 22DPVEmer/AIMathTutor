@@ -356,7 +356,6 @@ namespace MathTutor.Application.Services
                 // Check if the answer contains any of the expected solutions
                 if (problem.Contains("x² - 9 = 0") || problem.Contains("x^2 - 9 = 0"))
                 {
-                    // The solutions are x = 3 or x = -3
                     if (numbers.Contains(3) || numbers.Contains(-3))
                     {
                         string feedback = numbers.Contains(3) && numbers.Contains(-3)
@@ -419,24 +418,12 @@ namespace MathTutor.Application.Services
                 bool isActuallyCorrect = false;
                 if (!string.IsNullOrWhiteSpace(sanitizedSolution) && !string.IsNullOrWhiteSpace(sanitizedUserAnswer))
                 {
-                    // Check if the answer contains the correct number
-                    bool containsCorrectNumber = false;
+                    // DIRECT COMPARISON: Compare user answer with the solution directly
+                    // This is the absolute truth for correctness
+                    bool isDirectMatch = string.Equals(sanitizedUserAnswer, sanitizedSolution, StringComparison.OrdinalIgnoreCase);
 
-                    // Try to extract numbers from both the solution and user answer
-                    var solutionNumbers = ExtractNumbersFromAnswer(sanitizedSolution);
-                    var userNumbers = ExtractNumbersFromAnswer(sanitizedUserAnswer);
-
-                    // Check if any of the user's numbers match any of the solution numbers
-                    if (solutionNumbers.Count > 0 && userNumbers.Count > 0)
-                    {
-                        containsCorrectNumber = solutionNumbers.Intersect(userNumbers).Any();
-                    }
-
-                    // Check for exact match
-                    bool isDirectMatch = sanitizedUserAnswer.Equals(sanitizedSolution, StringComparison.OrdinalIgnoreCase);
-
-                    // Set the actual correctness based on direct match or containing the correct number
-                    isActuallyCorrect = isDirectMatch || containsCorrectNumber;
+                    // Set correctness based on direct match only
+                    isActuallyCorrect = isDirectMatch;
 
                     if (isDirectMatch)
                     {
@@ -451,20 +438,23 @@ namespace MathTutor.Application.Services
                         // Skip other evaluation methods
                         goto SaveAttempt;
                     }
-                    else if (containsCorrectNumber)
-                    {
-                        _logger.LogInformation("User answer contains the correct number but not exact match");
-                        evaluationResult = new EvaluateMathAnswerResponseDto
-                        {
-                            IsCorrect = true,
-                            Feedback = "Correct! The answer is " + sanitizedSolution + ". " +
-                                (string.IsNullOrWhiteSpace(request.Explanation) ?
-                                    "Your answer contains the correct value." : request.Explanation)
-                        };
 
-                        // Skip other evaluation methods
-                        goto SaveAttempt;
-                    }
+                    // If we're here, the answer doesn't match exactly
+                    // For debugging purposes, log the comparison
+                    _logger.LogInformation("User answer '{UserAnswer}' does not match solution '{Solution}'",
+                        sanitizedUserAnswer, sanitizedSolution);
+
+                    // Create a default evaluation result for incorrect answers
+                    evaluationResult = new EvaluateMathAnswerResponseDto
+                    {
+                        IsCorrect = false,
+                        Feedback = "Incorrect. The correct answer is " + request.Solution + ". " +
+                            (string.IsNullOrWhiteSpace(request.Explanation) ?
+                                "Your answer does not match the expected solution." : request.Explanation)
+                    };
+
+                    // Skip other evaluation methods
+                    goto SaveAttempt;
                 }
 
                 // Special case handling for quadratic equations

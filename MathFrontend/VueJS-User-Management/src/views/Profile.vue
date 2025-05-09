@@ -13,59 +13,11 @@
                   ></div>
                 </div>
                 <div v-else>
-                  <!-- Profile Header -->
-                  <div class="mb-6 flex justify-between items-center">
-                    <div>
-                      <h3 class="text-2xl font-bold text-gray-900">
-                        Welcome, {{ user.firstName }}
-                      </h3>
-                      <p class="text-gray-600">{{ user.email }}</p>
-                    </div>
-                    <div class="flex space-x-3">
-                      <button
-                        @click="showEditMode"
-                        class="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                        Edit Profile
-                      </button>
-                      <button
-                        @click="confirmDelete"
-                        class="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        Delete Account
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Math Progress Widget -->
-                    <div>
+                  <!-- Main Content Layout -->
+                  <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Left Section: Progress and Topics -->
+                    <div class="flex-1 space-y-6">
+                      <!-- Math Progress Widget -->
                       <div
                         class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                       >
@@ -133,7 +85,7 @@
                         >
                           <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600"
-                              >Last achievement: {{ lastAchievement }}</span
+                              >Last activity: {{ lastAchievement }}</span
                             >
                             <button
                               class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -144,10 +96,8 @@
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <!-- Topic Progress Section -->
-                    <div>
+                      <!-- Topic Progress Section -->
                       <div
                         class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                       >
@@ -227,29 +177,38 @@
                       </div>
                     </div>
 
-                    <!-- Profile Card (View Mode) -->
-                    <div v-if="!editMode">
+                    <!-- Right Section: User Profile -->
+                    <div class="lg:w-1/3">
                       <div
                         class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                       >
                         <div class="bg-primary-600 px-4 py-3">
                           <h5 class="text-lg font-medium text-white">
-                            User Profile
+                            Profile Information
                           </h5>
                         </div>
                         <div class="p-4">
-                          <div class="flex items-center mb-4">
-                            <div
-                              class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-medium text-primary-600 mr-4"
-                            >
-                              {{ user.firstName?.charAt(0)
-                              }}{{ user.lastName?.charAt(0) }}
+                          <!-- Profile Header -->
+                          <div class="mb-6">
+                            <div class="flex items-center space-x-4 mb-4">
+                              <div
+                                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-medium text-primary-600"
+                              >
+                                {{ user.firstName?.charAt(0)
+                                }}{{ user.lastName?.charAt(0) }}
+                              </div>
+                              <div>
+                                <h3 class="text-xl font-bold text-gray-900">
+                                  {{ user.firstName }} {{ user.lastName }}
+                                </h3>
+                                <p class="text-gray-600">{{ user.email }}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h5 class="text-lg font-medium text-gray-900">
-                                {{ user.firstName }} {{ user.lastName }}
-                              </h5>
-                              <p class="text-gray-600 flex items-center">
+                            <div class="flex space-x-3">
+                              <button
+                                @click="showEditMode"
+                                class="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                              >
                                 <svg
                                   class="w-4 h-4 mr-2"
                                   fill="none"
@@ -260,194 +219,69 @@
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                   />
                                 </svg>
-                                {{ user.email }}
-                              </p>
-                            </div>
-                          </div>
-                          <div class="border-t border-gray-200 pt-4">
-                            <dl class="divide-y divide-gray-200">
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  First Name:
-                                </dt>
-                                <dd class="text-sm text-gray-900 col-span-2">
-                                  {{ user.firstName }}
-                                </dd>
-                              </div>
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  Last Name:
-                                </dt>
-                                <dd class="text-sm text-gray-900 col-span-2">
-                                  {{ user.lastName }}
-                                </dd>
-                              </div>
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  Email:
-                                </dt>
-                                <dd class="text-sm text-gray-900 col-span-2">
-                                  {{ user.email }}
-                                </dd>
-                              </div>
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  Created:
-                                </dt>
-                                <dd class="text-sm text-gray-900 col-span-2">
-                                  {{ formatDate(user.createdAt) }}
-                                </dd>
-                              </div>
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  Last Login:
-                                </dt>
-                                <dd class="text-sm text-gray-900 col-span-2">
-                                  {{ formatDate(user.lastLogin) }}
-                                </dd>
-                              </div>
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  Verified:
-                                </dt>
-                                <dd class="text-sm col-span-2">
-                                  <span
-                                    class="px-2 py-1 text-xs font-medium rounded-full"
-                                    :class="
-                                      user.isVerified
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-blue-100 text-blue-800'
-                                    "
-                                  >
-                                    {{ user.isVerified ? "Yes" : "No" }}
-                                  </span>
-                                </dd>
-                              </div>
-                              <div class="grid grid-cols-3 gap-4 py-3">
-                                <dt class="text-sm font-medium text-gray-500">
-                                  Roles:
-                                </dt>
-                                <dd class="text-sm col-span-2">
-                                  <div class="flex flex-wrap gap-2">
-                                    <span
-                                      v-for="role in user.roles"
-                                      :key="role"
-                                      class="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800"
-                                    >
-                                      {{ role }}
-                                    </span>
-                                    <span
-                                      v-if="!user.roles?.length"
-                                      class="text-gray-500"
-                                    >
-                                      No roles assigned
-                                    </span>
-                                  </div>
-                                </dd>
-                              </div>
-                            </dl>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Edit Profile Form (Edit Mode) -->
-                    <div v-if="editMode">
-                      <div
-                        class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-                      >
-                        <div class="bg-primary-600 px-4 py-3">
-                          <h5 class="text-lg font-medium text-white">
-                            Edit Profile
-                          </h5>
-                        </div>
-                        <div class="p-4">
-                          <form
-                            @submit.prevent="updateProfile"
-                            class="space-y-4"
-                          >
-                            <div>
-                              <label
-                                for="firstName"
-                                class="block text-sm font-medium text-gray-700"
-                                >First Name</label
-                              >
-                              <input
-                                type="text"
-                                id="firstName"
-                                v-model="formData.firstName"
-                                required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label
-                                for="lastName"
-                                class="block text-sm font-medium text-gray-700"
-                                >Last Name</label
-                              >
-                              <input
-                                type="text"
-                                id="lastName"
-                                v-model="formData.lastName"
-                                required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label
-                                for="email"
-                                class="block text-sm font-medium text-gray-700"
-                                >Email</label
-                              >
-                              <input
-                                type="email"
-                                id="email"
-                                v-model="formData.email"
-                                required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                              />
-                            </div>
-                            <div class="flex justify-end space-x-3">
-                              <button
-                                type="button"
-                                @click="cancelEdit"
-                                class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                              >
-                                Cancel
+                                Edit Profile
                               </button>
                               <button
-                                type="submit"
-                                :disabled="updating"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                                @click="confirmDelete"
+                                class="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                               >
                                 <svg
-                                  v-if="updating"
-                                  class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                  class="w-4 h-4 mr-2"
                                   fill="none"
+                                  stroke="currentColor"
                                   viewBox="0 0 24 24"
                                 >
-                                  <circle
-                                    class="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    stroke-width="4"
-                                  ></circle>
                                   <path
-                                    class="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  ></path>
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
                                 </svg>
-                                Save Changes
+                                Delete Account
                               </button>
                             </div>
-                          </form>
+                          </div>
+
+                          <!-- Profile Details -->
+                          <div class="space-y-4">
+                            <div class="border-t border-gray-200 pt-4">
+                              <h6
+                                class="text-sm font-medium text-gray-900 mb-2"
+                              >
+                                Account Details
+                              </h6>
+                              <div class="space-y-2">
+                                <div class="flex justify-between">
+                                  <span class="text-sm text-gray-500"
+                                    >Member Since</span
+                                  >
+                                  <span class="text-sm text-gray-900">{{
+                                    formatDate(user.createdAt)
+                                  }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                  <span class="text-sm text-gray-500"
+                                    >Last Login</span
+                                  >
+                                  <span class="text-sm text-gray-900">{{
+                                    formatDate(user.lastLogin)
+                                  }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                  <span class="text-sm text-gray-500"
+                                    >Account Status</span
+                                  >
+                                  <span class="text-sm text-gray-900">{{
+                                    user.isVerified ? "Verified" : "Pending"
+                                  }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

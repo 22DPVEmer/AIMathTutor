@@ -83,7 +83,7 @@
       </div>
       <div class="card-footer bg-light">
         <div class="d-flex justify-content-between align-items-center">
-          <span>Last achievement: {{ lastAchievement }}</span>
+          <span>Last activity: {{ lastAchievement }}</span>
           <button class="btn btn-sm btn-primary" @click="viewTopics">
             <i class="bi bi-grid-3x3-gap-fill me-1"></i> View All Topics
           </button>

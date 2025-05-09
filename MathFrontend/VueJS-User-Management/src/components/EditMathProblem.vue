@@ -29,6 +29,18 @@
 
         <div class="grid grid-cols-1 gap-6">
           <div>
+            <label for="problemName" class="block mb-2 font-medium"
+              >Problem Name</label
+            >
+            <input
+              id="problemName"
+              v-model="editedProblem.name"
+              class="w-full p-2 border rounded-md"
+              placeholder="Enter a name for this problem"
+            />
+          </div>
+
+          <div>
             <label for="topicName" class="block mb-2 font-medium">Topic</label>
             <div class="flex gap-2">
               <select
@@ -229,6 +241,19 @@ export default {
       (newProblem) => {
         if (newProblem && Object.keys(newProblem).length > 0) {
           editedProblem.value = { ...newProblem };
+
+          // If this is a UserMathProblem (not published), try to get the name from localStorage
+          if (!isPublished.value && newProblem.id) {
+            const savedName = localStorage.getItem(
+              `userMathProblem_${newProblem.id}_name`
+            );
+            if (savedName) {
+              editedProblem.value.name = savedName;
+            } else if (!editedProblem.value.name) {
+              // Set a default name based on topic if no saved name exists
+              editedProblem.value.name = `${editedProblem.value.topicName || "Math"} Problem`;
+            }
+          }
         }
       },
       { immediate: true, deep: true }
@@ -251,12 +276,18 @@ export default {
           editedProblem.value.topicName = selectedTopic.name;
         }
 
+        // Ensure problem has a name (use topic name as fallback)
+        if (
+          !editedProblem.value.name ||
+          editedProblem.value.name.trim() === ""
+        ) {
+          editedProblem.value.name = `${editedProblem.value.topicName || "Math"} Problem`;
+        }
+
         if (isPublished.value) {
           // For published math problems, use the updateMathProblem API
           const updateData = {
-            name:
-              editedProblem.value.name ||
-              editedProblem.value.topicName + " Problem",
+            name: editedProblem.value.name,
             statement: editedProblem.value.statement,
             solution: editedProblem.value.solution,
             explanation: editedProblem.value.explanation,
@@ -268,10 +299,17 @@ export default {
           await updateMathProblem(editedProblem.value.id, updateData);
         } else {
           // For user math problems, use the updateUserMathProblem API
-          await updateUserMathProblem(
-            editedProblem.value.id,
-            editedProblem.value
+          // Create a copy of the problem with the name property
+          // This is our workaround since UserMathProblem doesn't have a name field
+          const userProblemData = { ...editedProblem.value };
+
+          // Store the name in localStorage for this problem ID
+          localStorage.setItem(
+            `userMathProblem_${editedProblem.value.id}_name`,
+            editedProblem.value.name
           );
+
+          await updateUserMathProblem(editedProblem.value.id, userProblemData);
         }
 
         emit("problem-saved", editedProblem.value);
@@ -300,9 +338,24 @@ export default {
         return;
       }
 
+      // Ensure problem has a name (use topic name as fallback)
+      if (!editedProblem.value.name || editedProblem.value.name.trim() === "") {
+        const selectedTopic = props.topics.find(
+          (t) => t.id === editedProblem.value.topicId
+        );
+        const topicName = selectedTopic ? selectedTopic.name : "Math";
+        editedProblem.value.name = `${topicName} Problem`;
+      }
+
       isPublishing.value = true;
 
       try {
+        // Store the name in localStorage before saving
+        localStorage.setItem(
+          `userMathProblem_${editedProblem.value.id}_name`,
+          editedProblem.value.name
+        );
+
         // First save any changes to the problem
         await updateUserMathProblem(
           editedProblem.value.id,
