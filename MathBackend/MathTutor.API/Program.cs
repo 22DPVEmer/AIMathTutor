@@ -36,15 +36,12 @@ builder.Services.AddAutoMapper(typeof(MathTutor.Core.Mappings.AutoMapperProfile)
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-// Register HttpClient for AIservice
-builder.Services.AddHttpClient<IAIservice, AIservice>(client =>
+// Register HttpClient for AI services
+builder.Services.AddHttpClient("AIClient", client =>
 {
     client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
-
-// Register AIService
-builder.Services.AddScoped<IAIservice, AIservice>();
 
 // Register Semantic Kernel
 builder.Services.AddSingleton<Kernel>(sp => {
@@ -63,6 +60,20 @@ builder.Services.AddSingleton<Kernel>(sp => {
             serviceId: "gemini")
         .Build();
 });
+
+// Register KernelProvider
+builder.Services.AddScoped<IKernelProvider, KernelProvider>();
+
+// Register JsonService
+builder.Services.AddScoped<IJsonService, JsonService>();
+
+// Register specialized AI services
+builder.Services.AddScoped<IProblemGenerationService, ProblemGenerationService>();
+builder.Services.AddScoped<IAnswerEvaluationService, AnswerEvaluationService>();
+builder.Services.AddScoped<IGuidanceService, GuidanceService>();
+
+// Register legacy AIService for backward compatibility
+builder.Services.AddScoped<IAIservice, AIservice>();
 
 // Register Math Problem Services and Repository
 builder.Services.AddScoped<IMathProblemService, MathProblemService>();
