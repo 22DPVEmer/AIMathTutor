@@ -10,6 +10,7 @@ using System;
 using MathTutor.Core.Models;
 using System.Security.Claims;
 using AutoMapper;
+using MathTutor.API.Constants;
 
 namespace MathTutor.API.Controllers
 {
@@ -53,7 +54,7 @@ namespace MathTutor.API.Controllers
             {
                 if (topicId <= 0)
                 {
-                    return BadRequest("Invalid topic ID");
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.InvalidTopicId);
                 }
 
                 var problems = await _mathProblemService.GetProblemsByTopicAsync(topicId);
@@ -61,8 +62,6 @@ namespace MathTutor.API.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception but return an empty list
-                Console.WriteLine($"Error fetching problems for topic {topicId}: {ex.Message}");
                 return Ok(new List<MathProblemModel>());
             }
         }
@@ -111,7 +110,7 @@ namespace MathTutor.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Teacher")]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         public async Task<IActionResult> DeleteProblem(int id)
@@ -170,46 +169,35 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                // Log the incoming request for debugging
-                Console.WriteLine($"Received evaluation request: Problem={request?.Problem?.Length ?? 0} chars, " +
-                                 $"UserAnswer={request?.UserAnswer?.Length ?? 0} chars");
-
                 if (request == null)
                 {
-                    return BadRequest("Request body is required");
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.RequestBodyRequired);
                 }
 
                 if (string.IsNullOrWhiteSpace(request.Problem) || string.IsNullOrWhiteSpace(request.UserAnswer))
                 {
-                    return BadRequest("Problem statement and user answer are required");
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.MissingProblemOrAnswer);
                 }
 
                 // Special case handling for quadratic equations
                 if (_mathProblemService.IsQuadraticEquation(request.Problem))
                 {
-                    Console.WriteLine("Detected quadratic equation. Using AI evaluation for quadratic equation.");
                 }
 
                 string aiResponse = await _aiService.EvaluateAnswerAsync(request.Problem, request.UserAnswer);
 
-                // Log the AI response for debugging
-                Console.WriteLine($"AI response for evaluation: {aiResponse?.Length ?? 0} chars");
-
                 if (string.IsNullOrEmpty(aiResponse))
                 {
-                    return BadRequest("Failed to get a valid response from the AI service");
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.FailedAiResponse);
                 }
 
                 return await ParseAiResponseAsync<EvaluateMathAnswerResponseDto>(aiResponse);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in EvaluateDirectly: {ex.Message}");
-                return BadRequest(ex.Message);
+                return BadRequest(string.Format(MathProblemControllerConstants.ErrorMessages.ParseError, ex.Message));
             }
         }
-
-
 
         [HttpPost("get-guidance")]
         [ProducesResponseType(typeof(GuidanceResponseDto), 200)]
@@ -218,44 +206,27 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                // Log the incoming request for debugging
-                Console.WriteLine($"Received guidance request: Problem={request?.Problem?.Length ?? 0} chars, " +
-                                 $"Solution={request?.Solution?.Length ?? 0} chars, " +
-                                 $"UserAnswer={request?.UserAnswer?.Length ?? 0} chars, " +
-                                 $"Question={request?.Question?.Length ?? 0} chars");
-
-                if (request == null)
+                if (request == null || string.IsNullOrWhiteSpace(request.Problem))
                 {
-                    return BadRequest("Request body is required");
-                }
-
-                if (string.IsNullOrWhiteSpace(request.Problem) ||
-                    string.IsNullOrWhiteSpace(request.Solution) ||
-                    string.IsNullOrWhiteSpace(request.Question))
-                {
-                    return BadRequest("Problem statement, solution, and question are required");
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.InvalidGuidanceRequest);
                 }
 
                 string aiResponse = await _aiService.GetGuidanceAsync(
-                    request.Problem,
-                    request.Solution,
-                    request.UserAnswer ?? string.Empty,
-                    request.Question);
-
-                // Log the AI response for debugging
-                Console.WriteLine($"AI response for guidance: {aiResponse?.Length ?? 0} chars");
+                    request.Problem, 
+                    request.Solution ?? string.Empty, 
+                    request.UserAnswer ?? string.Empty, 
+                    request.Question ?? string.Empty);
 
                 if (string.IsNullOrEmpty(aiResponse))
                 {
-                    return BadRequest("Failed to get a valid guidance response from the AI service");
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.FailedGuidanceResponse);
                 }
 
                 return await ParseAiResponseAsync<GuidanceResponseDto>(aiResponse);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetGuidance: {ex.Message}");
-                return BadRequest(ex.Message);
+                return BadRequest(string.Format(MathProblemControllerConstants.ErrorMessages.ParseError, ex.Message));
             }
         }
 
@@ -268,32 +239,25 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                var userId = GetUserId();
+                string userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized();
                 }
 
+                // Override the user ID in the DTO
                 attemptDto.UserId = userId;
+
                 var result = await _mathProblemService.SaveProblemAttemptAsync(attemptDto);
-
-                if (result && attemptDto.TopicId.HasValue)
+                
+                if (result)
                 {
-                    // Get updated problems for this topic to reflect the new attempt
-                    var problems = await _mathProblemService.GetProblemsByTopicAsync(attemptDto.TopicId.Value);
-
-                    // Get user attempts for these problems
-                    var attempts = await _mathProblemService.GetAttemptsByUserIdAsync(userId);
-
-                    // Return both the result and the updated problems
-                    return Ok(new {
-                        success = result,
-                        problems = problems,
-                        attempts = attempts
-                    });
+                    return Ok(new { success = true });
                 }
-
-                return HandleResult(result);
+                else
+                {
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.FailedToSaveAttempt);
+                }
             }
             catch (Exception ex)
             {
@@ -310,38 +274,20 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                if (request == null)
-                {
-                    return BadRequest("Request body is required");
-                }
-
-                if (string.IsNullOrWhiteSpace(request.Problem) || string.IsNullOrWhiteSpace(request.UserAnswer))
-                {
-                    return BadRequest("Problem statement and user answer are required");
-                }
-
-                // Get the user ID
-                var userId = GetUserId();
+                string userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized();
                 }
 
-                // Use the service to evaluate and save the problem
                 var result = await _mathProblemService.EvaluateAndSaveAsync(request, userId);
-
-                // Map the result to the response DTO
-                var response = new EvaluateAndSaveResponseDto
+                
+                if (result == null)
                 {
-                    Success = result.Success,
-                    IsCorrect = result.IsCorrect,
-                    Feedback = result.Feedback,
-                    HasExistingCorrectAttempt = result.HasExistingCorrectAttempt,
-                    Problems = result.Problems,
-                    Attempts = result.Attempts
-                };
-
-                return Ok(response);
+                    return BadRequest(MathProblemControllerConstants.ErrorMessages.FailedToEvaluateAndSave);
+                }
+                
+                return Ok(result);
             }
             catch (Exception ex)
             {

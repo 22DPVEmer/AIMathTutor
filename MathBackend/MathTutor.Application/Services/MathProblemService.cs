@@ -1,9 +1,9 @@
 using AutoMapper;
+using MathTutor.Application.Constants;
 using MathTutor.Application.DTOs;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Entities;
 using MathTutor.Core.Enums;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,13 +21,7 @@ namespace MathTutor.Application.Services
         private readonly IAIservice _aiService;
         private readonly MathKernelService _mathKernelService;
         private readonly IMapper _mapper;
-        private readonly ILogger<MathProblemService> _logger;
-        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            AllowTrailingCommas = true,
-            ReadCommentHandling = JsonCommentHandling.Skip
-        };
+        private static readonly JsonSerializerOptions _jsonOptions = MathProblemServiceConstants.JsonOptions;
 
         public MathProblemService(
             IMathProblemRepository mathProblemRepository,
@@ -35,8 +29,7 @@ namespace MathTutor.Application.Services
             IMathProblemAttemptRepository mathProblemAttemptRepository,
             IAIservice aiService,
             MathKernelService mathKernelService,
-            IMapper mapper,
-            ILogger<MathProblemService> logger)
+            IMapper mapper)
         {
             _mathProblemRepository = mathProblemRepository ?? throw new ArgumentNullException(nameof(mathProblemRepository));
             _mathTopicRepository = mathTopicRepository ?? throw new ArgumentNullException(nameof(mathTopicRepository));
@@ -44,7 +37,6 @@ namespace MathTutor.Application.Services
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
             _mathKernelService = mathKernelService ?? throw new ArgumentNullException(nameof(mathKernelService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<IEnumerable<MathProblemModel>> GetAllProblemsAsync()
@@ -109,22 +101,16 @@ namespace MathTutor.Application.Services
                 string difficultyLevel = MapDifficultyToString(request.Difficulty);
                 string aiResponse = await _aiService.GenerateMathProblemAsync(request.Topic, difficultyLevel);
 
-                _logger.LogDebug("Raw AI Response: {Response}", aiResponse);
-
                 // Use the shared JsonSerializerOptions
-
                 GeneratedMathProblemResponseDto generatedProblem = null;
 
                 try
                 {
                     // Try to deserialize the response
                     generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(aiResponse, _jsonOptions);
-                    _logger.LogDebug("Deserialized problem: {Problem}", JsonSerializer.Serialize(generatedProblem));
                 }
-                catch (JsonException ex)
+                catch (JsonException)
                 {
-                    _logger.LogWarning(ex, "Initial deserialization failed, attempting fallback parsing");
-
                     // If direct deserialization fails, try to extract the JSON portion
                     // Gemini sometimes includes additional text around the JSON
                     var jsonStart = aiResponse.IndexOf('{');
@@ -133,33 +119,28 @@ namespace MathTutor.Application.Services
                     if (jsonStart >= 0 && jsonEnd > jsonStart)
                     {
                         var jsonPart = aiResponse.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                        _logger.LogDebug("Extracted JSON part: {JsonPart}", jsonPart);
 
                         try {
                             generatedProblem = JsonSerializer.Deserialize<GeneratedMathProblemResponseDto>(jsonPart, _jsonOptions);
                         }
-                        catch (JsonException innerEx) {
-                            _logger.LogWarning(innerEx, "Fallback parsing also failed");
-                            throw new InvalidOperationException("Failed to parse the generated math problem");
+                        catch (JsonException) {
+                            throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedAIResponseValidation);
                         }
                     }
                     else
                     {
-                        _logger.LogWarning("Could not extract valid JSON from AI response");
-                        throw new InvalidOperationException("Failed to generate a valid math problem");
+                        throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedToGenerateValidProblem);
                     }
                 }
 
                 if (generatedProblem == null)
                 {
-                    _logger.LogWarning("Deserialized problem is null");
-                    throw new InvalidOperationException("Failed to generate a valid math problem");
+                    throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedToGenerateValidProblem);
                 }
 
                 if (string.IsNullOrWhiteSpace(generatedProblem.Statement))
                 {
-                    _logger.LogWarning("AI generated a problem with no statement");
-                    throw new InvalidOperationException("Generated problem is missing a statement");
+                    throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.MissingProblemStatement);
                 }
 
                 // If TopicId is provided and SaveToDatabase is true, store the generated problem
@@ -169,7 +150,7 @@ namespace MathTutor.Application.Services
 
                     var problemToCreate = new CreateMathProblemDto
                     {
-                        Name = generatedProblem.Name ?? $"{request.Topic} Problem",
+                        Name = generatedProblem.Name ?? string.Format(MathProblemServiceConstants.DefaultValues.DefaultProblemNameFormat, request.Topic),
                         Statement = generatedProblem.Statement,
                         Solution = generatedProblem.Solution,
                         Explanation = generatedProblem.Explanation,
@@ -178,14 +159,12 @@ namespace MathTutor.Application.Services
                     };
 
                     await CreateProblemAsync(problemToCreate);
-                    _logger.LogInformation("Generated problem saved to database with TopicId: {TopicId}", request.TopicId);
                 }
 
                 return generatedProblem;
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error generating math problem");
                 throw;
             }
         }
@@ -198,19 +177,18 @@ namespace MathTutor.Application.Services
 
                 if (problem == null)
                 {
-                    throw new InvalidOperationException($"Math problem with ID {request.ProblemId} not found");
+                    throw new InvalidOperationException(string.Format(MathProblemServiceConstants.ErrorMessages.ProblemNotFound, request.ProblemId));
                 }
 
                 // Check for non-answer responses
-                string[] nonAnswerResponses = { "i don't know", "idk", "dont know", "don't know", "no idea", "not sure", "unsure", "maybe", "probably", "perhaps" };
                 string normalizedUserAnswer = NormalizeAnswer(request.UserAnswer);
 
-                if (nonAnswerResponses.Contains(normalizedUserAnswer))
+                if (MathProblemServiceConstants.NonAnswerResponses.Contains(normalizedUserAnswer))
                 {
                     return new EvaluateMathAnswerResponseDto
                     {
                         IsCorrect = false,
-                        Feedback = "Please provide a mathematical answer. If you're unsure, try to work through the problem step by step."
+                        Feedback = MathProblemServiceConstants.FeedbackTemplates.NonMathematicalAnswer
                     };
                 }
 
@@ -221,15 +199,16 @@ namespace MathTutor.Application.Services
                     return new EvaluateMathAnswerResponseDto
                     {
                         IsCorrect = false,
-                        Feedback = "Your answer is not a valid mathematical expression. Please check your input and try again."
+                        Feedback = MathProblemServiceConstants.FeedbackTemplates.InvalidMathExpression
                     };
                 }
 
                 bool isEquivalent = await _mathKernelService.CheckExpressionEquivalenceAsync(normalizedUserAnswer, problem.Solution);
 
                 string feedback = isEquivalent
-                    ? "Correct! " + problem.Explanation
-                    : $"Incorrect. The correct answer is: {problem.Solution}. Here's why: {problem.Explanation}";
+                    ? MathProblemServiceConstants.FeedbackTemplates.CorrectPrefix + problem.Explanation
+                    : MathProblemServiceConstants.FeedbackTemplates.IncorrectPrefix + problem.Solution +
+                      MathProblemServiceConstants.FeedbackTemplates.ExplanationSuffix + problem.Explanation;
 
                 return new EvaluateMathAnswerResponseDto
                 {
@@ -237,20 +216,16 @@ namespace MathTutor.Application.Services
                     Feedback = feedback
                 };
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error evaluating answer");
                 throw;
             }
         }
 
-        private bool ContainsMathematicalContent(string answer)
+        private static bool ContainsMathematicalContent(string answer)
         {
             // Check for mathematical symbols, numbers, or variables
-            return answer.Any(c => char.IsDigit(c) ||
-                                 c == '+' || c == '-' || c == '*' || c == '/' ||
-                                 c == '^' || c == '√' || c == 'π' || c == 'x' ||
-                                 c == 'y' || c == 'z' || c == '=');
+            return answer.Any(c => char.IsDigit(c) || MathProblemServiceConstants.MathematicalSymbols.Contains(c));
         }
 
         public string SanitizeAnswer(string answer)
@@ -259,14 +234,14 @@ namespace MathTutor.Application.Services
                 return string.Empty;
 
             // Remove whitespace, convert to lowercase, and handle common math formatting
-            return answer.Trim()
-                .ToLower()
-                .Replace(" ", "")
-                .Replace("=", "")
-                .Replace("≈", "")
-                .Replace("~", "")
-                .Replace("pi", "π")
-                .Replace("sqrt", "√");
+            string result = answer.Trim().ToLower();
+
+            foreach (var replacement in MathProblemServiceConstants.AnswerReplacements)
+            {
+                result = result.Replace(replacement.Key, replacement.Value);
+            }
+
+            return result;
         }
 
         // Kept for backward compatibility
@@ -275,18 +250,18 @@ namespace MathTutor.Application.Services
             return SanitizeAnswer(answer);
         }
 
-        private string MapDifficultyToString(string difficulty)
+        private static string MapDifficultyToString(string difficulty)
         {
             return difficulty.ToLower() switch
             {
-                "easy" => "Easy",
-                "medium" => "Medium",
-                "hard" => "Hard",
-                _ => "Medium"
+                "easy" => MathProblemServiceConstants.DifficultyMapping.Easy,
+                "medium" => MathProblemServiceConstants.DifficultyMapping.Medium,
+                "hard" => MathProblemServiceConstants.DifficultyMapping.Hard,
+                _ => MathProblemServiceConstants.DifficultyMapping.Default
             };
         }
 
-        private DifficultyLevel MapStringToDifficulty(string difficulty)
+        private static DifficultyLevel MapStringToDifficulty(string difficulty)
         {
             return difficulty.ToLower() switch
             {
@@ -297,14 +272,14 @@ namespace MathTutor.Application.Services
             };
         }
 
-        private int GetPointsForDifficulty(string difficulty)
+        private static int GetPointsForDifficulty(string difficulty)
         {
             return difficulty.ToLower() switch
             {
-                "easy" => 1,
-                "medium" => 2,
-                "hard" => 3,
-                _ => 1
+                "easy" => MathProblemServiceConstants.DifficultyPoints.Easy,
+                "medium" => MathProblemServiceConstants.DifficultyPoints.Medium,
+                "hard" => MathProblemServiceConstants.DifficultyPoints.Hard,
+                _ => MathProblemServiceConstants.DifficultyPoints.Default
             };
         }
 
@@ -315,9 +290,8 @@ namespace MathTutor.Application.Services
                 var attempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(userId);
                 return _mapper.Map<IEnumerable<MathProblemAttemptModel>>(attempts);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error getting attempts for user {UserId}", userId);
                 return new List<MathProblemAttemptModel>();
             }
         }
@@ -328,41 +302,50 @@ namespace MathTutor.Application.Services
             string normalizedProblem = SanitizeAnswer(problem);
 
             // Check for common quadratic equation patterns
-            return normalizedProblem.Contains("x²") ||
-                   normalizedProblem.Contains("x^2") ||
-                   (normalizedProblem.Contains("quadratic") && normalizedProblem.Contains("equation")) ||
-                   (normalizedProblem.Contains("solve") &&
-                    (normalizedProblem.Contains("x²") || normalizedProblem.Contains("x^2")));
+            return normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.XSquared) ||
+                   normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.XPower2) ||
+                   (normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.QuadraticKeyword) &&
+                    normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.EquationKeyword)) ||
+                   (normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.SolveKeyword) &&
+                    (normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.XSquared) ||
+                     normalizedProblem.Contains(MathProblemServiceConstants.QuadraticPatterns.XPower2)));
         }
 
         private EvaluateMathAnswerResponseDto? EvaluateQuadraticEquation(string problem, string userAnswer)
         {
             try
             {
-                _logger.LogDebug("Evaluating quadratic equation answer: Problem={Problem}, UserAnswer={UserAnswer}", problem, userAnswer);
-
                 // Normalize the user answer using our SanitizeAnswer method
                 string normalizedAnswer = SanitizeAnswer(userAnswer);
 
-                // Extract numbers from the answer
                 var numbers = ExtractNumbersFromAnswer(normalizedAnswer);
 
                 if (numbers.Count == 0)
                 {
-                    _logger.LogDebug("No numbers found in answer, falling back to AI evaluation");
                     return null; // Fall back to AI evaluation
                 }
 
                 // Check if the answer contains any of the expected solutions
-                if (problem.Contains("x² - 9 = 0") || problem.Contains("x^2 - 9 = 0"))
+                if (problem.Contains(MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9) ||
+                    problem.Contains(MathProblemServiceConstants.KnownQuadraticSolutions.XPower2Minus9))
                 {
-                    if (numbers.Contains(3) || numbers.Contains(-3))
+                    if (numbers.Contains(MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[0]) ||
+                        numbers.Contains(MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[1]))
                     {
-                        string feedback = numbers.Contains(3) && numbers.Contains(-3)
-                            ? "Correct! The solutions are x = 3 and x = -3."
-                            : numbers.Contains(3)
-                                ? "Correct! x = 3 is one of the solutions. The other solution is x = -3."
-                                : "Correct! x = -3 is one of the solutions. The other solution is x = 3.";
+                        bool containsPositiveSolution = numbers.Contains(MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[0]);
+                        bool containsNegativeSolution = numbers.Contains(MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[1]);
+
+                        string feedback = containsPositiveSolution && containsNegativeSolution
+                            ? string.Format(MathProblemServiceConstants.ResponseStrings.QuadraticBothSolutions,
+                                MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[0],
+                                MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[1])
+                            : containsPositiveSolution
+                                ? string.Format(MathProblemServiceConstants.ResponseStrings.QuadraticOneSolution,
+                                    MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[0],
+                                    MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[1])
+                                : string.Format(MathProblemServiceConstants.ResponseStrings.QuadraticOneSolution,
+                                    MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[1],
+                                    MathProblemServiceConstants.KnownQuadraticSolutions.XSquaredMinus9Solutions[0]);
 
                         return new EvaluateMathAnswerResponseDto
                         {
@@ -377,9 +360,8 @@ namespace MathTutor.Application.Services
                 // If we couldn't determine the answer with our special logic, fall back to AI
                 return null;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error in quadratic equation evaluation");
                 return null; // Fall back to AI evaluation
             }
         }
@@ -388,7 +370,7 @@ namespace MathTutor.Application.Services
         private static List<int> ExtractNumbersFromAnswer(string answer)
         {
             var result = new List<int>();
-            var numberStrings = System.Text.RegularExpressions.Regex.Matches(answer, @"-?\d+");
+            var numberStrings = System.Text.RegularExpressions.Regex.Matches(answer, MathProblemServiceConstants.RegexPatterns.ExtractNumbers);
 
             foreach (System.Text.RegularExpressions.Match match in numberStrings)
             {
@@ -405,8 +387,6 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Evaluating and saving math problem for user {UserId}", userId);
-
                 // Sanitize user answer and solution by removing whitespace and normalizing
                 string sanitizedUserAnswer = SanitizeAnswer(request.UserAnswer);
                 string sanitizedSolution = string.IsNullOrWhiteSpace(request.Solution) ? string.Empty : SanitizeAnswer(request.Solution);
@@ -427,30 +407,25 @@ namespace MathTutor.Application.Services
 
                     if (isDirectMatch)
                     {
-                        _logger.LogInformation("Direct match found between sanitized user answer and solution");
                         evaluationResult = new EvaluateMathAnswerResponseDto
                         {
                             IsCorrect = true,
-                            Feedback = "Correct! " + (string.IsNullOrWhiteSpace(request.Explanation) ?
-                                "Your answer matches the expected solution." : request.Explanation)
+                            Feedback = MathProblemServiceConstants.FeedbackTemplates.CorrectPrefix + 
+                                (string.IsNullOrWhiteSpace(request.Explanation) ?
+                                    MathProblemServiceConstants.ResponseStrings.MatchesExpectedSolution : request.Explanation)
                         };
 
                         // Skip other evaluation methods
                         goto SaveAttempt;
                     }
 
-                    // If we're here, the answer doesn't match exactly
-                    // For debugging purposes, log the comparison
-                    _logger.LogInformation("User answer '{UserAnswer}' does not match solution '{Solution}'",
-                        sanitizedUserAnswer, sanitizedSolution);
-
                     // Create a default evaluation result for incorrect answers
                     evaluationResult = new EvaluateMathAnswerResponseDto
                     {
                         IsCorrect = false,
-                        Feedback = "Incorrect. The correct answer is " + request.Solution + ". " +
+                        Feedback = MathProblemServiceConstants.FeedbackTemplates.IncorrectPrefix + request.Solution + ". " +
                             (string.IsNullOrWhiteSpace(request.Explanation) ?
-                                "Your answer does not match the expected solution." : request.Explanation)
+                                MathProblemServiceConstants.ResponseStrings.DoesNotMatchExpectedSolution : request.Explanation)
                     };
 
                     // Skip other evaluation methods
@@ -471,14 +446,14 @@ namespace MathTutor.Application.Services
 
                         if (string.IsNullOrEmpty(aiResponse))
                         {
-                            throw new InvalidOperationException("Failed to get a valid response from the AI service");
+                            throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedAIResponse);
                         }
 
                         try
                         {
                             // Parse the AI response using the shared JsonSerializerOptions
                             var aiEvaluation = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse, _jsonOptions)
-                                ?? throw new InvalidOperationException("Failed to parse the AI evaluation response");
+                                ?? throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedToParseAIEvaluation);
 
                             // Override the AI's correctness determination with our ground truth if we have a solution
                             if (!string.IsNullOrWhiteSpace(sanitizedSolution))
@@ -488,8 +463,8 @@ namespace MathTutor.Application.Services
                                 {
                                     IsCorrect = isActuallyCorrect,
                                     Feedback = isActuallyCorrect
-                                        ? "Correct! The answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
-                                        : "Incorrect. The correct answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
+                                        ? string.Format(MathProblemServiceConstants.ResponseStrings.CorrectWithAnswer, sanitizedSolution, aiEvaluation.Feedback)
+                                        : string.Format(MathProblemServiceConstants.ResponseStrings.IncorrectWithAnswer, sanitizedSolution, aiEvaluation.Feedback)
                                 };
                             }
                             else
@@ -498,10 +473,9 @@ namespace MathTutor.Application.Services
                                 evaluationResult = aiEvaluation;
                             }
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            _logger.LogError(ex, "Error parsing AI response");
-                            throw new InvalidOperationException("Failed to parse the AI evaluation response");
+                            throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedToParseAIEvaluation);
                         }
                     }
                 }
@@ -511,14 +485,14 @@ namespace MathTutor.Application.Services
 
                     if (string.IsNullOrEmpty(aiResponse))
                     {
-                        throw new InvalidOperationException("Failed to get a valid response from the AI service");
+                        throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedAIResponse);
                     }
 
                     try
                     {
                         // Parse the AI response using the shared JsonSerializerOptions
                         var aiEvaluation = JsonSerializer.Deserialize<EvaluateMathAnswerResponseDto>(aiResponse, _jsonOptions)
-                            ?? throw new InvalidOperationException("Failed to parse the AI evaluation response");
+                            ?? throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedToParseAIEvaluation);
 
                         // Override the AI's correctness determination with our ground truth if we have a solution
                         if (!string.IsNullOrWhiteSpace(sanitizedSolution))
@@ -528,8 +502,8 @@ namespace MathTutor.Application.Services
                             {
                                 IsCorrect = isActuallyCorrect,
                                 Feedback = isActuallyCorrect
-                                    ? "Correct! The answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
-                                    : "Incorrect. The correct answer is " + sanitizedSolution + ". " + aiEvaluation.Feedback
+                                    ? string.Format(MathProblemServiceConstants.ResponseStrings.CorrectWithAnswer, sanitizedSolution, aiEvaluation.Feedback)
+                                    : string.Format(MathProblemServiceConstants.ResponseStrings.IncorrectWithAnswer, sanitizedSolution, aiEvaluation.Feedback)
                             };
                         }
                         else
@@ -538,10 +512,9 @@ namespace MathTutor.Application.Services
                             evaluationResult = aiEvaluation;
                         }
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        _logger.LogError(ex, "Error parsing AI response");
-                        throw new InvalidOperationException("Failed to parse the AI evaluation response");
+                        throw new InvalidOperationException(MathProblemServiceConstants.ErrorMessages.FailedToParseAIEvaluation);
                     }
                 }
 
@@ -606,9 +579,8 @@ namespace MathTutor.Application.Services
 
                 return response;
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error evaluating and saving math problem");
                 throw;
             }
         }
@@ -617,8 +589,6 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Saving problem attempt for user {UserId}", attemptDto.UserId);
-
                 // Find or create a MathProblem entity
                 MathProblem? problem = null;
 
@@ -629,7 +599,6 @@ namespace MathTutor.Application.Services
                     var topic = await _mathTopicRepository.GetTopicByIdAsync(attemptDto.TopicId.Value);
                     if (topic == null)
                     {
-                        _logger.LogWarning("Topic with ID {TopicId} not found", attemptDto.TopicId.Value);
                         return false;
                     }
 
@@ -653,9 +622,7 @@ namespace MathTutor.Application.Services
                     {
                         // If the current attempt is correct, we don't need to save it
                         // If it's incorrect, we still don't save it, but we want to preserve the user's points
-                        _logger.LogInformation("User {UserId} already has a correct attempt for problem {ProblemId} - not saving new attempt",
-                            attemptDto.UserId, problem.Id);
-
+                        
                         // Return true because we're successfully handling the request, even though we're not saving anything
                         return true;
                     }
@@ -664,72 +631,53 @@ namespace MathTutor.Application.Services
                     foreach (var existingAttempt in existingAttempts)
                     {
                         await _mathProblemAttemptRepository.DeleteAttemptAsync(existingAttempt.Id);
-                        _logger.LogInformation("Deleted previous incorrect attempt ID {AttemptId} for user {UserId} on problem {ProblemId}",
-                            existingAttempt.Id, attemptDto.UserId, problem.Id);
                     }
                 }
                 else
                 {
-
                     var allUserAttempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(attemptDto.UserId);
-
-
-                    var matchingAttempts = allUserAttempts.Where(a => a.ProblemId == 0).ToList();
-
-
+                    
+                    var matchingAttempts = allUserAttempts.Where(a => a.ProblemId == MathProblemServiceConstants.DefaultValues.DefaultProblemId).ToList();
+                    
                     var hasCorrectAttempt = matchingAttempts.Any(a => a.IsCorrect);
 
                     if (hasCorrectAttempt)
                     {
                         // If the current attempt is correct, we don't need to save it
                         // If it's incorrect, we still don't save it, but we want to preserve the user's points
-                        _logger.LogInformation("User {UserId} already has a correct attempt for this non-persistent problem - not saving new attempt",
-                            attemptDto.UserId);
-
+                        
                         return true;
                     }
-
-
+                    
                     foreach (var existingAttempt in matchingAttempts)
                     {
                         await _mathProblemAttemptRepository.DeleteAttemptAsync(existingAttempt.Id);
-                        _logger.LogInformation("Deleted previous non-persistent attempt ID {AttemptId} for user {UserId}",
-                            existingAttempt.Id, attemptDto.UserId);
                     }
                 }
-
-
+                
                 var attempt = new MathProblemAttempt
                 {
                     UserId = attemptDto.UserId,
-                    ProblemId = problem?.Id ?? 0,
+                    ProblemId = problem?.Id ?? MathProblemServiceConstants.DefaultValues.DefaultProblemId,
                     UserAnswer = attemptDto.UserAnswer,
                     IsCorrect = attemptDto.IsCorrect,
                     AttemptedAt = DateTime.UtcNow,
-
                     PointsEarned = attemptDto.IsCorrect ? GetPointsForDifficulty(attemptDto.Difficulty) : 0
                 };
 
                 if (problem != null)
                 {
-
                     await _mathProblemAttemptRepository.CreateAttemptAsync(attempt);
-                    _logger.LogInformation("New attempt saved with problem ID {ProblemId} for user {UserId}, IsCorrect={IsCorrect}",
-                        problem.Id, attemptDto.UserId, attemptDto.IsCorrect);
                 }
                 else
                 {
-
                     await _mathProblemAttemptRepository.CreateAttemptWithoutProblemAsync(attempt, attemptDto.Statement);
-                    _logger.LogInformation("New attempt saved without persistent problem for user {UserId}, IsCorrect={IsCorrect}",
-                        attemptDto.UserId, attemptDto.IsCorrect);
                 }
 
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error saving problem attempt");
                 return false;
             }
         }

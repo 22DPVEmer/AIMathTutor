@@ -1,7 +1,6 @@
 using AutoMapper;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
-using Microsoft.Extensions.Logging;
 
 namespace MathTutor.Application.Services;
 
@@ -9,16 +8,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    private readonly ILogger<UserService> _logger;
 
     public UserService(
         IUserRepository userRepository,
-        IMapper mapper,
-        ILogger<UserService> logger)
+        IMapper mapper)
     {
         _userRepository = userRepository;
         _mapper = mapper;
-        _logger = logger;
     }
 
     public async Task<UserModel?> GetUserByIdAsync(string id)
@@ -35,9 +31,8 @@ public class UserService : IUserService
 
             return userModel;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error retrieving user by ID");
             return null;
         }
     }
@@ -56,9 +51,8 @@ public class UserService : IUserService
 
             return userModel;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error retrieving user by email");
             return null;
         }
     }
@@ -80,9 +74,8 @@ public class UserService : IUserService
 
             return userModels;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error retrieving all users");
             return Enumerable.Empty<UserModel>();
         }
     }
@@ -113,9 +106,8 @@ public class UserService : IUserService
             result.Roles = roles.ToList();
             return result;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error updating user");
             return null;
         }
     }
@@ -130,9 +122,8 @@ public class UserService : IUserService
 
             return await _userRepository.ChangePasswordAsync(user, currentPassword, newPassword);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error changing password");
             return false;
         }
     }
@@ -143,9 +134,8 @@ public class UserService : IUserService
         {
             return await _userRepository.DeleteAsync(id);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error deleting user");
             return false;
         }
     }

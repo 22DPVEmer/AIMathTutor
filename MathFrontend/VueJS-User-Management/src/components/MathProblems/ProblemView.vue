@@ -5,15 +5,15 @@
       <div class="flex gap-2">
         <button
           @click="goBackToProblems"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center shadow-md"
         >
-          <span class="mr-1">←</span> Back to Problems
+          <span class="mr-2 font-bold">←</span> Back to Problems
         </button>
         <button
           v-if="hasNextProblem"
           @click="goToNextProblem"
           @mousedown="console.log('Next button mousedown')"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center shadow-md"
         >
           Next Problem <span class="ml-1"> →</span>
         </button>
@@ -147,54 +147,59 @@
           <h4 class="font-semibold mb-2">Feedback:</h4>
           <p>{{ evaluation.feedback }}</p>
         </div>
+      </div>
 
-        <div v-if="solutionVisible" class="mt-6">
-          <div class="bg-green-600 text-white p-4 rounded-t-lg">
+      <!-- Solution Section -->
+      <div v-if="solutionVisible">
+        <div class="bg-green-600 text-white p-4 w-full">
+          <div class="flex justify-between items-center w-full">
             <h3 class="text-xl font-bold">Solution:</h3>
           </div>
-          <div class="border border-t-0 border-gray-300 p-4 rounded-b-lg">
-            <div
-              class="p-4 bg-gray-50 rounded-md"
-              v-html="formattedSolution"
-            ></div>
-
-            <h4 class="font-semibold mt-4 mb-2">Explanation:</h4>
-            <div
-              class="p-4 bg-gray-50 rounded-md"
-              v-html="formattedExplanation"
-            ></div>
-          </div>
         </div>
+        <div class="border-b border-gray-300 p-4">
+          <div
+            class="p-4 bg-gray-50 rounded-md"
+            v-html="formattedSolution"
+          ></div>
 
-        <!-- Ask for Guidance section -->
-        <div v-if="evaluation" class="mt-6">
-          <div class="bg-green-600 text-white p-4 rounded-t-lg">
+          <h4 class="font-semibold mt-4 mb-2">Explanation:</h4>
+          <div
+            class="p-4 bg-gray-50 rounded-md"
+            v-html="formattedExplanation"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Ask for Guidance section -->
+      <div v-if="evaluation">
+        <div class="bg-green-600 text-white p-4 w-full">
+          <div class="flex justify-between items-center w-full">
             <h3 class="text-xl font-bold">Need Additional Help?</h3>
           </div>
-          <div class="border border-t-0 border-gray-300 p-4 rounded-b-lg">
-            <div class="mb-4">
-              <textarea
-                v-model="guidanceQuestion"
-                class="w-full p-3 border rounded-md"
-                rows="3"
-                placeholder="Ask a specific question about this problem or request additional guidance..."
-              ></textarea>
-            </div>
-            <div class="flex gap-2">
-              <button
-                @click="askForGuidance"
-                class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-                :disabled="!guidanceQuestion || isRequestingGuidance"
-              >
-                <span v-if="isRequestingGuidance">Requesting...</span>
-                <span v-else>Ask for Guidance</span>
-              </button>
-            </div>
+        </div>
+        <div class="border-b border-gray-300 p-4">
+          <div class="mb-4">
+            <textarea
+              v-model="guidanceQuestion"
+              class="w-full p-3 border rounded-md"
+              rows="3"
+              placeholder="Ask a specific question about this problem or request additional guidance..."
+            ></textarea>
+          </div>
+          <div class="flex gap-2">
+            <button
+              @click="askForGuidance"
+              class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              :disabled="!guidanceQuestion || isRequestingGuidance"
+            >
+              <span v-if="isRequestingGuidance">Requesting...</span>
+              <span v-else>Ask for Guidance</span>
+            </button>
+          </div>
 
-            <div v-if="guidance" class="mt-4 p-4 bg-blue-50 rounded-md">
-              <h5 class="font-semibold mb-2">Guidance:</h5>
-              <div v-html="formattedGuidance"></div>
-            </div>
+          <div v-if="guidance" class="mt-4 p-4 bg-blue-50 rounded-md">
+            <h5 class="font-semibold mb-2">Guidance:</h5>
+            <div v-html="formattedGuidance"></div>
           </div>
         </div>
       </div>

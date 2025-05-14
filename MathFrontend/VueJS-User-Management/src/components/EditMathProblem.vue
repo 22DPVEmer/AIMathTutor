@@ -168,9 +168,14 @@
               </button>
             </div>
           </div>
-          <div v-else class="flex-grow"></div>
 
-          <div class="flex gap-2">
+          <button
+            @click="deleteProblem"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Delete Problem
+          </button>
+          <div class="flex gap-4">
             <button
               @click="cancel"
               class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
@@ -197,6 +202,8 @@ import {
   updateUserMathProblem,
   publishUserMathProblem,
   updateMathProblem,
+  deleteUserMathProblem,
+  deleteMathProblem,
 } from "@/api/math";
 
 export default {
@@ -224,7 +231,13 @@ export default {
       default: false,
     },
   },
-  emits: ["update:show", "problem-saved", "problem-published", "cancel"],
+  emits: [
+    "update:show",
+    "problem-saved",
+    "problem-published",
+    "problem-deleted",
+    "cancel",
+  ],
   setup(props, { emit }) {
     const editedProblem = ref({});
     const isSaving = ref(false);
@@ -380,6 +393,38 @@ export default {
       }
     };
 
+    const deleteProblem = async () => {
+      if (
+        confirm(
+          "Are you sure you want to delete this problem? This action cannot be undone."
+        )
+      ) {
+        try {
+          if (isPublished.value) {
+            // Delete published math problem
+            await deleteMathProblem(editedProblem.value.id);
+          } else {
+            // Delete user math problem
+            await deleteUserMathProblem(editedProblem.value.id);
+          }
+
+          // Remove the name from localStorage if it exists
+          if (!isPublished.value && editedProblem.value.id) {
+            localStorage.removeItem(
+              `userMathProblem_${editedProblem.value.id}_name`
+            );
+          }
+
+          alert("Problem successfully deleted!");
+          emit("problem-deleted", editedProblem.value.id);
+          emit("update:show", false);
+        } catch (error) {
+          console.error("Error deleting problem:", error);
+          alert("Failed to delete problem. Please try again.");
+        }
+      }
+    };
+
     return {
       editedProblem,
       isSaving,
@@ -388,6 +433,7 @@ export default {
       cancel,
       save,
       publish,
+      deleteProblem,
     };
   },
 };

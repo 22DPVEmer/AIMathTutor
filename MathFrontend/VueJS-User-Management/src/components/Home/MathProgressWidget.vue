@@ -125,20 +125,16 @@ export default defineComponent({
   },
   methods: {
     viewTopics() {
-      // Navigate to topics view
       console.log("View topics clicked");
       this.$router.push("/topics");
     },
     navigateToTopic(topic: any) {
-      // Navigate directly to the topic problems view
       const topicId = topic.topicId;
       this.$router.push(`/topics/${topicId}/problems`);
       console.log(`Navigating to topic problems for topic ID: ${topicId}`);
     },
   },
-  computed: {
-    // No level-based computations needed
-  },
+  computed: {},
 });
 </script>
 

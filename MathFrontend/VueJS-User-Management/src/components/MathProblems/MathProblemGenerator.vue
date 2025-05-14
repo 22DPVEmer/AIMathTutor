@@ -203,19 +203,16 @@ export default {
   name: "MathProblemGenerator",
 
   setup() {
-    // Form data and state
     const formData = ref({
       topic: "",
       difficulty: "Medium",
       saveToDatabase: false,
     });
 
-    // Topic selection state
     const topics = ref([]);
-    const topicSelectionType = ref("existing"); // 'custom' or 'existing'
+    const topicSelectionType = ref("existing");
     const selectedTopicId = ref("");
 
-    // UI state
     const isLoading = ref(false);
     const isChecking = ref(false);
     const isSaving = ref(false);
@@ -251,7 +248,6 @@ export default {
       }
     });
 
-    // Helper function to flatten the topic hierarchy
     function flattenTopics(topicsArray, prefix = "") {
       let result = [];
 

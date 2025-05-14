@@ -1,9 +1,8 @@
-using Microsoft.Extensions.Logging;
+using MathTutor.Application.Constants;
 using MathTutor.Application.Interfaces;
 using System;
 using System.Linq;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace MathTutor.Application.Services
 {
@@ -12,8 +11,6 @@ namespace MathTutor.Application.Services
     /// </summary>
     public class JsonService : IJsonService
     {
-        private readonly ILogger<JsonService> _logger;
-
         /// <summary>
         /// Gets the JSON serializer options
         /// </summary>
@@ -22,17 +19,9 @@ namespace MathTutor.Application.Services
         /// <summary>
         /// Initializes a new instance of the JsonService class
         /// </summary>
-        /// <param name="logger">The logger</param>
-        public JsonService(ILogger<JsonService> logger)
+        public JsonService()
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            JsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                AllowTrailingCommas = true,
-                ReadCommentHandling = JsonCommentHandling.Skip
-            };
+            JsonOptions = JsonServiceConstants.DefaultJsonOptions;
         }
 
         /// <summary>
@@ -47,9 +36,8 @@ namespace MathTutor.Application.Services
             {
                 return JsonSerializer.Serialize(value, JsonOptions);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error serializing object to JSON");
                 throw;
             }
         }
@@ -66,9 +54,8 @@ namespace MathTutor.Application.Services
             {
                 return JsonSerializer.Deserialize<T>(json, JsonOptions);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error deserializing JSON to object");
                 throw;
             }
         }
@@ -125,34 +112,36 @@ namespace MathTutor.Application.Services
                 string solution = string.Empty;
                 string explanation = string.Empty;
 
-                if (jsonObject.TryGetProperty("statement", out var statementElement))
+                if (jsonObject.TryGetProperty(JsonServiceConstants.StatementProperty, out var statementElement))
                 {
                     statement = statementElement.GetString() ?? string.Empty;
                 }
 
-                if (jsonObject.TryGetProperty("solution", out var solutionElement))
+                if (jsonObject.TryGetProperty(JsonServiceConstants.SolutionProperty, out var solutionElement))
                 {
                     solution = solutionElement.GetString() ?? string.Empty;
                 }
 
-                if (jsonObject.TryGetProperty("explanation", out var explanationElement))
+                if (jsonObject.TryGetProperty(JsonServiceConstants.ExplanationProperty, out var explanationElement))
                 {
                     explanation = explanationElement.GetString() ?? string.Empty;
                 }
 
-                return $@"{{
-                    ""statement"": ""{EscapeJsonString(statement)}"",
-                    ""solution"": ""{EscapeJsonString(solution)}"",
-                    ""explanation"": ""{EscapeJsonString(explanation)}""
-                }}";
+                return string.Format(
+                    JsonServiceConstants.StructuredResponseTemplate,
+                    JsonServiceConstants.StatementProperty, EscapeJsonString(statement),
+                    JsonServiceConstants.SolutionProperty, EscapeJsonString(solution),
+                    JsonServiceConstants.ExplanationProperty, EscapeJsonString(explanation)
+                );
             }
             catch
             {
-                return $@"{{
-                    ""statement"": ""Invalid problem format"",
-                    ""solution"": ""N/A"",
-                    ""explanation"": ""The system could not generate a valid problem.""
-                }}";
+                return string.Format(
+                    JsonServiceConstants.FallbackResponseTemplate,
+                    JsonServiceConstants.StatementProperty, JsonServiceConstants.InvalidProblemFormatMessage,
+                    JsonServiceConstants.SolutionProperty, JsonServiceConstants.NotAvailableMessage,
+                    JsonServiceConstants.ExplanationProperty, JsonServiceConstants.SystemGenerationErrorMessage
+                );
             }
         }
 

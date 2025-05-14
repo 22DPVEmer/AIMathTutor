@@ -6,7 +6,9 @@
 
       <!-- Main Content -->
       <main class="col-md-9 ms-sm-auto col-lg-9 px-md-4">
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div
+          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+        >
           <h1 class="h2">AI Math Assistant</h1>
         </div>
 
@@ -18,16 +20,25 @@
                 <div class="chat-container">
                   <!-- Chat Messages -->
                   <div class="chat-messages" ref="chatMessages">
-                    <div v-for="(message, index) in messages" :key="index" 
-                         :class="['message', message.type]">
+                    <div
+                      v-for="(message, index) in messages"
+                      :key="index"
+                      :class="['message', message.type]"
+                    >
                       <div class="message-content">
-                        <div v-if="message.type === 'ai'" class="message-header">
+                        <div
+                          v-if="message.type === 'ai'"
+                          class="message-header"
+                        >
                           <i class="bi bi-robot me-2"></i>AI Assistant
                         </div>
                         <div v-else class="message-header">
                           <i class="bi bi-person me-2"></i>You
                         </div>
-                        <div class="message-text" v-html="message.content"></div>
+                        <div
+                          class="message-text"
+                          v-html="message.content"
+                        ></div>
                       </div>
                     </div>
                   </div>
@@ -35,17 +46,25 @@
                   <!-- Input Area -->
                   <div class="chat-input">
                     <div class="input-group">
-                      <input type="text" 
-                             class="form-control" 
-                             v-model="userInput" 
-                             placeholder="Ask a math question..."
-                             @keyup.enter="sendMessage"
-                             :disabled="loading">
-                      <button class="btn btn-primary" 
-                              @click="sendMessage"
-                              :disabled="loading || !userInput">
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="userInput"
+                        placeholder="Ask a math question..."
+                        @keyup.enter="sendMessage"
+                        :disabled="loading"
+                      />
+                      <button
+                        class="btn btn-primary"
+                        @click="sendMessage"
+                        :disabled="loading || !userInput"
+                      >
                         <span v-if="loading">
-                          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          <span
+                            class="spinner-border spinner-border-sm"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
                           Sending...
                         </span>
                         <span v-else>Send</span>
@@ -63,12 +82,19 @@
           <div class="col-12">
             <h3>Quick Actions</h3>
             <div class="row">
-              <div class="col-md-4 mb-3" v-for="(action, index) in quickActions" :key="index">
+              <div
+                class="col-md-4 mb-3"
+                v-for="(action, index) in quickActions"
+                :key="index"
+              >
                 <div class="card">
                   <div class="card-body">
                     <h5 class="card-title">{{ action.title }}</h5>
                     <p class="card-text">{{ action.description }}</p>
-                    <button class="btn btn-outline-primary" @click="useQuickAction(action)">
+                    <button
+                      class="btn btn-outline-primary"
+                      @click="useQuickAction(action)"
+                    >
                       Use
                     </button>
                   </div>
@@ -83,63 +109,64 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
-import Sidebar from '@/components/Home/Sidebar.vue';
+import { mapActions } from "vuex";
+import Sidebar from "@/components/Home/Sidebar.vue";
 
 export default {
-  name: 'AIHelp',
+  name: "AIHelp",
   components: {
-    Sidebar
+    Sidebar,
   },
   data() {
     return {
-      userInput: '',
+      userInput: "",
       loading: false,
       messages: [
         {
-          type: 'ai',
-          content: 'Hello! I\'m your AI Math Assistant. How can I help you today?'
-        }
+          type: "ai",
+          content:
+            "Hello! I'm your AI Math Assistant. How can I help you today?",
+        },
       ],
       quickActions: [
         {
-          title: 'Explain a Concept',
-          description: 'Get a detailed explanation of any math concept'
+          title: "Explain a Concept",
+          description: "Get a detailed explanation of any math concept",
         },
         {
-          title: 'Solve a Problem',
-          description: 'Get step-by-step solution to a math problem'
+          title: "Solve a Problem",
+          description: "Get step-by-step solution to a math problem",
         },
         {
-          title: 'Practice Problems',
-          description: 'Get personalized practice problems'
-        }
-      ]
+          title: "Practice Problems",
+          description: "Get personalized practice problems",
+        },
+      ],
     };
   },
   methods: {
-    ...mapActions('math', ['getAIResponse']),
+    ...mapActions("math", ["getAIResponse"]),
     async sendMessage() {
       if (!this.userInput.trim() || this.loading) return;
 
       const userMessage = this.userInput;
       this.messages.push({
-        type: 'user',
-        content: userMessage
+        type: "user",
+        content: userMessage,
       });
-      this.userInput = '';
+      this.userInput = "";
       this.loading = true;
 
       try {
         const response = await this.getAIResponse(userMessage);
         this.messages.push({
-          type: 'ai',
-          content: response
+          type: "ai",
+          content: response,
         });
       } catch (error) {
         this.messages.push({
-          type: 'ai',
-          content: 'Sorry, I encountered an error. Please try again.'
+          type: "ai",
+          content: "Sorry, I encountered an error. Please try again.",
         });
       } finally {
         this.loading = false;
@@ -149,17 +176,16 @@ export default {
       }
     },
     useQuickAction(action) {
-      // Implement quick action logic
-      console.log('Using quick action:', action);
+      console.log("Using quick action:", action);
     },
     scrollToBottom() {
       const container = this.$refs.chatMessages;
       container.scrollTop = container.scrollHeight;
-    }
+    },
   },
   mounted() {
     this.scrollToBottom();
-  }
+  },
 };
 </script>
 
@@ -227,4 +253,4 @@ export default {
 .card:hover {
   transform: translateY(-5px);
 }
-</style> 
+</style>

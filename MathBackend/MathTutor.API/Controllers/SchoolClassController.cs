@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using AutoMapper;
 using MathTutor.Core.Models;
 using MathTutor.Application.Interfaces;
+using MathTutor.API.Constants;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,14 +14,11 @@ namespace MathTutor.API.Controllers
     public class SchoolClassController : BaseApiController
     {
         private readonly ISchoolClassService _schoolClassService;
-        private readonly ILogger<SchoolClassController> _logger;
 
         public SchoolClassController(
-            ISchoolClassService schoolClassService,
-            ILogger<SchoolClassController> logger)
+            ISchoolClassService schoolClassService)
         {
             _schoolClassService = schoolClassService ?? throw new ArgumentNullException(nameof(schoolClassService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpGet]
@@ -33,10 +30,9 @@ namespace MathTutor.API.Controllers
                 var classes = await _schoolClassService.GetAllClassesAsync();
                 return Ok(classes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error retrieving school classes");
-                return StatusCode(500, "An error occurred while retrieving school classes");
+                return StatusCode(500, string.Format(SchoolClassControllerConstants.ErrorMessages.ServerError, "retrieving school classes"));
             }
         }
 
@@ -51,15 +47,14 @@ namespace MathTutor.API.Controllers
 
                 if (schoolClass == null)
                 {
-                    return NotFound($"School class with ID {id} not found");
+                    return NotFound(string.Format(SchoolClassControllerConstants.ErrorMessages.ClassNotFound, id));
                 }
 
                 return Ok(schoolClass);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error retrieving school class with ID {ClassId}", id);
-                return StatusCode(500, "An error occurred while retrieving the school class");
+                return StatusCode(500, string.Format(SchoolClassControllerConstants.ErrorMessages.ServerError, "retrieving the school class"));
             }
         }
 
@@ -72,10 +67,9 @@ namespace MathTutor.API.Controllers
                 var createdClass = await _schoolClassService.CreateClassAsync(schoolClassModel);
                 return CreatedAtAction(nameof(GetClassById), new { id = createdClass.Id }, createdClass);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error creating school class");
-                return StatusCode(500, "An error occurred while creating the school class");
+                return StatusCode(500, string.Format(SchoolClassControllerConstants.ErrorMessages.ServerError, "creating the school class"));
             }
         }
 
@@ -88,7 +82,7 @@ namespace MathTutor.API.Controllers
             {
                 if (id != schoolClassModel.Id)
                 {
-                    return BadRequest("ID mismatch");
+                    return BadRequest(SchoolClassControllerConstants.ErrorMessages.IdMismatch);
                 }
 
                 var updatedClass = await _schoolClassService.UpdateClassAsync(schoolClassModel);
@@ -98,10 +92,9 @@ namespace MathTutor.API.Controllers
             {
                 return NotFound(ex.Message);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error updating school class with ID {ClassId}", id);
-                return StatusCode(500, "An error occurred while updating the school class");
+                return StatusCode(500, string.Format(SchoolClassControllerConstants.ErrorMessages.ServerError, "updating the school class"));
             }
         }
 
@@ -115,10 +108,9 @@ namespace MathTutor.API.Controllers
                 await _schoolClassService.DeleteClassAsync(id);
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error deleting school class with ID {ClassId}", id);
-                return StatusCode(500, "An error occurred while deleting the school class");
+                return StatusCode(500, string.Format(SchoolClassControllerConstants.ErrorMessages.ServerError, "deleting the school class"));
             }
         }
     }

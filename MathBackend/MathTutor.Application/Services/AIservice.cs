@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using MathTutor.Application.Constants;
 using MathTutor.Application.Interfaces;
 using System;
 using System.Threading.Tasks;
@@ -11,7 +11,6 @@ namespace MathTutor.Application.Services
     /// </summary>
     public class AIservice : IAIservice
     {
-        private readonly ILogger<AIservice> _logger;
         private readonly IProblemGenerationService _problemGenerationService;
         private readonly IAnswerEvaluationService _answerEvaluationService;
         private readonly IGuidanceService _guidanceService;
@@ -20,25 +19,20 @@ namespace MathTutor.Application.Services
         /// <summary>
         /// Initializes a new instance of the AIService class
         /// </summary>
-        /// <param name="logger">The logger</param>
         /// <param name="problemGenerationService">The problem generation service</param>
         /// <param name="answerEvaluationService">The answer evaluation service</param>
         /// <param name="guidanceService">The guidance service</param>
         /// <param name="kernelProvider">The kernel provider</param>
         public AIservice(
-            ILogger<AIservice> logger,
             IProblemGenerationService problemGenerationService,
             IAnswerEvaluationService answerEvaluationService,
             IGuidanceService guidanceService,
             IKernelProvider kernelProvider)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _problemGenerationService = problemGenerationService ?? throw new ArgumentNullException(nameof(problemGenerationService));
             _answerEvaluationService = answerEvaluationService ?? throw new ArgumentNullException(nameof(answerEvaluationService));
             _guidanceService = guidanceService ?? throw new ArgumentNullException(nameof(guidanceService));
             _kernelProvider = kernelProvider ?? throw new ArgumentNullException(nameof(kernelProvider));
-
-            _logger.LogInformation("Legacy AIService initialized with specialized services");
         }
 
         /// <summary>
@@ -50,13 +44,11 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogDebug("Delegating prompt to KernelProvider: {Prompt}", prompt);
                 return await _kernelProvider.InvokePromptAsync(prompt);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error generating AI response: {Message}", ex.Message);
-                return "I'm sorry, I couldn't generate a response at this time.";
+                return AIServiceConstants.GenerateResponseErrorMessage;
             }
         }
 
@@ -70,19 +62,11 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Delegating math problem generation to ProblemGenerationService: Topic={Topic}, Difficulty={Difficulty}",
-                    topic, difficulty);
-                
                 return await _problemGenerationService.GenerateMathProblemAsync(topic, difficulty);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error generating math problem: {Message}", ex.Message);
-                return @"{
-                    ""statement"": ""Simple math problem: Unable to generate a custom problem at this time."",
-                    ""solution"": ""Contact your teacher for assistance."",
-                    ""explanation"": ""The system encountered an error while generating this problem.""
-                }";
+                return AIServiceConstants.MathProblemGenerationFallbackJson;
             }
         }
 
@@ -96,17 +80,11 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Delegating answer evaluation to AnswerEvaluationService: Problem={Problem}", problem);
-                
                 return await _answerEvaluationService.EvaluateAnswerAsync(problem, userAnswer);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error evaluating answer: {Message}", ex.Message);
-                return @"{
-                    ""isCorrect"": false,
-                    ""feedback"": ""Unable to evaluate your answer at this time. Please try again later or contact your instructor for assistance.""
-                }";
+                return AIServiceConstants.AnswerEvaluationFallbackJson;
             }
         }
 
@@ -122,17 +100,11 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Delegating guidance request to GuidanceService: Problem={Problem}, Question={Question}",
-                    problem, question);
-                
                 return await _guidanceService.GetGuidanceAsync(problem, solution, userAnswer, question);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error generating guidance: {Message}", ex.Message);
-                return @"{
-                    ""guidance"": ""I recommend reviewing the problem step-by-step. Break it down into smaller parts and solve each part separately. Check your calculations carefully and make sure you understand the concepts involved.""
-                }";
+                return AIServiceConstants.GuidanceFallbackJson;
             }
         }
     }

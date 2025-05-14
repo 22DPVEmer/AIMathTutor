@@ -1,4 +1,5 @@
 using AutoMapper;
+using MathTutor.API.Constants;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -35,7 +36,7 @@ namespace MathTutor.API.Controllers
                 var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized(MathProblemAttemptControllerConstants.ErrorMessages.UserNotAuthenticated);
                 }
 
                 var attempts = await _attemptRepository.GetAttemptsByUserIdAsync(userId);
@@ -78,14 +79,14 @@ namespace MathTutor.API.Controllers
                 var attempt = await _attemptRepository.GetAttemptByIdAsync(id);
                 if (attempt == null)
                 {
-                    return NotFound($"Attempt with ID {id} not found");
+                    return NotFound(string.Format(MathProblemAttemptControllerConstants.ErrorMessages.AttemptNotFound, id));
                 }
 
                 // Check if the attempt belongs to the current user
                 var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId) || attempt.UserId != userId)
                 {
-                    return Unauthorized("You are not authorized to view this attempt");
+                    return Unauthorized(MathProblemAttemptControllerConstants.ErrorMessages.NotAuthorizedToViewAttempt);
                 }
 
                 var attemptModel = _mapper.Map<MathProblemAttemptModel>(attempt);

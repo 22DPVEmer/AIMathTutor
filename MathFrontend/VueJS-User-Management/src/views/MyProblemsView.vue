@@ -244,6 +244,7 @@
       :is-teacher-or-admin="isTeacherOrAdmin"
       @problem-saved="handleProblemSaved"
       @problem-published="handleProblemPublished"
+      @problem-deleted="handleProblemDeleted"
       @cancel="cancelEdit"
     />
   </div>
@@ -585,6 +586,14 @@ export default {
       }
     };
 
+    // Handler for when a problem is deleted in the EditMathProblem component
+    const handleProblemDeleted = (problemId) => {
+      // Remove the problem from the local array
+      problems.value = problems.value.filter(
+        (problem) => problem.id !== problemId
+      );
+    };
+
     onMounted(async () => {
       try {
         // Make sure user profile is loaded
@@ -619,6 +628,7 @@ export default {
       cancelEdit,
       handleProblemSaved,
       handleProblemPublished,
+      handleProblemDeleted,
       topics,
     };
   },

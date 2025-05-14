@@ -5,6 +5,7 @@ using MathTutor.Application.Services;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
 using MathTutor.Core.Enums;
+using MathTutor.API.Constants;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace MathTutor.API.Controllers
                 var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized(UserMathProblemControllerConstants.ErrorMessages.UserNotAuthenticated);
                 }
 
                 var problems = await _userMathProblemService.GetUserMathProblemsByUserIdAsync(userId);
@@ -107,20 +108,18 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                // Get the current user ID from the claims
                 var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized(UserMathProblemControllerConstants.ErrorMessages.UserNotAuthenticated);
                 }
 
-                // Set the user ID in the model
                 model.UserId = userId;
 
                 var result = await _userMathProblemService.CreateUserMathProblemAsync(model);
                 if (result == null)
                 {
-                    return BadRequest("Failed to create user math problem");
+                    return BadRequest(UserMathProblemControllerConstants.ErrorMessages.FailedToCreateProblem);
                 }
 
                 return CreatedAtAction(nameof(GetUserMathProblemById), new { id = result.Id }, result);
@@ -146,14 +145,12 @@ namespace MathTutor.API.Controllers
                     return NotFound();
                 }
 
-                // Check if the current user is the owner of the problem
                 var userId = GetUserId();
                 if (userId != problem.UserId && !User.IsInRole("Admin") && !User.IsInRole("Teacher"))
                 {
                     return Forbid();
                 }
 
-                // Ensure the ID is set correctly
                 model.Id = id;
 
                 // If topicId has changed, update the topicName as well
@@ -170,7 +167,7 @@ namespace MathTutor.API.Controllers
                 var result = await _userMathProblemService.UpdateUserMathProblemAsync(id, model);
                 if (!result)
                 {
-                    return BadRequest("Failed to update user math problem");
+                    return BadRequest(UserMathProblemControllerConstants.ErrorMessages.FailedToUpdateProblem);
                 }
 
                 return NoContent();
@@ -196,7 +193,6 @@ namespace MathTutor.API.Controllers
                     return NotFound();
                 }
 
-                // Check if the current user is the owner of the problem
                 var userId = GetUserId();
                 if (userId != problem.UserId && !User.IsInRole("Admin") && !User.IsInRole("Teacher"))
                 {
@@ -206,7 +202,7 @@ namespace MathTutor.API.Controllers
                 var result = await _userMathProblemService.DeleteUserMathProblemAsync(id);
                 if (!result)
                 {
-                    return BadRequest("Failed to delete user math problem");
+                    return BadRequest(UserMathProblemControllerConstants.ErrorMessages.FailedToDeleteProblem);
                 }
 
                 return NoContent();
@@ -232,7 +228,6 @@ namespace MathTutor.API.Controllers
                     return NotFound();
                 }
 
-                // Check if the current user is the owner of the problem
                 var userId = GetUserId();
                 if (userId != problem.UserId)
                 {
@@ -258,12 +253,11 @@ namespace MathTutor.API.Controllers
                 var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized(UserMathProblemControllerConstants.ErrorMessages.UserNotAuthenticated);
                 }
 
                 attemptDto.UserId = userId;
 
-                // Create the UserMathProblem with all fields from the DTO
                 var userMathProblem = new UserMathProblemModel
                 {
                     UserId = userId,
@@ -281,7 +275,7 @@ namespace MathTutor.API.Controllers
                 var savedProblem = await _userMathProblemService.CreateUserMathProblemAsync(userMathProblem);
                 if (savedProblem == null)
                 {
-                    return BadRequest("Failed to create user math problem");
+                    return BadRequest(UserMathProblemControllerConstants.ErrorMessages.FailedToCreateProblem);
                 }
 
                 return CreatedAtAction(nameof(GetUserMathProblemById), new { id = savedProblem.Id }, savedProblem);
@@ -301,44 +295,38 @@ namespace MathTutor.API.Controllers
         {
             try
             {
-                // Get the user math problem
                 var userProblem = await _userMathProblemService.GetUserMathProblemByIdAsync(id);
                 if (userProblem == null)
                 {
-                    return NotFound($"User math problem with ID {id} not found");
+                    return NotFound(string.Format(UserMathProblemControllerConstants.ErrorMessages.ProblemNotFound, id));
                 }
 
-                // Ensure the problem has a topic ID
                 if (!userProblem.TopicId.HasValue || userProblem.TopicId.Value <= 0)
                 {
-                    return BadRequest("Problem must be associated with a topic to be published");
+                    return BadRequest(UserMathProblemControllerConstants.ErrorMessages.TopicRequired);
                 }
 
-                // Create a new MathProblem from the UserMathProblem
                 var mathProblemService = HttpContext.RequestServices.GetRequiredService<IMathProblemService>();
                 var createProblemDto = new CreateMathProblemDto
                 {
-                    // Use the provided name if available, otherwise use the default
-                    Name = !string.IsNullOrWhiteSpace(name) ? name : $"{userProblem.TopicName} Problem",
+                    Name = !string.IsNullOrWhiteSpace(name) ? name : string.Format(UserMathProblemControllerConstants.DefaultValues.DefaultProblemName, userProblem.TopicName),
                     Statement = userProblem.Statement,
                     Solution = userProblem.Solution,
                     Explanation = userProblem.Explanation,
                     Difficulty = MapStringToDifficulty(userProblem.Difficulty),
                     TopicId = userProblem.TopicId.Value,
-                    PointValue = userProblem.PointValue // Use provided point value
+                    PointValue = userProblem.PointValue
                 };
 
                 var publishedProblem = await mathProblemService.CreateProblemAsync(createProblemDto);
 
-                return Ok(new { success = true, message = "Problem successfully published as a curated Math Problem", publishedProblemId = publishedProblem.Id });
+                return Ok(new { success = true, message = UserMathProblemControllerConstants.SuccessMessages.PublishedSuccessfully, publishedProblemId = publishedProblem.Id });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-
 
         private static DifficultyLevel MapStringToDifficulty(string difficulty)
         {
@@ -363,18 +351,16 @@ namespace MathTutor.API.Controllers
                 // Direct comparison - if user answer matches solution exactly, it's correct
                 bool isCorrect = string.Equals(normalizedUserAnswer, normalizedSolution, StringComparison.OrdinalIgnoreCase);
 
-                // Generate appropriate feedback
                 string feedback;
                 if (isCorrect)
                 {
-                    feedback = "Your answer is correct!";
+                    feedback = UserMathProblemControllerConstants.FeedbackMessages.CorrectAnswer;
                 }
                 else
                 {
                     // Only use AI for feedback if the answer is incorrect
                     try
                     {
-                        // Ensure userAnswer is not null for AI service
                         string safeUserAnswer = userAnswer ?? string.Empty;
                         string aiResponse = await _aiService.EvaluateAnswerAsync(problem.Statement, safeUserAnswer);
                         var parsedResponse = await ParseAiResponseAsync<EvaluateMathAnswerResponseDto>(aiResponse);
@@ -386,30 +372,26 @@ namespace MathTutor.API.Controllers
                         }
                         else
                         {
-                            feedback = "Your answer is incorrect. Please try again.";
+                            feedback = UserMathProblemControllerConstants.FeedbackMessages.IncorrectAnswer;
                         }
                     }
                     catch
                     {
-                        feedback = "Your answer is incorrect. Please try again.";
+                        feedback = UserMathProblemControllerConstants.FeedbackMessages.IncorrectAnswer;
                     }
                 }
 
-                // Update the problem with the new answer and result
                 problem.UserAnswer = userAnswer ?? string.Empty;
                 problem.IsCorrect = isCorrect;
 
-                // Save the updated problem
                 var result = await _userMathProblemService.UpdateUserMathProblemAsync(problem.Id, problem);
                 if (!result)
                 {
-                    return BadRequest("Failed to update the problem with new answer");
+                    return BadRequest(UserMathProblemControllerConstants.ErrorMessages.FailedToUpdateWithNewAnswer);
                 }
 
-                // Get the updated problem to return to the client
                 var updatedProblem = await _userMathProblemService.GetUserMathProblemByIdAsync(problem.Id);
 
-                // Return both the evaluation result and the updated problem
                 return Ok(new {
                     feedback = feedback,
                     isCorrect = isCorrect,
@@ -418,7 +400,7 @@ namespace MathTutor.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error evaluating answer: {ex.Message}");
+                return BadRequest(string.Format(UserMathProblemControllerConstants.ErrorMessages.EvaluationError, ex.Message));
             }
         }
     }

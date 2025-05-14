@@ -280,7 +280,6 @@ export default {
       );
     });
 
-    // Parent topics are those without a parentTopicId
     const parentTopics = computed(() => {
       return filteredTopics.value.filter((topic) => !topic.parentTopicId);
     });

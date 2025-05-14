@@ -4,6 +4,7 @@ using System.Text.Json;
 using System;
 using System.Threading.Tasks;
 using MathTutor.Application.DTOs;
+using MathTutor.API.Constants;
 
 namespace MathTutor.API.Controllers;
 
@@ -64,7 +65,7 @@ public abstract class BaseApiController : ControllerBase
     {
         if (string.IsNullOrEmpty(aiResponse))
         {
-            return BadRequest("AI service returned an empty response");
+            return BadRequest(BaseApiControllerConstants.ErrorMessages.EmptyAiResponse);
         }
         
         try 
@@ -75,7 +76,7 @@ public abstract class BaseApiController : ControllerBase
             
             if (result == null)
             {
-                return BadRequest("Failed to parse AI response due to invalid format");
+                return BadRequest(BaseApiControllerConstants.ErrorMessages.InvalidAiResponseFormat);
             }
             
             return Ok(result);
@@ -97,24 +98,24 @@ public abstract class BaseApiController : ControllerBase
                     
                     if (result == null)
                     {
-                        return BadRequest("Failed to parse AI response due to invalid format");
+                        return BadRequest(BaseApiControllerConstants.ErrorMessages.InvalidAiResponseFormat);
                     }
                     
                     return Ok(result);
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest($"Failed to parse AI response: {ex.Message}");
+                    return BadRequest(string.Format(BaseApiControllerConstants.ErrorMessages.GenericAiParseError, ex.Message));
                 }
             }
             else
             {
-                return BadRequest("Failed to parse AI response due to invalid format");
+                return BadRequest(BaseApiControllerConstants.ErrorMessages.InvalidAiResponseFormat);
             }
         }
         catch (Exception ex)
         {
-            return BadRequest($"Failed to parse AI response: {ex.Message}");
+            return BadRequest(string.Format(BaseApiControllerConstants.ErrorMessages.GenericAiParseError, ex.Message));
         }
     }
     

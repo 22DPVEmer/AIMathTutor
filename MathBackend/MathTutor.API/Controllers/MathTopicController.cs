@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MathTutor.Application.DTOs;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
+using MathTutor.API.Constants;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -57,7 +58,7 @@ namespace MathTutor.API.Controllers
                 var result = await _mathTopicService.CreateTopicAsync(model);
                 if (result == null)
                 {
-                    return BadRequest("Failed to create topic");
+                    return BadRequest(MathTopicControllerConstants.ErrorMessages.FailedToCreateTopic);
                 }
 
                 return CreatedAtAction(nameof(GetTopicById), new { id = result.Id }, result);
@@ -89,7 +90,7 @@ namespace MathTutor.API.Controllers
                 var result = await _mathTopicService.UpdateTopicAsync(id, model);
                 if (!result)
                 {
-                    return BadRequest("Failed to update topic");
+                    return BadRequest(MathTopicControllerConstants.ErrorMessages.FailedToUpdateTopic);
                 }
 
                 return NoContent();
@@ -118,7 +119,7 @@ namespace MathTutor.API.Controllers
                 var result = await _mathTopicService.DeleteTopicAsync(id);
                 if (!result)
                 {
-                    return BadRequest("Failed to delete topic");
+                    return BadRequest(MathTopicControllerConstants.ErrorMessages.FailedToDeleteTopic);
                 }
 
                 return NoContent();
@@ -140,7 +141,7 @@ namespace MathTutor.API.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated");
+                    return Unauthorized(MathTopicControllerConstants.ErrorMessages.UserNotAuthenticated);
                 }
 
                 var result = await _mathTopicService.GetTopicCompletionForUserAsync(userId);

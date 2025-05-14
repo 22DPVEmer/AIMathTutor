@@ -4,9 +4,9 @@
       <h2 class="text-2xl font-bold">{{ topicName }}</h2>
       <button
         @click="goBackToTopics"
-        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center"
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center shadow-md"
       >
-        <span class="mr-1">←</span> Back to Topics
+        <span class="mr-1 ">←</span> Back to Topics
       </button>
     </div>
 
@@ -90,7 +90,7 @@
                     <button
                       v-if="isTeacherOrAdmin"
                       @click="editProblem(problem)"
-                      class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs"
+                      class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs"
                     >
                       Edit
                     </button>
@@ -114,6 +114,7 @@
       :is-teacher-or-admin="isTeacherOrAdmin"
       :is-published-problem="true"
       @problem-saved="handleProblemSaved"
+      @problem-deleted="handleProblemDeleted"
       @cancel="cancelEdit"
     />
   </div>
@@ -478,8 +479,14 @@ export default {
         // Update the problem in the database
         await updateMathProblem(savedProblem.id, updateData);
 
-        // Refresh the problems list
-        fetchProblems();
+        // Update the problem in the local array without fetching from the server
+        const index = problems.value.findIndex((p) => p.id === savedProblem.id);
+        if (index !== -1) {
+          problems.value[index] = {
+            ...problems.value[index],
+            ...savedProblem,
+          };
+        }
 
         // Close the edit dialog
         editingProblem.value = false;
@@ -487,6 +494,14 @@ export default {
         console.error("Error saving problem:", error);
         alert("Failed to save changes. Please try again.");
       }
+    };
+
+    // Handler for when a problem is deleted in the EditMathProblem component
+    const handleProblemDeleted = (problemId) => {
+      // Remove the problem from the local array
+      problems.value = problems.value.filter(
+        (problem) => problem.id !== problemId
+      );
     };
 
     // Fetch all topics for the edit form
@@ -524,6 +539,7 @@ export default {
       editedProblem,
       cancelEdit,
       handleProblemSaved,
+      handleProblemDeleted,
       topics,
     };
   },

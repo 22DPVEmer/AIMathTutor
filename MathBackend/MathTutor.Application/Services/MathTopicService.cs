@@ -1,9 +1,9 @@
 using AutoMapper;
+using MathTutor.Application.Constants;
 using MathTutor.Application.DTOs;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Entities;
 using MathTutor.Core.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,20 +17,17 @@ namespace MathTutor.Application.Services
         private readonly IMathProblemRepository _mathProblemRepository;
         private readonly IMathProblemAttemptRepository _mathProblemAttemptRepository;
         private readonly IMapper _mapper;
-        private readonly ILogger<MathTopicService> _logger;
 
         public MathTopicService(
             IMathTopicRepository mathTopicRepository,
             IMathProblemRepository mathProblemRepository,
             IMathProblemAttemptRepository mathProblemAttemptRepository,
-            IMapper mapper,
-            ILogger<MathTopicService> logger)
+            IMapper mapper)
         {
             _mathTopicRepository = mathTopicRepository ?? throw new ArgumentNullException(nameof(mathTopicRepository));
             _mathProblemRepository = mathProblemRepository ?? throw new ArgumentNullException(nameof(mathProblemRepository));
             _mathProblemAttemptRepository = mathProblemAttemptRepository ?? throw new ArgumentNullException(nameof(mathProblemAttemptRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<IEnumerable<MathTopicModel>> GetAllTopicsAsync()
@@ -52,9 +49,8 @@ namespace MathTutor.Application.Services
 
                 return rootTopics;
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error getting all topics");
                 return Enumerable.Empty<MathTopicModel>();
             }
         }
@@ -77,9 +73,8 @@ namespace MathTutor.Application.Services
                 var topic = await _mathTopicRepository.GetTopicByIdAsync(id);
                 return _mapper.Map<MathTopicModel>(topic);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error getting topic with ID {TopicId}", id);
                 return null;
             }
         }
@@ -91,9 +86,8 @@ namespace MathTutor.Application.Services
                 var topics = await _mathTopicRepository.GetTopicsBySchoolClassAsync(schoolClassId);
                 return _mapper.Map<IEnumerable<MathTopicModel>>(topics);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error getting topics for school class ID {SchoolClassId}", schoolClassId);
                 return Enumerable.Empty<MathTopicModel>();
             }
         }
@@ -106,9 +100,8 @@ namespace MathTutor.Application.Services
                 var createdTopic = await _mathTopicRepository.CreateTopicAsync(topic);
                 return _mapper.Map<MathTopicModel>(createdTopic);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error creating topic {TopicName}", topicModel.Name);
                 return null;
             }
         }
@@ -128,9 +121,8 @@ namespace MathTutor.Application.Services
 
                 return await _mathTopicRepository.UpdateTopicAsync(existingTopic);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error updating topic with ID {TopicId}", id);
                 return false;
             }
         }
@@ -141,9 +133,8 @@ namespace MathTutor.Application.Services
             {
                 return await _mathTopicRepository.DeleteTopicAsync(id);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error deleting topic with ID {TopicId}", id);
                 return false;
             }
         }
@@ -152,18 +143,14 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Calculating topic completion for user {UserId}", userId);
-
                 // Get all topics
                 var topics = await _mathTopicRepository.GetAllTopicsAsync();
 
                 // Get all user attempts in one query for efficiency
                 var userAttempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(userId);
-                _logger.LogDebug("Found {AttemptCount} attempts for user {UserId}", userAttempts.Count(), userId);
 
                 // Get all problems in one query for efficiency
                 var allProblems = await _mathProblemRepository.GetAllProblemsAsync();
-                _logger.LogDebug("Found {ProblemCount} total problems", allProblems.Count());
 
                 // Group problems by topic for faster lookup
                 var problemsByTopic = allProblems.GroupBy(p => p.TopicId)
@@ -179,17 +166,11 @@ namespace MathTutor.Application.Services
                         ? problemsByTopic[topic.Id]
                         : new List<MathProblem>();
 
-                    _logger.LogDebug("Topic {TopicId} ({TopicName}) has {ProblemCount} problems",
-                        topic.Id, topic.Name, problems.Count);
-
                     // Calculate total points possible
                     int totalPointsPossible = problems.Sum(p => p.PointValue);
 
                     // Calculate points earned
                     int pointsEarned = 0;
-
-                    _logger.LogInformation("Calculating topic completion for topic {TopicId} ({TopicName})", topic.Id, topic.Name);
-                    _logger.LogInformation("Found {ProblemCount} problems and {AttemptCount} user attempts", problems.Count, userAttempts.Count());
 
                     // Create a lookup of problem IDs for faster matching
                     var problemIds = problems.Select(p => p.Id).ToHashSet();
@@ -200,21 +181,12 @@ namespace MathTutor.Application.Services
                     // Build the mapping of statements to problem IDs
                     foreach (var problem in problems)
                     {
-                        var normalizedStatement = problem.Statement.ToLower().Replace(" ", "");
+                        var normalizedStatement = problem.Statement.ToLower().Replace(MathTopicServiceConstants.StatementNormalization.WhitespaceCharacter, MathTopicServiceConstants.StatementNormalization.EmptyReplacement);
                         if (!statementToProblemIds.ContainsKey(normalizedStatement))
                         {
                             statementToProblemIds[normalizedStatement] = new List<int>();
                         }
                         statementToProblemIds[normalizedStatement].Add(problem.Id);
-                    }
-
-                    // Log the statement mapping for debugging
-                    foreach (var kvp in statementToProblemIds)
-                    {
-                        _logger.LogDebug("Statement '{Statement}' maps to {Count} problems: {ProblemIds}",
-                            kvp.Key.Substring(0, Math.Min(20, kvp.Key.Length)),
-                            kvp.Value.Count,
-                            string.Join(", ", kvp.Value));
                     }
 
                     // Find all successful attempts for problems in this topic
@@ -223,9 +195,6 @@ namespace MathTutor.Application.Services
                         .Where(a => problemIds.Contains(a.ProblemId) && a.IsCorrect)
                         .GroupBy(a => a.ProblemId)
                         .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.PointsEarned).First());
-
-                    _logger.LogDebug("Found {Count} successful attempts by direct problem ID match",
-                        topicAttemptsByProblemId.Count);
 
                     // Track which problems we've already counted to avoid double-counting
                     var countedProblemIds = topicAttemptsByProblemId.Keys.ToHashSet();
@@ -244,7 +213,7 @@ namespace MathTutor.Application.Services
                             continue;
 
                         // Normalize the statement
-                        var normalizedStatement = attempt.Problem.Statement.ToLower().Replace(" ", "");
+                        var normalizedStatement = attempt.Problem.Statement.ToLower().Replace(MathTopicServiceConstants.StatementNormalization.WhitespaceCharacter, MathTopicServiceConstants.StatementNormalization.EmptyReplacement);
 
                         // Skip if we've already counted this statement
                         if (countedStatements.Contains(normalizedStatement))
@@ -264,15 +233,8 @@ namespace MathTutor.Application.Services
                             {
                                 countedProblemIds.Add(problemId);
                             }
-
-                            _logger.LogDebug("Found successful attempt for statement '{Statement}', marking {Count} problems as completed",
-                                normalizedStatement.Substring(0, Math.Min(20, normalizedStatement.Length)),
-                                statementToProblemIds[normalizedStatement].Count);
                         }
                     }
-
-                    _logger.LogDebug("Found {Count} additional successful attempts by statement matching",
-                        additionalAttempts.Count);
 
                     // Combine the attempts
                     var topicAttempts = topicAttemptsByProblemId.Values.Concat(additionalAttempts);
@@ -282,8 +244,8 @@ namespace MathTutor.Application.Services
 
                     // Calculate percentage
                     int percentageCompleted = totalPointsPossible > 0
-                        ? (int)Math.Round((double)pointsEarned / totalPointsPossible * 100)
-                        : 0;
+                        ? (int)Math.Round((double)pointsEarned / totalPointsPossible * MathTopicServiceConstants.PercentageCalculation.PercentageMultiplier)
+                        : MathTopicServiceConstants.PercentageCalculation.DefaultPercentage;
 
                     // Add to result
                     result.Add(new TopicCompletionDto
@@ -294,16 +256,12 @@ namespace MathTutor.Application.Services
                         PointsEarned = pointsEarned,
                         PercentageCompleted = percentageCompleted
                     });
-
-                    _logger.LogDebug("Topic {TopicId} ({TopicName}): {PointsEarned}/{TotalPointsPossible} points, {PercentageCompleted}% complete",
-                        topic.Id, topic.Name, pointsEarned, totalPointsPossible, percentageCompleted);
                 }
 
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error calculating topic completion for user {UserId}", userId);
                 return Enumerable.Empty<TopicCompletionDto>();
             }
         }

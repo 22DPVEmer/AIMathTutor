@@ -357,3 +357,13 @@ export const updateMathProblem = async (
     throw error;
   }
 };
+
+export const deleteMathProblem = async (id: number): Promise<boolean> => {
+  try {
+    await api.delete(`/MathProblem/${id}`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting math problem ${id}:`, error);
+    throw error;
+  }
+};

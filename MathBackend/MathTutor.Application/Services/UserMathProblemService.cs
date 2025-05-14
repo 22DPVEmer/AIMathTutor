@@ -1,5 +1,4 @@
 using AutoMapper;
-using Microsoft.Extensions.Logging;
 using MathTutor.Application.DTOs;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Entities;
@@ -17,18 +16,15 @@ namespace MathTutor.Application.Services
         private readonly IUserMathProblemRepository _userMathProblemRepository;
         private readonly IMathTopicRepository _mathTopicRepository;
         private readonly IMapper _mapper;
-        private readonly ILogger<UserMathProblemService> _logger;
 
         public UserMathProblemService(
             IUserMathProblemRepository userMathProblemRepository,
             IMathTopicRepository mathTopicRepository,
-            IMapper mapper,
-            ILogger<UserMathProblemService> logger)
+            IMapper mapper)
         {
             _userMathProblemRepository = userMathProblemRepository ?? throw new ArgumentNullException(nameof(userMathProblemRepository));
             _mathTopicRepository = mathTopicRepository ?? throw new ArgumentNullException(nameof(mathTopicRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<IEnumerable<UserMathProblemModel>> GetAllUserMathProblemsAsync()
@@ -38,9 +34,8 @@ namespace MathTutor.Application.Services
                 var userMathProblems = await _userMathProblemRepository.GetAllUserMathProblemsAsync();
                 return _mapper.Map<IEnumerable<UserMathProblemModel>>(userMathProblems);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error retrieving all user math problems");
                 return Enumerable.Empty<UserMathProblemModel>();
             }
         }
@@ -56,9 +51,8 @@ namespace MathTutor.Application.Services
                 }
                 return _mapper.Map<UserMathProblemModel>(userMathProblem);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error retrieving user math problem with ID {Id}", id);
                 return null;
             }
         }
@@ -70,9 +64,8 @@ namespace MathTutor.Application.Services
                 var userMathProblems = await _userMathProblemRepository.GetUserMathProblemsByUserIdAsync(userId);
                 return _mapper.Map<IEnumerable<UserMathProblemModel>>(userMathProblems);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error retrieving user math problems for user ID {UserId}", userId);
                 return Enumerable.Empty<UserMathProblemModel>();
             }
         }
@@ -84,9 +77,8 @@ namespace MathTutor.Application.Services
                 var userMathProblems = await _userMathProblemRepository.GetUserMathProblemsByTopicIdAsync(topicId);
                 return _mapper.Map<IEnumerable<UserMathProblemModel>>(userMathProblems);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error retrieving user math problems for topic ID {TopicId}", topicId);
                 return Enumerable.Empty<UserMathProblemModel>();
             }
         }
@@ -98,9 +90,8 @@ namespace MathTutor.Application.Services
                 var userMathProblems = await _userMathProblemRepository.GetUserMathProblemsByTopicNameAsync(topicName);
                 return _mapper.Map<IEnumerable<UserMathProblemModel>>(userMathProblems);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error retrieving user math problems for topic name {TopicName}", topicName);
                 return Enumerable.Empty<UserMathProblemModel>();
             }
         }
@@ -113,9 +104,8 @@ namespace MathTutor.Application.Services
                 var userMathProblems = await _userMathProblemRepository.GetUserMathProblemsByDifficultyAsync(difficultyLevel);
                 return _mapper.Map<IEnumerable<UserMathProblemModel>>(userMathProblems);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error retrieving user math problems for difficulty {Difficulty}", difficulty);
                 return Enumerable.Empty<UserMathProblemModel>();
             }
         }
@@ -136,9 +126,8 @@ namespace MathTutor.Application.Services
 
                 return _mapper.Map<UserMathProblemModel>(userMathProblem);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error creating user math problem for user {UserId}", model.UserId);
                 return null;
             }
         }
@@ -165,9 +154,8 @@ namespace MathTutor.Application.Services
 
                 return await _userMathProblemRepository.UpdateUserMathProblemAsync(existingProblem);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error updating user math problem with ID {Id}", id);
                 return false;
             }
         }
@@ -178,9 +166,8 @@ namespace MathTutor.Application.Services
             {
                 return await _userMathProblemRepository.DeleteUserMathProblemAsync(id);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error deleting user math problem with ID {Id}", id);
                 return false;
             }
         }
@@ -189,8 +176,6 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogInformation("Saving generated problem for user {UserId}", problemAttemptDto.UserId);
-
                 var userMathProblem = new UserMathProblem
                 {
                     Statement = problemAttemptDto.Statement,
@@ -208,16 +193,13 @@ namespace MathTutor.Application.Services
                 userMathProblem = await _userMathProblemRepository.CreateUserMathProblemAsync(userMathProblem);
                 if (userMathProblem == null)
                 {
-                    _logger.LogWarning("Failed to save user math problem for user {UserId}", problemAttemptDto.UserId);
                     return null;
                 }
 
-                _logger.LogInformation("User math problem saved with ID {Id}", userMathProblem.Id);
                 return _mapper.Map<UserMathProblemModel>(userMathProblem);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "Error saving generated problem for user {UserId}", problemAttemptDto.UserId);
                 return null;
             }
         }

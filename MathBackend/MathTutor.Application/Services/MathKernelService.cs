@@ -1,5 +1,5 @@
 using Microsoft.SemanticKernel;
-using Microsoft.Extensions.Logging;
+using MathTutor.Application.Constants;
 using MathTutor.Application.Plugins;
 using System;
 using System.Threading.Tasks;
@@ -12,36 +12,30 @@ namespace MathTutor.Application.Services
     public sealed class MathKernelService
     {
         private readonly Kernel _kernel;
-        private readonly ILogger<MathKernelService> _logger;
         private readonly KernelPlugin _mathPlugin;
 
         /// <summary>
         /// Initializes a new instance of the MathKernelService class
         /// </summary>
         /// <param name="kernel">The Semantic Kernel instance</param>
-        /// <param name="logger">The logger</param>
-        public MathKernelService(Kernel kernel, ILogger<MathKernelService> logger)
+        public MathKernelService(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // Check if the plugin is already registered
             try
             {
-                if (_kernel.Plugins.TryGetPlugin("MathPlugin", out var existingPlugin))
+                if (_kernel.Plugins.TryGetPlugin(MathKernelServiceConstants.MathPluginName, out var existingPlugin))
                 {
                     _mathPlugin = existingPlugin;
-                    _logger.LogDebug("Using existing MathPlugin instance");
                 }
                 else
                 {
-                    _mathPlugin = kernel.ImportPluginFromObject(new MathPlugin(), "MathPlugin");
-                    _logger.LogDebug("Created new MathPlugin instance");
+                    _mathPlugin = kernel.ImportPluginFromObject(new MathPlugin(), MathKernelServiceConstants.MathPluginName);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error initializing MathPlugin");
                 throw;
             }
         }
@@ -56,25 +50,17 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                var function = _kernel.CreateFunctionFromPrompt(
-                    @"Generate a {{$difficulty}} math problem about {{$topic}}.
-                    Respond ONLY with valid JSON using this structure:
-                    {
-                        ""statement"": ""problem statement"",
-                        ""solution"": ""correct solution"",
-                        ""explanation"": ""step-by-step explanation""
-                    }");
+                var function = _kernel.CreateFunctionFromPrompt(MathKernelServiceConstants.GenerateMathProblemPrompt);
 
                 var result = await _kernel.InvokeAsync(function, new() {
-                    ["difficulty"] = difficulty,
-                    ["topic"] = topic
+                    [MathKernelServiceConstants.DifficultyParameter] = difficulty,
+                    [MathKernelServiceConstants.TopicParameter] = topic
                 });
 
                 return result.ToString();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error generating math problem");
                 throw;
             }
         }
@@ -89,13 +75,12 @@ namespace MathTutor.Application.Services
             try
             {
                 return await _kernel.InvokeAsync<bool>(
-                    _mathPlugin["ValidateExpression"],
-                    new() { ["expression"] = expression }
+                    _mathPlugin[MathKernelServiceConstants.ValidateExpressionFunction],
+                    new() { [MathKernelServiceConstants.ExpressionParameter] = expression }
                 );
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error validating expression");
                 throw;
             }
         }
@@ -111,16 +96,15 @@ namespace MathTutor.Application.Services
             try
             {
                 return await _kernel.InvokeAsync<bool>(
-                    _mathPlugin["AreEquivalent"],
+                    _mathPlugin[MathKernelServiceConstants.AreEquivalentFunction],
                     new() {
-                        ["expr1"] = expr1,
-                        ["expr2"] = expr2
+                        [MathKernelServiceConstants.Expr1Parameter] = expr1,
+                        [MathKernelServiceConstants.Expr2Parameter] = expr2
                     }
                 );
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error checking equivalence");
                 throw;
             }
         }
@@ -135,14 +119,13 @@ namespace MathTutor.Application.Services
             try
             {
                 var result = await _kernel.InvokeAsync<string>(
-                    _mathPlugin["SimplifyExpression"],
-                    new() { ["expression"] = expression }
+                    _mathPlugin[MathKernelServiceConstants.SimplifyExpressionFunction],
+                    new() { [MathKernelServiceConstants.ExpressionParameter] = expression }
                 );
                 return result ?? expression;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error simplifying expression");
                 throw;
             }
         }
@@ -157,13 +140,12 @@ namespace MathTutor.Application.Services
             try
             {
                 return await _kernel.InvokeAsync<double>(
-                    _mathPlugin["EvaluateExpression"],
-                    new() { ["expression"] = expression }
+                    _mathPlugin[MathKernelServiceConstants.EvaluateExpressionFunction],
+                    new() { [MathKernelServiceConstants.ExpressionParameter] = expression }
                 );
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error evaluating expression");
                 throw;
             }
         }

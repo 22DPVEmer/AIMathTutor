@@ -1,9 +1,9 @@
 using AutoMapper;
+using MathTutor.Application.Constants;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Entities;
 using MathTutor.Core.Models;
 using MathTutor.Core.Models.Auth;
-using Microsoft.Extensions.Logging;
 
 namespace MathTutor.Application.Services;
 
@@ -13,20 +13,17 @@ public class AuthService : IAuthService
     private readonly IRoleRepository _roleRepository;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IMapper _mapper;
-    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IJwtTokenService jwtTokenService,
-        IMapper mapper,
-        ILogger<AuthService> logger)
+        IMapper mapper)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _jwtTokenService = jwtTokenService;
         _mapper = mapper;
-        _logger = logger;
     }
 
     public async Task<AuthResponseModel> RegisterAsync(RegisterModel model)
@@ -39,8 +36,8 @@ public class AuthService : IAuthService
                 return new AuthResponseModel
                 {
                     Success = false,
-                    Message = "User already exists",
-                    Errors = new List<string> { "Email is already registered" }
+                    Message = AuthServiceConstants.UserAlreadyExistsMessage,
+                    Errors = new List<string> { AuthServiceConstants.EmailAlreadyRegisteredError }
                 };
 
             // Create new user
@@ -59,33 +56,32 @@ public class AuthService : IAuthService
                 return new AuthResponseModel
                 {
                     Success = false,
-                    Message = "User creation failed",
-                    Errors = new List<string> { "Failed to create user" }
+                    Message = AuthServiceConstants.UserCreationFailedMessage,
+                    Errors = new List<string> { AuthServiceConstants.FailedToCreateUserError }
                 };
 
             // Ensure User role exists
-            if (!await _roleRepository.RoleExistsAsync("User"))
-                await _roleRepository.CreateRoleAsync("User");
+            if (!await _roleRepository.RoleExistsAsync(AuthServiceConstants.DefaultUserRole))
+                await _roleRepository.CreateRoleAsync(AuthServiceConstants.DefaultUserRole);
 
             // Add default user role
             // Refetch user to get the created Id
             user = await _userRepository.GetByEmailAsync(model.Email);
-            await _userRepository.AddToRoleAsync(user, "User");
+            await _userRepository.AddToRoleAsync(user, AuthServiceConstants.DefaultUserRole);
 
             return new AuthResponseModel
             {
                 Success = true,
-                Message = "User registered successfully. Please verify your email address."
+                Message = AuthServiceConstants.RegistrationSuccessMessage
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Error during user registration");
             return new AuthResponseModel
             {
                 Success = false,
-                Message = "Registration failed",
-                Errors = new List<string> { "An error occurred during registration" }
+                Message = AuthServiceConstants.RegistrationFailedMessage,
+                Errors = new List<string> { AuthServiceConstants.RegistrationErrorMessage }
             };
         }
     }
@@ -100,8 +96,8 @@ public class AuthService : IAuthService
                 return new AuthResponseModel
                 {
                     Success = false,
-                    Message = "Invalid login attempt",
-                    Errors = new List<string> { "Invalid email or password" }
+                    Message = AuthServiceConstants.InvalidLoginAttemptMessage,
+                    Errors = new List<string> { AuthServiceConstants.InvalidCredentialsError }
                 };
 
             // Check password
@@ -110,8 +106,8 @@ public class AuthService : IAuthService
                 return new AuthResponseModel
                 {
                     Success = false,
-                    Message = "Invalid login attempt",
-                    Errors = new List<string> { "Invalid email or password" }
+                    Message = AuthServiceConstants.InvalidLoginAttemptMessage,
+                    Errors = new List<string> { AuthServiceConstants.InvalidCredentialsError }
                 };
 
             // Get user roles
@@ -128,18 +124,17 @@ public class AuthService : IAuthService
             {
                 Success = true,
                 Token = token,
-                Message = "Login successful",
+                Message = AuthServiceConstants.LoginSuccessMessage,
                 User = _mapper.Map<UserModel>(user)
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Error during user login");
             return new AuthResponseModel
             {
                 Success = false,
-                Message = "Login failed",
-                Errors = new List<string> { "An error occurred during login" }
+                Message = AuthServiceConstants.LoginFailedMessage,
+                Errors = new List<string> { AuthServiceConstants.LoginErrorMessage }
             };
         }
     }
@@ -154,8 +149,8 @@ public class AuthService : IAuthService
                 return new AuthResponseModel
                 {
                     Success = false,
-                    Message = "Invalid token",
-                    Errors = new List<string> { "Token validation failed" }
+                    Message = AuthServiceConstants.InvalidTokenMessage,
+                    Errors = new List<string> { AuthServiceConstants.TokenValidationFailedError }
                 };
 
             var user = await _userRepository.GetByIdAsync(userId);
@@ -163,8 +158,8 @@ public class AuthService : IAuthService
                 return new AuthResponseModel
                 {
                     Success = false,
-                    Message = "User not found",
-                    Errors = new List<string> { "User associated with token not found" }
+                    Message = AuthServiceConstants.UserNotFoundMessage,
+                    Errors = new List<string> { AuthServiceConstants.UserNotFoundWithTokenError }
                 };
 
             var newToken = _jwtTokenService.GenerateJwtToken(user, roles);
@@ -173,18 +168,17 @@ public class AuthService : IAuthService
             {
                 Success = true,
                 Token = newToken,
-                Message = "Token refreshed successfully",
+                Message = AuthServiceConstants.TokenRefreshedMessage,
                 User = _mapper.Map<UserModel>(user)
             };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Error refreshing token");
             return new AuthResponseModel
             {
                 Success = false,
-                Message = "Token refresh failed",
-                Errors = new List<string> { "An error occurred while refreshing the token" }
+                Message = AuthServiceConstants.TokenRefreshFailedMessage,
+                Errors = new List<string> { AuthServiceConstants.TokenRefreshErrorMessage }
             };
         }
     }
@@ -223,4 +217,4 @@ public class AuthService : IAuthService
 
         return userModels;
     }
-} 
+}

@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using MathTutor.Application.Constants;
 using MathTutor.Application.Interfaces;
 using System;
 using System.Threading.Tasks;
@@ -11,8 +11,6 @@ namespace MathTutor.Application.Services
     /// </summary>
     public class KernelProvider : IKernelProvider
     {
-        private readonly ILogger<KernelProvider> _logger;
-
         /// <summary>
         /// Gets the Semantic Kernel instance
         /// </summary>
@@ -22,13 +20,9 @@ namespace MathTutor.Application.Services
         /// Initializes a new instance of the KernelProvider class
         /// </summary>
         /// <param name="kernel">The Semantic Kernel instance</param>
-        /// <param name="logger">The logger</param>
-        public KernelProvider(Kernel kernel, ILogger<KernelProvider> logger)
+        public KernelProvider(Kernel kernel)
         {
             Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
-            _logger.LogInformation("KernelProvider initialized with Semantic Kernel");
         }
 
         /// <summary>
@@ -42,30 +36,25 @@ namespace MathTutor.Application.Services
         {
             try
             {
-                _logger.LogDebug("Sending prompt to AI model: {Prompt}", prompt);
-                
                 var arguments = new KernelArguments();
-                
+
                 if (temperature.HasValue)
                 {
-                    arguments["Temperature"] = temperature.Value;
+                    arguments[KernelProviderConstants.TemperatureParameter] = temperature.Value;
                 }
-                
+
                 if (maxTokens.HasValue)
                 {
-                    arguments["MaxTokens"] = maxTokens.Value;
+                    arguments[KernelProviderConstants.MaxTokensParameter] = maxTokens.Value;
                 }
-                
+
                 var result = await Kernel.InvokePromptAsync(prompt, arguments);
                 var response = result.GetValue<string>() ?? string.Empty;
-                
-                _logger.LogDebug("Received response from AI model: {Response}", response);
-                
+
                 return response;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error invoking prompt: {Message}", ex.Message);
                 throw;
             }
         }
