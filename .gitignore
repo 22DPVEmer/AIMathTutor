@@ -1,47 +1,31 @@
 # Node.js / Frontend
 node_modules/
 dist/
-.DS_Store
+dist-ssr/
+coverage/
+*.tsbuildinfo
+pnpm-debug.log*
+lerna-debug.log*
+
+# Logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Environment variables
 .env
 .env.local
+.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
-coverage/
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.local
 
 # C# / Backend
 bin/
 obj/
-Debug/
-Release/
-.vs/
-*.user
-*.userosscache
-*.suo
-*.dbmdl
-*.jfm
-*.pfx
-*.publishsettings
-orleans.codegen.cs
-TestResults/
-_ReSharper*/
-*.ReSharper*
-*.DotSettings.user
-*.dotCover
-.vscode/
-
-# Build results
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -53,18 +37,32 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
+TestResults/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.user
+*.userosscache
+*.suo
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+_ReSharper*/
+*.ReSharper*
+*.DotSettings.user
+*.dotCover
 
 # NuGet
 *.nupkg
-# The packages folder can be ignored because of Package Restore
 **/packages/*
-# except build/, which is used as an MSBuild target.
 !**/packages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
-#!**/packages/repositories.config
-
-# Visual Studio 2015/2017 cache/options directory
-.vs/
 
 # Project specific
 MathBackend/MathTutor.API/MathTutor.API/appsettings.Development.json
@@ -73,33 +71,31 @@ MathBackend/**/wwwroot/
 MathFrontend/*/dist/
 MathFrontend/*/node_modules/
 
+# Database
+# Uncomment the next line if you want to ignore all migrations
+# **/Migrations/
+# Or specify exactly which migrations folder to ignore
+MathBackend/MathTutor.Infrastructure/Migrations/
+
 # Temporary files
 **/tmp/
 **/temp/
 **/.temp/
 
-# Logs
-logs/
-*.log
-npm-debug.log*
+# Testing
+/cypress/videos/
+/cypress/screenshots/
 
-# Local env files
-.env.local
-.env.*.local
-
-# Editor directories and files
-.idea
-*.suo
+# Other editor files
+.idea/
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 
 # System Files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# ApplicationDbContextModelSnapshot
+**/ApplicationDbContextModelSnapshot.cs

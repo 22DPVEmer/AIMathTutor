@@ -102,52 +102,67 @@ namespace MathTutor.Infrastructure.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("MathTutor.Core.Entities.MathCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MathCategories");
 
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            Description = "Master algebraic expressions and equations",
-                            Name = "Algebra"
+                            Id = "1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "b1d1f880-9d41-49e9-9e9e-0336617d8141",
+                            CreatedAt = new DateTime(2025, 5, 6, 4, 53, 21, 607, DateTimeKind.Utc).AddTicks(2459),
+                            Email = "admin@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Admin",
+                            IsVerified = true,
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            NormalizedUserName = "ADMIN@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM1EXpMLb7P+A2yTFA7mwp2jR51C9DG87ELh93Haffm8YtWUh6WctoiDO7o4KkRd2g==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "1da9d9fa-3589-446b-82cd-f673bb201417",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@example.com"
                         },
                         new
                         {
-                            Id = 2,
-                            Description = "Explore shapes and spatial relationships",
-                            Name = "Geometry"
+                            Id = "2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a9f92da7-3e2f-4f1e-9bbe-910eab9d1e5d",
+                            CreatedAt = new DateTime(2025, 5, 6, 4, 53, 21, 730, DateTimeKind.Utc).AddTicks(2695),
+                            Email = "student@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Student",
+                            IsVerified = true,
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "STUDENT@EXAMPLE.COM",
+                            NormalizedUserName = "STUDENT@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP5gOb2TFvERgIvviAdYK+ghAYkgiUxVpdxG+ubpO2QJCn9PWHlycbmOjZBvGEHjww==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e1b97b55-3d2b-4dd4-880c-7f8f059846be",
+                            TwoFactorEnabled = false,
+                            UserName = "student@example.com"
                         },
                         new
                         {
-                            Id = 3,
-                            Description = "Learn about limits, derivatives, and integrals",
-                            Name = "Calculus"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Understand data analysis and probability",
-                            Name = "Statistics"
+                            Id = "3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "449465ce-9ff9-4601-b8ce-446f3370fd5c",
+                            CreatedAt = new DateTime(2025, 5, 6, 4, 53, 21, 842, DateTimeKind.Utc).AddTicks(1603),
+                            Email = "teacher@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Teacher",
+                            IsVerified = true,
+                            LastName = "User",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "TEACHER@EXAMPLE.COM",
+                            NormalizedUserName = "TEACHER@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ+ueWr3CPYRsG8LMCKBSQ0SFVDnlVehJsF03Lz10IACQuh+ko4li9Dc5yUc4OhVhg==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "be07c2a5-421f-4f87-b813-fbe6a2c5ebf0",
+                            TwoFactorEnabled = false,
+                            UserName = "teacher@example.com"
                         });
                 });
 
@@ -159,12 +174,22 @@ namespace MathTutor.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AuthorId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Difficulty")
                         .HasColumnType("int");
 
                     b.Property<string>("Explanation")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PointValue")
+                        .HasColumnType("int");
 
                     b.Property<string>("Solution")
                         .IsRequired()
@@ -179,9 +204,493 @@ namespace MathTutor.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AuthorId");
+
                     b.HasIndex("TopicId");
 
                     b.ToTable("MathProblems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1001,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Using the Pythagorean theorem: |v⃗| = √(3² + 4²) = √(9 + 16) = √25 = 5",
+                            Name = "Vector Magnitude Calculation",
+                            PointValue = 1,
+                            Solution = "|v⃗| = 5",
+                            Statement = "Calculate the magnitude of vector v⃗ = (3,4)",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Using the 3D magnitude formula: |a⃗| = √(2² + 2² + 1²) = √(4 + 4 + 1) = √9 = 3",
+                            Name = "3D Vector Magnitude",
+                            PointValue = 2,
+                            Solution = "|a⃗| = 3",
+                            Statement = "Find the magnitude of vector a⃗ = (2,2,1)",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Using trigonometry: x = 5cos(30°), y = 5sin(30°)",
+                            Name = "Vector Components",
+                            PointValue = 2,
+                            Solution = "x ≈ 4.33, y = 2.5",
+                            Statement = "A vector has magnitude 5 and makes a 30° angle with the x-axis. Find its x and y components.",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1004,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "First find |v⃗| = √(6² + 8²) = 10, then divide components by magnitude: (6/10, 8/10)",
+                            Name = "Unit Vector Calculation",
+                            PointValue = 2,
+                            Solution = "u⃗ = (0.6,0.8)",
+                            Statement = "Find the unit vector in the direction of v⃗ = (6,8)",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1005,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Use arctan(y/x) = arctan(-4/4) = -45°",
+                            Name = "Vector Direction Angle",
+                            PointValue = 2,
+                            Solution = "-45°",
+                            Statement = "Find the angle that vector v⃗ = (4,-4) makes with the positive x-axis.",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1006,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Using direction cosines: cos²α + cos²β + cos²γ = 1, cos(60°) = 0.5, z = 6cos(γ) ≈ 3.46",
+                            Name = "3D Vector Components",
+                            PointValue = 3,
+                            Solution = "z ≈ 3.46",
+                            Statement = "A vector has magnitude 6 and makes angles of 60° with x-axis and 60° with y-axis. Find its z-component.",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1007,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Using vector decomposition formulas and the given angles",
+                            Name = "Vector Decomposition",
+                            PointValue = 3,
+                            Solution = "v₁ ≈ 8.66, v₂ ≈ 5",
+                            Statement = "Decompose vector v⃗ with magnitude 10 into components along 30° and 120° from x-axis.",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1008,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Vectors are equal when they have the same magnitude and direction, regardless of their position",
+                            Name = "Equal Vectors",
+                            PointValue = 1,
+                            Solution = "When they have same magnitude and direction",
+                            Statement = "When are two vectors equal if they start at different points?",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1009,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Components: B - A = (4-1,6-2) = (3,4). Magnitude: √(3² + 4²) = 5",
+                            Name = "Vector Position",
+                            PointValue = 2,
+                            Solution = "Components: (3,4), Magnitude: 5",
+                            Statement = "A vector starts at point A(1,2) and ends at B(4,6). Find its components and magnitude.",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 1010,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Vectors are parallel if one is a scalar multiple of the other. Here b⃗ = ½a⃗",
+                            Name = "Parallel Vectors",
+                            PointValue = 2,
+                            Solution = "Yes",
+                            Statement = "Are vectors a⃗ = (6,8) and b⃗ = (3,4) parallel?",
+                            TopicId = 2
+                        },
+                        new
+                        {
+                            Id = 2001,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Add corresponding components: (2+(-1), 3+4) = (1,7)",
+                            Name = "Vector Addition",
+                            PointValue = 1,
+                            Solution = "p⃗ + q⃗ = (1,7)",
+                            Statement = "Add vectors p⃗ = (2,3) and q⃗ = (-1,4)",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2002,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Add all x components and all y components: (1+2+(-1), 1+(-1)+3) = (2,3)",
+                            Name = "Multiple Vector Addition",
+                            PointValue = 2,
+                            Solution = "a⃗ + b⃗ + c⃗ = (2,3)",
+                            Statement = "Add three vectors: a⃗ = (1,1), b⃗ = (2,-1), and c⃗ = (-1,3)",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2003,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Subtract corresponding components: (5-3,7-4) = (2,3)",
+                            Name = "Vector Subtraction",
+                            PointValue = 1,
+                            Solution = "a⃗ - b⃗ = (2,3)",
+                            Statement = "Subtract vector b⃗ = (3,4) from a⃗ = (5,7)",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2004,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Using Pythagorean theorem on the resultant: √(3² + 4²) = 5",
+                            Name = "Resultant Vector",
+                            PointValue = 2,
+                            Solution = "|r⃗| = 5",
+                            Statement = "Find the magnitude of the resultant vector when a⃗ = (3,0) and b⃗ = (0,4) are added.",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2005,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "In a vector triangle, a⃗ + b⃗ + c⃗ = 0, so c⃗ = -(a⃗ + b⃗) = -(2+4,3+1) = (-6,-4)",
+                            Name = "Vector Triangle",
+                            PointValue = 2,
+                            Solution = "c⃗ = (-6,-4)",
+                            Statement = "Three vectors form a triangle. If two vectors are a⃗ = (2,3) and b⃗ = (4,1), find the third vector c⃗.",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2006,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Add the scalar components: 2 + 3 + (-4) = 1, so result is 1î",
+                            Name = "Parallel Vector Addition",
+                            PointValue = 1,
+                            Solution = "î",
+                            Statement = "Add three parallel vectors: 2î, 3î, and -4î",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2007,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Using Pythagorean theorem: √(3² + 4²) = 5N",
+                            Name = "Force Vectors",
+                            PointValue = 2,
+                            Solution = "5N",
+                            Statement = "Two forces of 3N and 4N act at right angles. Find their resultant.",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2008,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "The negative of the vector: -(2,3) = (-2,-3)",
+                            Name = "Zero Vector",
+                            PointValue = 1,
+                            Solution = "(-2,-3)",
+                            Statement = "What vector should be added to a⃗ = (2,3) to get zero vector?",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2009,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Final position: (-3,4). Magnitude = 5m, angle = arctan(4/3) from west direction",
+                            Name = "Vector Chain",
+                            PointValue = 3,
+                            Solution = "5m at 37° south of west",
+                            Statement = "A person walks 3m east, 4m north, then 6m west. Find the resultant displacement.",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 2010,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Sum of vectors = 0 due to symmetric 120° angles and equal magnitudes",
+                            Name = "Equilibrium Vectors",
+                            PointValue = 3,
+                            Solution = "Yes",
+                            Statement = "Three forces act on a point: 2N at 0°, 2N at 120°, and 2N at 240°. Are they in equilibrium?",
+                            TopicId = 3
+                        },
+                        new
+                        {
+                            Id = 7001,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "First distribute: 3x - 6 = 15. Add 6 to both sides: 3x = 21. Divide by 3: x = 7",
+                            Name = "Linear Equation with Parentheses",
+                            PointValue = 2,
+                            Solution = "x = 7",
+                            Statement = "Solve: 3(x - 2) = 15",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7002,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Subtract 2x from both sides: 2x + 3 = 11. Subtract 3: 2x = 8. Divide by 2: x = 4",
+                            Name = "Linear Equation with Variables on Both Sides",
+                            PointValue = 2,
+                            Solution = "x = 4",
+                            Statement = "Solve: 4x + 3 = 2x + 11",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7003,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Find common denominator: (3x + 2x)/6 = 5, 5x/6 = 5, x = 6",
+                            Name = "Linear Equation with Fractions",
+                            PointValue = 2,
+                            Solution = "x = 6",
+                            Statement = "Solve: x/2 + x/3 = 5",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7004,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Let x be current age. x + 5 = 2(x - 7), solve for x",
+                            Name = "Word Problem - Age",
+                            PointValue = 2,
+                            Solution = "19 years old",
+                            Statement = "In 5 years, John will be twice as old as he was 7 years ago. How old is he now?",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7005,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Subtract 1 from both sides: 2x < 6, divide by 2: x < 3",
+                            Name = "Linear Inequalities",
+                            PointValue = 1,
+                            Solution = "x < 3",
+                            Statement = "Solve: 2x + 1 < 7",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7006,
+                            AuthorId = "3",
+                            Difficulty = 1,
+                            Explanation = "Use distance = speed × time: 120 = x × 2, x = 60",
+                            Name = "Distance Problem",
+                            PointValue = 1,
+                            Solution = "60 km/h",
+                            Statement = "A car travels 120 km at constant speed. If it takes 2 hours, find the speed.",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7007,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Use mixture equation: 0.8x + 0.5(200-x) = 0.6(200)",
+                            Name = "Mixture Problem",
+                            PointValue = 3,
+                            Solution = "66.67ml of 80% solution",
+                            Statement = "How much 80% solution should be mixed with 50% solution to get 200ml of 60% solution?",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7008,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Add equations: 2x = 6, x = 3. Substitute to find y = 2",
+                            Name = "Linear System",
+                            PointValue = 2,
+                            Solution = "x = 3, y = 2",
+                            Statement = "Solve: x + y = 5, x - y = 1",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7009,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Use I = Pr: 1000 = x(0.05), x = 20000",
+                            Name = "Investment Problem",
+                            PointValue = 2,
+                            Solution = "$20,000",
+                            Statement = "Find investment at 5% to earn $1000 annual interest.",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 7010,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Let x be slower speed: 300/x = 300/(x+20) + 2",
+                            Name = "Motion Problem",
+                            PointValue = 3,
+                            Solution = "60km/h and 40km/h",
+                            Statement = "A train travels 300km. Going is 2h faster than return due to 20km/h speed difference. Find speeds.",
+                            TopicId = 110
+                        },
+                        new
+                        {
+                            Id = 8001,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "This is a perfect square trinomial: 3(x² - 4x + 4) = 0, 3(x - 2)² = 0, x = 2 (double root)",
+                            Name = "Complex Quadratic Equation",
+                            PointValue = 3,
+                            Solution = "x = 2 or x = 2",
+                            Statement = "Solve: 3x² - 12x + 12 = 0",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8002,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "This equation has no real solutions. The solutions are the complex numbers i and -i",
+                            Name = "Quadratic with Complex Roots",
+                            PointValue = 3,
+                            Solution = "x = i or x = -i",
+                            Statement = "Solve: x² + 1 = 0",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8003,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Factor as (x-2)(x-3) = 0, use zero product property",
+                            Name = "Factoring Quadratic",
+                            PointValue = 2,
+                            Solution = "x = 2 or x = 3",
+                            Statement = "Solve by factoring: x² - 5x + 6 = 0",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8004,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "(x² + 6x + 9) - 9 + 5 = 0, (x + 3)² = 4",
+                            Name = "Completing Square",
+                            PointValue = 2,
+                            Solution = "x = -1 or x = -5",
+                            Statement = "Solve by completing square: x² + 6x + 5 = 0",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8005,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "Let w be width: w(w+2) = 48, w² + 2w - 48 = 0",
+                            Name = "Area Problem",
+                            PointValue = 2,
+                            Solution = "8 by 6",
+                            Statement = "Rectangle's length is 2 more than width. Area is 48. Find dimensions.",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8006,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Factor: (x+2)(x-3) > 0, test intervals",
+                            Name = "Quadratic Inequalities",
+                            PointValue = 3,
+                            Solution = "x < -2 or x > 3",
+                            Statement = "Solve: x² - x - 6 > 0",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8007,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "-5t² + 20t = 15, solve quadratic",
+                            Name = "Projectile Motion",
+                            PointValue = 3,
+                            Solution = "t = 1 or t = 3",
+                            Statement = "Ball thrown up at 20m/s. When does it reach 15m? (g=10m/s²)",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8008,
+                            AuthorId = "3",
+                            Difficulty = 2,
+                            Explanation = "x + y = 7, xy = 12, substitute: x² - 7x + 12 = 0",
+                            Name = "Sum and Product",
+                            PointValue = 2,
+                            Solution = "x = 3 or x = 4",
+                            Statement = "Find two numbers whose sum is 7 and product is 12.",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8009,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Substitute y = 2-x: x² + 2-x = 4",
+                            Name = "Quadratic System",
+                            PointValue = 3,
+                            Solution = "x = 0, y = 2 or x = 2, y = 0",
+                            Statement = "Solve: x² + y = 4, x + y = 2",
+                            TopicId = 111
+                        },
+                        new
+                        {
+                            Id = 8010,
+                            AuthorId = "3",
+                            Difficulty = 3,
+                            Explanation = "Using discriminant: k² - 4 < 0",
+                            Name = "Complex Roots Pattern",
+                            PointValue = 3,
+                            Solution = "|k| < 2",
+                            Statement = "For what values of k are roots of x² + kx + 1 = 0 complex?",
+                            TopicId = 111
+                        });
                 });
 
             modelBuilder.Entity("MathTutor.Core.Entities.MathProblemAttempt", b =>
@@ -197,6 +706,9 @@ namespace MathTutor.Infrastructure.Migrations
 
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("bit");
+
+                    b.Property<int>("PointsEarned")
+                        .HasColumnType("int");
 
                     b.Property<int>("ProblemId")
                         .HasColumnType("int");
@@ -226,9 +738,6 @@ namespace MathTutor.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -236,15 +745,206 @@ namespace MathTutor.Infrastructure.Migrations
                     b.Property<int>("Difficulty")
                         .HasColumnType("int");
 
+                    b.Property<int>("GradeLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentTopicId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SchoolClassId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentTopicId");
+
+                    b.HasIndex("SchoolClassId");
+
+                    b.ToTable("MathTopics");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Study of vectors and their applications in motion",
+                            Difficulty = 2,
+                            GradeLevel = 8,
+                            Name = "Vectors and Motion",
+                            SchoolClassId = 8
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Description = "Introduction to combinatorics and probability theory",
+                            Difficulty = 2,
+                            GradeLevel = 8,
+                            Name = "Combinatorics and Probability I",
+                            SchoolClassId = 8
+                        },
+                        new
+                        {
+                            Id = 30,
+                            Description = "Introduction to statistical concepts and data analysis",
+                            Difficulty = 2,
+                            GradeLevel = 9,
+                            Name = "Statistics I",
+                            SchoolClassId = 9
+                        },
+                        new
+                        {
+                            Id = 40,
+                            Description = "Study of fractional functions and algebraic expressions",
+                            Difficulty = 2,
+                            GradeLevel = 9,
+                            Name = "Fractional Functions and Algebraic Fractions",
+                            SchoolClassId = 9
+                        },
+                        new
+                        {
+                            Id = 60,
+                            Description = "Study of trigonometric functions and their properties",
+                            Difficulty = 2,
+                            GradeLevel = 10,
+                            Name = "Sine and Cosine Functions",
+                            SchoolClassId = 10
+                        },
+                        new
+                        {
+                            Id = 70,
+                            Description = "Study of powers with rational exponents and geometric progressions",
+                            Difficulty = 2,
+                            GradeLevel = 10,
+                            Name = "Power with Rational Exponent, Geometric Progression",
+                            SchoolClassId = 10
+                        },
+                        new
+                        {
+                            Id = 80,
+                            Description = "Study of exponential functions and their applications",
+                            Difficulty = 2,
+                            GradeLevel = 11,
+                            Name = "Exponential Function",
+                            SchoolClassId = 11
+                        },
+                        new
+                        {
+                            Id = 90,
+                            Description = "Study of 3D geometry, lines, planes, and polyhedra",
+                            Difficulty = 2,
+                            GradeLevel = 11,
+                            Name = "Lines and Planes in Space. Polyhedra",
+                            SchoolClassId = 11
+                        },
+                        new
+                        {
+                            Id = 100,
+                            Description = "Study of bodies formed by rotation",
+                            Difficulty = 2,
+                            GradeLevel = 12,
+                            Name = "Rotational Bodies",
+                            SchoolClassId = 12
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Understanding vectors, their magnitude, and placement in space",
+                            Difficulty = 2,
+                            GradeLevel = 8,
+                            Name = "Vector and its Magnitude. Vector Placement",
+                            ParentTopicId = 1,
+                            SchoolClassId = 8
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Laws of vector addition",
+                            Difficulty = 2,
+                            GradeLevel = 8,
+                            Name = "Vector Addition Laws",
+                            ParentTopicId = 1,
+                            SchoolClassId = 8
+                        },
+                        new
+                        {
+                            Id = 110,
+                            Description = "Solving equations in the form ax + b = c",
+                            Difficulty = 2,
+                            GradeLevel = 7,
+                            Name = "Linear Equations",
+                            SchoolClassId = 7
+                        },
+                        new
+                        {
+                            Id = 111,
+                            Description = "Solving equations in the form ax² + bx + c = 0",
+                            Difficulty = 2,
+                            GradeLevel = 8,
+                            Name = "Quadratic Equations",
+                            SchoolClassId = 8
+                        });
+                });
+
+            modelBuilder.Entity("MathTutor.Core.Entities.SchoolClass", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.ToTable("SchoolClasses");
 
-                    b.ToTable("MathTopics");
+                    b.HasData(
+                        new
+                        {
+                            Id = 7,
+                            Description = "7th grade mathematics course",
+                            Name = "Grade 7"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Description = "8th grade mathematics course",
+                            Name = "Grade 8"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Description = "9th grade mathematics course",
+                            Name = "Grade 9"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Description = "10th grade mathematics course",
+                            Name = "Grade 10"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Description = "11th grade mathematics course",
+                            Name = "Grade 11"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Description = "12th grade mathematics course",
+                            Name = "Grade 12"
+                        });
                 });
 
             modelBuilder.Entity("MathTutor.Core.Entities.StudentProgress", b =>
@@ -258,7 +958,7 @@ namespace MathTutor.Infrastructure.Migrations
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PercentageCompleted")
+                    b.Property<int>("PointsEarned")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -278,6 +978,62 @@ namespace MathTutor.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("StudentProgress");
+                });
+
+            modelBuilder.Entity("MathTutor.Core.Entities.UserMathProblem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PointValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Solution")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TopicId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TopicName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserAnswer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMathProblems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -305,6 +1061,29 @@ namespace MathTutor.Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            ConcurrencyStamp = "3464315a-e3e0-4f28-a0ec-f71c5d000fb0",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            ConcurrencyStamp = "6d6d8be5-df26-4b26-97b9-d611dbb26361",
+                            Name = "Student",
+                            NormalizedName = "STUDENT"
+                        },
+                        new
+                        {
+                            Id = "3",
+                            ConcurrencyStamp = "e60885e5-4c51-459c-99c8-0bd4b2e8b9ef",
+                            Name = "Teacher",
+                            NormalizedName = "TEACHER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -392,6 +1171,23 @@ namespace MathTutor.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "1",
+                            RoleId = "1"
+                        },
+                        new
+                        {
+                            UserId = "2",
+                            RoleId = "2"
+                        },
+                        new
+                        {
+                            UserId = "3",
+                            RoleId = "3"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -415,11 +1211,18 @@ namespace MathTutor.Infrastructure.Migrations
 
             modelBuilder.Entity("MathTutor.Core.Entities.MathProblem", b =>
                 {
+                    b.HasOne("MathTutor.Core.Entities.ApplicationUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("MathTutor.Core.Entities.MathTopic", "Topic")
                         .WithMany("Problems")
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Author");
 
                     b.Navigation("Topic");
                 });
@@ -445,13 +1248,20 @@ namespace MathTutor.Infrastructure.Migrations
 
             modelBuilder.Entity("MathTutor.Core.Entities.MathTopic", b =>
                 {
-                    b.HasOne("MathTutor.Core.Entities.MathCategory", "Category")
+                    b.HasOne("MathTutor.Core.Entities.MathTopic", "ParentTopic")
+                        .WithMany("Subtopics")
+                        .HasForeignKey("ParentTopicId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MathTutor.Core.Entities.SchoolClass", "SchoolClass")
                         .WithMany("Topics")
-                        .HasForeignKey("CategoryId")
+                        .HasForeignKey("SchoolClassId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("ParentTopic");
+
+                    b.Navigation("SchoolClass");
                 });
 
             modelBuilder.Entity("MathTutor.Core.Entities.StudentProgress", b =>
@@ -464,6 +1274,23 @@ namespace MathTutor.Infrastructure.Migrations
 
                     b.HasOne("MathTutor.Core.Entities.ApplicationUser", "User")
                         .WithMany("Progress")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Topic");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MathTutor.Core.Entities.UserMathProblem", b =>
+                {
+                    b.HasOne("MathTutor.Core.Entities.MathTopic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId");
+
+                    b.HasOne("MathTutor.Core.Entities.ApplicationUser", "User")
+                        .WithMany("UserMathProblems")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -529,11 +1356,8 @@ namespace MathTutor.Infrastructure.Migrations
                     b.Navigation("ProblemAttempts");
 
                     b.Navigation("Progress");
-                });
 
-            modelBuilder.Entity("MathTutor.Core.Entities.MathCategory", b =>
-                {
-                    b.Navigation("Topics");
+                    b.Navigation("UserMathProblems");
                 });
 
             modelBuilder.Entity("MathTutor.Core.Entities.MathProblem", b =>
@@ -546,6 +1370,13 @@ namespace MathTutor.Infrastructure.Migrations
                     b.Navigation("Problems");
 
                     b.Navigation("StudentProgress");
+
+                    b.Navigation("Subtopics");
+                });
+
+            modelBuilder.Entity("MathTutor.Core.Entities.SchoolClass", b =>
+                {
+                    b.Navigation("Topics");
                 });
 #pragma warning restore 612, 618
         }

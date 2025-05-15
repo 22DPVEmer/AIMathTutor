@@ -1,7 +1,6 @@
 using AutoMapper;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
-using Microsoft.Extensions.Logging;
 
 namespace MathTutor.Application.Services;
 
@@ -9,16 +8,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    private readonly ILogger<UserService> _logger;
 
     public UserService(
         IUserRepository userRepository,
-        IMapper mapper,
-        ILogger<UserService> logger)
+        IMapper mapper)
     {
         _userRepository = userRepository;
         _mapper = mapper;
-        _logger = logger;
     }
 
     public async Task<UserModel?> GetUserByIdAsync(string id)
@@ -35,9 +31,8 @@ public class UserService : IUserService
 
             return userModel;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error retrieving user by ID");
             return null;
         }
     }
@@ -56,9 +51,8 @@ public class UserService : IUserService
 
             return userModel;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error retrieving user by email");
             return null;
         }
     }
@@ -80,20 +74,19 @@ public class UserService : IUserService
 
             return userModels;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error retrieving all users");
             return Enumerable.Empty<UserModel>();
         }
     }
 
-    public async Task<bool> UpdateUserAsync(UserModel userModel)
+    public async Task<UserModel> UpdateUserAsync(UserModel userModel)
     {
         try
         {
             var user = await _userRepository.GetByIdAsync(userModel.Id);
             if (user == null)
-                return false;
+                return null;
 
             user.FirstName = userModel.FirstName;
             user.LastName = userModel.LastName;
@@ -107,12 +100,15 @@ public class UserService : IUserService
                 user.IsVerified = false;
             }
             
-            return await _userRepository.UpdateAsync(user);
+            var updatedUser = await _userRepository.UpdateAsync(user);
+            var roles = await _userRepository.GetRolesAsync(updatedUser);
+            var result = _mapper.Map<UserModel>(updatedUser);
+            result.Roles = roles.ToList();
+            return result;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error updating user");
-            return false;
+            return null;
         }
     }
 
@@ -126,9 +122,8 @@ public class UserService : IUserService
 
             return await _userRepository.ChangePasswordAsync(user, currentPassword, newPassword);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error changing password");
             return false;
         }
     }
@@ -139,9 +134,8 @@ public class UserService : IUserService
         {
             return await _userRepository.DeleteAsync(id);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error deleting user");
             return false;
         }
     }

@@ -8,7 +8,7 @@ public interface IUserRepository
     Task<ApplicationUser> GetByEmailAsync(string email);
     Task<IEnumerable<ApplicationUser>> GetAllAsync();
     Task<bool> CreateAsync(ApplicationUser user, string password);
-    Task<bool> UpdateAsync(ApplicationUser user);
+    Task<ApplicationUser> UpdateAsync(ApplicationUser user);
     Task<bool> DeleteAsync(string id);
     Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
     Task<bool> AddToRoleAsync(ApplicationUser user, string role);

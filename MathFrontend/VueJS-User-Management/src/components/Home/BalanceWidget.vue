@@ -79,7 +79,6 @@ export default defineComponent({
   },
   methods: {
     viewProgress() {
-      // Implement view progress functionality
       console.log("View progress clicked");
     },
   },

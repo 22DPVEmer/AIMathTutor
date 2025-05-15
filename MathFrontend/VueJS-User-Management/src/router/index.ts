@@ -12,6 +12,9 @@ import Login from "../views/Login.vue";
 import Profile from "../views/Profile.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
+import MathProblemView from "../views/MathProblemView.vue";
+import TopicsView from "../views/TopicsView.vue";
+import MyProblemsView from "../views/MyProblemsView.vue";
 import store from "@/store";
 
 // Define the route meta types
@@ -20,8 +23,8 @@ interface RouteMeta {
   title?: string;
 }
 
-// Extend the RouteRecordRaw to include our custom meta
-interface AppRouteRecordRaw extends Omit<RouteRecordRaw, "meta"> {
+// Extend the RouteRecordRaw type to include our meta type
+interface AppRouteRecordRaw extends RouteRecordRaw {
   meta?: RouteMeta;
 }
 
@@ -72,6 +75,52 @@ const routes: AppRouteRecordRaw[] = [
     meta: { title: "Reset Password" },
   },
   {
+    path: "/math-problems",
+    name: "MathProblems",
+    component: MathProblemView,
+    meta: { requiresAuth: true, title: "Math Problem Generator" },
+  },
+  {
+    path: "/topics",
+    component: () => import("../views/TopicsView.vue"),
+    meta: { requiresAuth: true, title: "Math Topics" },
+    children: [
+      {
+        path: "",
+        name: "TopicsList",
+        component: () => import("../components/MathProblems/TopicsList.vue"),
+        meta: { title: "Math Topics" }
+      },
+      {
+        path: "parent/:parentId",
+        name: "SubtopicsList",
+        component: () => import("../components/MathProblems/SubtopicsList.vue"),
+        meta: { title: "Subtopics" },
+        props: true
+      },
+      {
+        path: ":topicId/problems",
+        name: "TopicProblems",
+        component: () => import("../components/MathProblems/ProblemsList.vue"),
+        meta: { title: "Topic Problems" },
+        props: true
+      },
+      {
+        path: ":topicId/problem/:problemId",
+        name: "ProblemView",
+        component: () => import("../components/MathProblems/ProblemView.vue"),
+        meta: { title: "Problem" },
+        props: true
+      }
+    ]
+  },
+  {
+    path: "/my-problems",
+    name: "MyProblems",
+    component: MyProblemsView,
+    meta: { requiresAuth: true, title: "My Problems" },
+  },
+  {
     path: "/logout",
     name: "Logout",
     beforeEnter: handleLogout,
@@ -90,29 +139,39 @@ const router = createRouter({
   routes: routes as RouteRecordRaw[],
 });
 
-router.beforeEach(
-  (
-    to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
-    next: NavigationGuardNext
-  ) => {
-    // Update document title
-    const defaultTitle = "Math Tutor";
-    document.title = to.meta.title
-      ? `${to.meta.title} | ${defaultTitle}`
-      : defaultTitle;
+// Global navigation guard
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  // Set page title
+  document.title = to.meta?.title ? `${to.meta.title} - AI Math Tutor` : 'AI Math Tutor';
 
-    // Check auth requirements
-    if (to.matched.some((record) => record.meta.requiresAuth)) {
-      if (!store.getters["user/isAuthenticated"]) {
-        next({ name: "Login" });
-      } else {
-        next();
+  // Check if route requires authentication
+  if (to.meta?.requiresAuth) {
+    const isAuthenticated = store.getters["user/isAuthenticated"];
+
+    if (!isAuthenticated) {
+      // Try to restore auth state
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          await store.dispatch("user/checkAuth");
+          await store.dispatch("user/getUserProfile");
+
+          // If we successfully restored auth, proceed
+          if (store.getters["user/isAuthenticated"]) {
+            return next();
+          }
+        } catch (error) {
+          console.error("Error restoring auth state:", error);
+          localStorage.removeItem("token");
+        }
       }
-    } else {
-      next();
+
+      // If we couldn't restore auth, redirect to login
+      return next({ name: "Login", query: { redirect: to.fullPath } });
     }
   }
-);
+
+  next();
+});
 
 export default router;

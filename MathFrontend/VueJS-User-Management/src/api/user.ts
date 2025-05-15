@@ -56,7 +56,7 @@ interface ApiResponse<T = any> {
 const API_URL = "http://localhost:5000/api";
 
 // Create axios instance with default config
-const api: AxiosInstance = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
@@ -70,6 +70,35 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
+  }
+);
+
+// Add response interceptor to handle token errors
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If the error is 401 Unauthorized and not a login request
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/auth/login")
+    ) {
+      originalRequest._retry = true;
+
+      // Clear invalid token
+      localStorage.removeItem("token");
+
+      // Redirect to login page
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+
+    return Promise.reject(error);
   }
 );
 
@@ -171,14 +200,13 @@ export const resetPassword = async (
   }
 };
 
-export const getUserProfile = async (): Promise<UserProfile> => {
+export const getUserProfile = async (): Promise<any> => {
   try {
-    const response: AxiosResponse<ApiResponse<UserProfile>> = await api.get(
-      "/user/profile"
-    );
-    return response.data.data as UserProfile;
+    const response = await api.get("/user/profile");
+    return response.data;
   } catch (error) {
-    return handleError(error as AxiosError | Error);
+    console.error("Error getting user profile:", error);
+    throw error;
   }
 };
 
@@ -186,11 +214,14 @@ export const updateUserProfile = async (
   userData: Partial<UserProfile>
 ): Promise<ApiResponse> => {
   try {
-    const response: AxiosResponse<ApiResponse> = await api.put(
-      "/user",
-      userData
-    );
-    return response.data;
+    const response: AxiosResponse = await api.put("/user/profile", userData);
+
+    // Transform the direct response into ApiResponse format
+    return {
+      success: true,
+      data: response.data,
+      message: "Profile updated successfully",
+    };
   } catch (error) {
     return handleError(error as AxiosError | Error);
   }

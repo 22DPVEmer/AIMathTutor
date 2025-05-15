@@ -13,4 +13,5 @@ public class ApplicationUser : IdentityUser
     // Navigation properties for math-related entities
     public virtual ICollection<StudentProgress> Progress { get; set; } = new List<StudentProgress>();
     public virtual ICollection<MathProblemAttempt> ProblemAttempts { get; set; } = new List<MathProblemAttempt>();
+    public virtual ICollection<UserMathProblem> UserMathProblems { get; set; } = new List<UserMathProblem>();
 } 

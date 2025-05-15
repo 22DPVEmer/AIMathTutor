@@ -1,6 +1,7 @@
 import * as userApi from "@/api/user";
 import { Module } from "vuex";
 import { RootState } from "..";
+import axios from "axios";
 
 // Define the UserState interface
 export interface UserState {
@@ -10,6 +11,7 @@ export interface UserState {
     lastName?: string;
     id?: string;
     token?: string;
+    roles?: string[];
     [key: string]: any;
   };
   loading: boolean;
@@ -48,6 +50,13 @@ const userModule: Module<UserState, RootState> = {
       if (userData.token) {
         localStorage.setItem("token", userData.token);
       }
+
+      // Cache user data if we have meaningful user information
+      if (userData.firstName || userData.lastName || userData.id) {
+        // Store a copy of user data without the token
+        const { token, ...userDataWithoutToken } = state.userData;
+        localStorage.setItem("userData", JSON.stringify(userDataWithoutToken));
+      }
     },
 
     SET_LOADING(state: UserState, loading: boolean): void {
@@ -61,6 +70,7 @@ const userModule: Module<UserState, RootState> = {
     CLEAR_USER_DATA(state: UserState): void {
       state.userData = { email: "" };
       localStorage.removeItem("token");
+      localStorage.removeItem("userData");
     },
   },
 
@@ -162,9 +172,20 @@ const userModule: Module<UserState, RootState> = {
         return profileData;
       } catch (error) {
         commit("SET_LOADING", false);
-        const errorMessage =
-          error instanceof Error ? error.message : "Failed to get user profile";
-        commit("SET_ERROR", errorMessage);
+
+        // Check if this is an authentication error
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          // If unauthorized, clear user data and redirect to login
+          commit("CLEAR_USER_DATA");
+          // Router redirect will be handled by the axios interceptor
+        } else {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to get user profile";
+          commit("SET_ERROR", errorMessage);
+        }
+
         throw error;
       }
     },
@@ -179,10 +200,12 @@ const userModule: Module<UserState, RootState> = {
       try {
         const response = await userApi.updateUserProfile(userData);
 
-        if (response.success) {
-          commit("SET_USER_DATA", userData);
+        if (response.success && response.data) {
+          commit("SET_USER_DATA", response.data);
+          console.log("Profile updated successfully", response.data);
         } else {
           commit("SET_ERROR", response.message || "Profile update failed");
+          console.log("Profile update failed", response.message);
         }
 
         commit("SET_LOADING", false);
@@ -250,10 +273,24 @@ const userModule: Module<UserState, RootState> = {
       }
     },
 
-    checkAuth({ commit }): void {
+    checkAuth({ commit, dispatch }): void {
       const token = localStorage.getItem("token");
       if (token) {
+        // Set the token in state
         commit("SET_USER_DATA", { token });
+
+        // Try to recover any cached user data
+        const cachedUserData = localStorage.getItem("userData");
+        if (cachedUserData) {
+          try {
+            const userData = JSON.parse(cachedUserData);
+            // Restore the cached user data with the current token
+            commit("SET_USER_DATA", { ...userData, token });
+          } catch (error) {
+            console.error("Error parsing cached user data:", error);
+            // If there's an error, we'll just rely on getUserProfile
+          }
+        }
       }
     },
   },

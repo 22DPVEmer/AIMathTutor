@@ -72,17 +72,17 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<bool> UpdateAsync(ApplicationUser user)
+    public async Task<ApplicationUser> UpdateAsync(ApplicationUser user)
     {
         try
         {
             var result = await _userManager.UpdateAsync(user);
-            return result.Succeeded;
+            return user;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating user {UserId}", user.Id);
-            return false;
+            return null;
         }
     }
 

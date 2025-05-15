@@ -3,20 +3,18 @@ using Microsoft.AspNetCore.Authorization;
 using MathTutor.Application.Interfaces;
 using MathTutor.Core.Models;
 using System.Security.Claims;
-using Microsoft.Extensions.Logging;
+using MathTutor.API.Constants;
+using System;
 
 namespace MathTutor.API.Controllers;
 
-[Authorize]
 public class UserController : BaseApiController
 {
     private readonly IUserService _userService;
-    private readonly ILogger<UserController> _logger;
 
-    public UserController(IUserService userService, ILogger<UserController> logger)
+    public UserController(IUserService userService)
     {
         _userService = userService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -28,14 +26,11 @@ public class UserController : BaseApiController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProfile()
     {
-        Console.WriteLine("GetProfile called");
-        
         var userId = GetUserId();
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
         var user = await _userService.GetUserByIdAsync(userId);
-        _logger.LogInformation("User profile retrieved for user ID: {UserId}", userId);
         return HandleResult(user);
     }
 
@@ -70,30 +65,38 @@ public class UserController : BaseApiController
     /// Update user profile
     /// </summary>
     /// <param name="model">The updated user data</param>
-    /// <returns>Result of the update operation</returns>
-    [HttpPut]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    /// <returns>The updated user profile</returns>
+    [HttpPut("profile")]
+    [ProducesResponseType(typeof(UserModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update([FromBody] UserModel model)
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<UserModel>> Update([FromBody] UserModel model)
     {
-        // Ensure user can only update their own profile unless they're an admin
-        var userId = GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
+        try
+        {
+            // Ensure user can only update their own profile unless they're an admin
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
-        if (userId != model.Id && !User.IsInRole("Admin"))
-            return Forbid();
+            if (userId != model.Id && !User.IsInRole("Admin"))
+                return Forbid();
 
-        // Validate input
-        if (string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName))
-            return BadRequest("First name and last name are required");
+            // Validate input
+            if (string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName))
+                return BadRequest(UserControllerConstants.ErrorMessages.NamesRequired);
 
-        var success = await _userService.UpdateUserAsync(model);
-        if (!success)
-            return NotFound();
+            var updatedUser = await _userService.UpdateUserAsync(model);
+            if (updatedUser == null)
+                return NotFound(UserControllerConstants.ErrorMessages.UserNotFoundOrUpdateFailed);
 
-        return Ok();
+            return Ok(updatedUser);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, UserControllerConstants.ErrorMessages.UpdateError);
+        }
     }
 
     /// <summary>
@@ -116,14 +119,14 @@ public class UserController : BaseApiController
 
         // Validate input
         if (string.IsNullOrWhiteSpace(model.CurrentPassword) || string.IsNullOrWhiteSpace(model.NewPassword))
-            return BadRequest("Current password and new password are required");
+            return BadRequest(UserControllerConstants.ErrorMessages.PasswordsRequired);
 
         if (model.NewPassword.Length < 6)
-            return BadRequest("New password must be at least 6 characters long");
+            return BadRequest(UserControllerConstants.ErrorMessages.PasswordTooShort);
 
         var success = await _userService.ChangePasswordAsync(userId, model.CurrentPassword, model.NewPassword);
         if (!success)
-            return BadRequest("Failed to change password. Please ensure your current password is correct.");
+            return BadRequest(UserControllerConstants.ErrorMessages.PasswordChangeFailed);
 
         return Ok();
     }
@@ -145,7 +148,7 @@ public class UserController : BaseApiController
             
         var success = await _userService.DeleteUserAsync(id);
         if (!success)
-            return BadRequest("Failed to delete user");
+            return BadRequest(UserControllerConstants.ErrorMessages.DeleteFailed);
             
         return Ok();
     }

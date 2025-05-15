@@ -1,11 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <NoWarn>$(NoWarn);1591;SKEXP0001;SKEXP0010;SKEXP0050</NoWarn>
+    <UserSecretsId>480782c7-6299-44bd-b0ab-5524fc6c2f19</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.46.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Google" Version="1.45.0-alpha" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
   </ItemGroup>
 
