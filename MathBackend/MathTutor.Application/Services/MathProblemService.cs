@@ -19,7 +19,7 @@ namespace MathTutor.Application.Services
         private readonly IMathTopicRepository _mathTopicRepository;
         private readonly IMathProblemAttemptRepository _mathProblemAttemptRepository;
         private readonly IAIservice _aiService;
-        private readonly MathKernelService _mathKernelService;
+        private readonly IMathKernelService _mathKernelService;
         private readonly IMapper _mapper;
         private static readonly JsonSerializerOptions _jsonOptions = MathProblemServiceConstants.JsonOptions;
 
@@ -28,7 +28,7 @@ namespace MathTutor.Application.Services
             IMathTopicRepository mathTopicRepository,
             IMathProblemAttemptRepository mathProblemAttemptRepository,
             IAIservice aiService,
-            MathKernelService mathKernelService,
+            IMathKernelService mathKernelService,
             IMapper mapper)
         {
             _mathProblemRepository = mathProblemRepository ?? throw new ArgumentNullException(nameof(mathProblemRepository));
@@ -180,10 +180,10 @@ namespace MathTutor.Application.Services
                     throw new InvalidOperationException(string.Format(MathProblemServiceConstants.ErrorMessages.ProblemNotFound, request.ProblemId));
                 }
 
-                // Check for non-answer responses
-                string normalizedUserAnswer = NormalizeAnswer(request.UserAnswer);
+                // Check for non-answer responses BEFORE sanitization to preserve original matching
+                string lowercaseUserAnswer = request.UserAnswer?.Trim().ToLower() ?? string.Empty;
 
-                if (MathProblemServiceConstants.NonAnswerResponses.Contains(normalizedUserAnswer))
+                if (MathProblemServiceConstants.NonAnswerResponses.Contains(lowercaseUserAnswer))
                 {
                     return new EvaluateMathAnswerResponseDto
                     {
@@ -191,6 +191,9 @@ namespace MathTutor.Application.Services
                         Feedback = MathProblemServiceConstants.FeedbackTemplates.NonMathematicalAnswer
                     };
                 }
+
+                // Now sanitize for mathematical validation
+                string normalizedUserAnswer = NormalizeAnswer(request.UserAnswer ?? string.Empty);
 
                 // Use MathKernelService to validate and check equivalence
                 bool isValidExpression = await _mathKernelService.ValidateMathExpressionAsync(normalizedUserAnswer);
@@ -410,7 +413,7 @@ namespace MathTutor.Application.Services
                         evaluationResult = new EvaluateMathAnswerResponseDto
                         {
                             IsCorrect = true,
-                            Feedback = MathProblemServiceConstants.FeedbackTemplates.CorrectPrefix + 
+                            Feedback = MathProblemServiceConstants.FeedbackTemplates.CorrectPrefix +
                                 (string.IsNullOrWhiteSpace(request.Explanation) ?
                                     MathProblemServiceConstants.ResponseStrings.MatchesExpectedSolution : request.Explanation)
                         };
@@ -622,7 +625,7 @@ namespace MathTutor.Application.Services
                     {
                         // If the current attempt is correct, we don't need to save it
                         // If it's incorrect, we still don't save it, but we want to preserve the user's points
-                        
+
                         // Return true because we're successfully handling the request, even though we're not saving anything
                         return true;
                     }
@@ -636,25 +639,25 @@ namespace MathTutor.Application.Services
                 else
                 {
                     var allUserAttempts = await _mathProblemAttemptRepository.GetAttemptsByUserIdAsync(attemptDto.UserId);
-                    
+
                     var matchingAttempts = allUserAttempts.Where(a => a.ProblemId == MathProblemServiceConstants.DefaultValues.DefaultProblemId).ToList();
-                    
+
                     var hasCorrectAttempt = matchingAttempts.Any(a => a.IsCorrect);
 
                     if (hasCorrectAttempt)
                     {
                         // If the current attempt is correct, we don't need to save it
                         // If it's incorrect, we still don't save it, but we want to preserve the user's points
-                        
+
                         return true;
                     }
-                    
+
                     foreach (var existingAttempt in matchingAttempts)
                     {
                         await _mathProblemAttemptRepository.DeleteAttemptAsync(existingAttempt.Id);
                     }
                 }
-                
+
                 var attempt = new MathProblemAttempt
                 {
                     UserId = attemptDto.UserId,

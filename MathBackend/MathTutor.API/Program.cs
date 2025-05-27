@@ -177,7 +177,7 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Add services to the container.
-builder.Services.AddScoped<MathKernelService>();
+builder.Services.AddScoped<IMathKernelService, MathKernelService>();
 
 // Add controllers
 builder.Services.AddControllers()
