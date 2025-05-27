@@ -1,5 +1,6 @@
 using Microsoft.SemanticKernel;
 using MathTutor.Application.Constants;
+using MathTutor.Application.Interfaces;
 using MathTutor.Application.Plugins;
 using System;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace MathTutor.Application.Services
     /// <summary>
     /// Service for mathematical operations using Semantic Kernel
     /// </summary>
-    public sealed class MathKernelService
+    public sealed class MathKernelService : IMathKernelService
     {
         private readonly Kernel _kernel;
         private readonly KernelPlugin _mathPlugin;
