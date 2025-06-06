@@ -1,13 +1,27 @@
 <template>
   <div class="dashboard-container">
-    <div class="row">
-      <!-- Sidebar -->
-      <Sidebar />
+    <!-- Sidebar -->
+    <Sidebar />
 
-      <!-- Main Content -->
-      <main class="col-md-9 ms-sm-auto col-lg-9 px-md-4">
+    <!-- Main Content -->
+    <main class="w-full pt-14 sm:pt-20 md:pt-3 px-3 px-md-4">
+        <!-- Mobile Header -->
+        <div class="d-block d-md-none pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h3 text-center">Welcome, {{ userData.firstName }}!</h1>
+          <div class="d-grid mt-3">
+            <button
+              type="button"
+              class="btn btn-primary btn-lg"
+              @click="startPractice"
+            >
+              Start Practice
+            </button>
+          </div>
+        </div>
+
+        <!-- Desktop Header -->
         <div
-          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+          class="d-none d-md-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
         >
           <h1 class="h2">Welcome, {{ userData.firstName }}!</h1>
           <div class="btn-toolbar mb-2 mb-md-0">
@@ -174,7 +188,6 @@
           </div>
         </div>
       </main>
-    </div>
   </div>
 </template>
 

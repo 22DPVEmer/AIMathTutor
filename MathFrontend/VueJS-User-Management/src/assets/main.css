@@ -6,19 +6,196 @@
   body {
     @apply bg-gray-50;
   }
+
+  /* iPhone SE and very small screens (320px - 375px) */
+  @media (max-width: 375px) {
+    html {
+      font-size: 14px; /* Reduce base font size */
+    }
+
+    h1, .h1 {
+      font-size: 1.5rem !important;
+    }
+
+    h2, .h2 {
+      font-size: 1.25rem !important;
+    }
+
+    h3, .h3 {
+      font-size: 1.125rem !important;
+    }
+
+    h4, .h4 {
+      font-size: 1rem !important;
+    }
+
+    h5, .h5 {
+      font-size: 0.875rem !important;
+    }
+
+    /* Smaller text sizes */
+    .text-lg {
+      font-size: 1rem !important;
+    }
+
+    .text-xl {
+      font-size: 1.125rem !important;
+    }
+
+    .text-2xl {
+      font-size: 1.25rem !important;
+    }
+
+    /* Smaller icons */
+    svg {
+      width: 0.875em !important;
+      height: 0.875em !important;
+    }
+
+    /* Smaller buttons and padding */
+    button, .btn {
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.875rem !important;
+    }
+
+    /* Reduce card padding */
+    .p-4 {
+      padding: 0.75rem !important;
+    }
+
+    .p-6 {
+      padding: 1rem !important;
+    }
+
+    /* Smaller gaps */
+    .gap-4 {
+      gap: 0.75rem !important;
+    }
+
+    .space-y-4 > * + * {
+      margin-top: 0.75rem !important;
+    }
+  }
+
+  /* Ensure proper touch targets on mobile */
+  @media (max-width: 768px) {
+    button, a, input, select, textarea {
+      min-height: 44px;
+    }
+
+    /* Prevent horizontal scroll on mobile */
+    body {
+      overflow-x: hidden;
+    }
+
+    /* Ensure all content is visible */
+    * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Improve text readability on mobile */
+    p, span, div {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+  }
+
+  /* Ensure all interactive elements are accessible */
+  button:focus, a:focus, input:focus, select:focus, textarea:focus {
+    outline: 2px solid #217bff;
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
   }
-  
+
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white;
   }
 
   .form-input {
     @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
+  }
+
+  /* Mobile-first responsive utilities */
+  .mobile-container {
+    @apply px-4 mx-auto max-w-sm;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-container {
+      @apply max-w-md px-6;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .mobile-container {
+      @apply max-w-2xl px-8;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-container {
+      @apply max-w-4xl;
+    }
+  }
+
+  /* Touch-friendly buttons */
+  .btn-mobile {
+    @apply py-3 px-4 text-base font-medium;
+  }
+
+  @media (min-width: 768px) {
+    .btn-mobile {
+      @apply py-2 px-4 text-sm;
+    }
+  }
+
+  /* Mobile-specific utilities */
+  .mobile-full-width {
+    @apply w-full;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-full-width {
+      @apply w-auto;
+    }
+  }
+
+  .mobile-text-center {
+    @apply text-center;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-text-center {
+      @apply text-left;
+    }
+  }
+
+  /* Responsive spacing */
+  .mobile-spacing {
+    @apply p-4 space-y-4;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-spacing {
+      @apply p-6 space-y-6;
+    }
+  }
+
+  /* Ensure forms are mobile-friendly */
+  .form-control {
+    @apply w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  }
+
+  @media (min-width: 768px) {
+    .form-control {
+      @apply py-2 text-sm;
+    }
   }
 }
 

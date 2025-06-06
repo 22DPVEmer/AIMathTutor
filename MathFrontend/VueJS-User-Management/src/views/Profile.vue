@@ -1,12 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <section class="p-4 sm:p-6 lg:p-8">
+    <Sidebar />
+    <section class="pt-14 sm:pt-20 md:pt-2 p-2 sm:p-4 md:p-6 lg:p-8">
       <div class="max-w-7xl mx-auto">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div class="flex flex-col md:flex-row">
-            <Sidebar />
-            <div class="flex-1">
-              <div class="p-4 sm:p-6 lg:p-8">
+          <div class="p-3 sm:p-4 md:p-6 lg:p-8">
                 <div v-if="loading" class="flex justify-center">
                   <div
                     class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"
@@ -14,25 +12,25 @@
                 </div>
                 <div v-else>
                   <!-- Main Content Layout -->
-                  <div class="flex flex-col lg:flex-row gap-6">
+                  <div class="flex flex-col xl:flex-row gap-4 md:gap-6">
                     <!-- Left Section: Progress and Topics -->
-                    <div class="flex-1 space-y-6">
+                    <div class="flex-1 space-y-4 md:space-y-6">
                       <!-- Math Progress Widget -->
                       <div
                         class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                       >
-                        <div class="bg-primary-600 px-4 py-3">
-                          <h5 class="text-lg font-medium text-white">
+                        <div class="bg-primary-600 px-3 py-2 sm:px-4 sm:py-3">
+                          <h5 class="text-base sm:text-lg font-medium text-white">
                             Math Learning Progress
                           </h5>
                         </div>
-                        <div class="p-4">
-                          <div class="flex items-center mb-4">
+                        <div class="p-3 sm:p-4">
+                          <div class="flex items-center mb-3 sm:mb-4">
                             <div
-                              class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-medium text-primary-600 mr-4"
+                              class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center text-lg sm:text-xl font-medium text-primary-600 mr-3 sm:mr-4"
                             >
                               <svg
-                                class="w-8 h-8"
+                                class="w-6 h-6 sm:w-8 sm:h-8"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -46,15 +44,15 @@
                               </svg>
                             </div>
                             <div>
-                              <h3 class="text-2xl font-bold text-gray-900">
+                              <h3 class="text-xl sm:text-2xl font-bold text-gray-900">
                                 {{ progress }}%
                               </h3>
-                              <p class="text-gray-600">Overall Completion</p>
+                              <p class="text-sm sm:text-base text-gray-600">Overall Completion</p>
                             </div>
                           </div>
 
                           <!-- Progress Bar -->
-                          <div class="h-2 bg-gray-200 rounded-full mb-6">
+                          <div class="h-2 bg-gray-200 rounded-full mb-4 sm:mb-6">
                             <div
                               class="h-2 rounded-full bg-green-500"
                               :style="{ width: progress + '%' }"
@@ -62,33 +60,33 @@
                           </div>
 
                           <!-- Stats -->
-                          <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="bg-gray-50 p-3 rounded-lg text-center">
-                              <h5 class="text-xl font-semibold text-gray-900">
+                          <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+                            <div class="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
+                              <h5 class="text-lg sm:text-xl font-semibold text-gray-900">
                                 {{ completedProblems }}
                               </h5>
-                              <p class="text-sm text-gray-600">
+                              <p class="text-xs sm:text-sm text-gray-600">
                                 Problems Solved
                               </p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-lg text-center">
-                              <h5 class="text-xl font-semibold text-gray-900">
+                            <div class="bg-gray-50 p-2 sm:p-3 rounded-lg text-center">
+                              <h5 class="text-lg sm:text-xl font-semibold text-gray-900">
                                 {{ skillLevel }}
                               </h5>
-                              <p class="text-sm text-gray-600">Current Skill</p>
+                              <p class="text-xs sm:text-sm text-gray-600">Current Skill</p>
                             </div>
                           </div>
                         </div>
 
                         <div
-                          class="bg-gray-50 px-4 py-3 border-t border-gray-200"
+                          class="bg-gray-50 px-3 py-2 sm:px-4 sm:py-3 border-t border-gray-200"
                         >
-                          <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600"
+                          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+                            <span class="text-xs sm:text-sm text-gray-600"
                               >Last activity: {{ lastAchievement }}</span
                             >
                             <button
-                              class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                              class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                               @click="$router.push('/topics')"
                             >
                               View All Topics
@@ -101,22 +99,22 @@
                       <div
                         class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                       >
-                        <div class="bg-primary-600 px-4 py-3">
-                          <h5 class="text-lg font-medium text-white">
+                        <div class="bg-primary-600 px-3 py-2 sm:px-4 sm:py-3">
+                          <h5 class="text-base sm:text-lg font-medium text-white">
                             Topic Progress
                           </h5>
                         </div>
-                        <div class="p-4">
-                          <div class="grid grid-cols-2 gap-4">
+                        <div class="p-2 sm:p-4">
+                          <div class="grid grid-cols-2 gap-2 sm:gap-4">
                             <!-- Filter out topics with 0 total points and map remaining ones -->
                             <div
                               v-for="topic in activeTopics"
                               :key="topic.topicId"
                               @click="navigateToTopic(topic)"
-                              class="relative bg-white rounded-lg shadow-sm p-4 flex flex-col items-center justify-center hover:shadow-md transition-shadow border border-gray-100 topic-card cursor-pointer"
+                              class="relative bg-white rounded-lg shadow-sm p-2 sm:p-4 flex flex-col items-center justify-center hover:shadow-md transition-shadow border border-gray-100 topic-card cursor-pointer"
                             >
                               <!-- Circular Progress -->
-                              <div class="relative w-20 h-20">
+                              <div class="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
                                 <svg class="w-full h-full" viewBox="0 0 36 36">
                                   <path
                                     d="M18 2.0845
@@ -143,7 +141,7 @@
                                 <div
                                   class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center"
                                 >
-                                  <span class="text-lg font-bold text-gray-700"
+                                  <span class="text-xs sm:text-sm md:text-lg font-bold text-gray-700"
                                     >{{ topic.percentageCompleted }}%</span
                                   >
                                 </div>
@@ -151,11 +149,11 @@
 
                               <!-- Topic Name and Points -->
                               <h4
-                                class="mt-2 text-sm font-medium text-gray-900 text-center hover:text-primary-600 transition-colors"
+                                class="mt-1 sm:mt-2 text-xs sm:text-sm font-medium text-gray-900 text-center hover:text-primary-600 transition-colors leading-tight"
                               >
                                 {{ topic.topicName }}
                               </h4>
-                              <p class="mt-1 text-xs text-gray-500">
+                              <p class="mt-0.5 sm:mt-1 text-xs text-gray-500">
                                 {{ topic.pointsEarned }}/{{
                                   topic.totalPointsPossible
                                 }}
@@ -167,7 +165,7 @@
                                 :class="
                                   getStatusClass(topic.percentageCompleted)
                                 "
-                                class="absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-full"
+                                class="absolute top-1 right-1 sm:top-2 sm:right-2 px-1 py-0.5 sm:px-2 sm:py-1 text-xs font-medium rounded-full"
                               >
                                 {{ getStatusText(topic.percentageCompleted) }}
                               </span>
@@ -178,7 +176,7 @@
                     </div>
 
                     <!-- Right Section: User Profile -->
-                    <div class="lg:w-1/3">
+                    <div class="xl:w-1/3">
                       <div
                         class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                       >
@@ -190,59 +188,118 @@
                         <div class="p-4">
                           <!-- Profile Header -->
                           <div class="mb-6">
-                            <div class="flex items-center space-x-4 mb-4">
-                              <div
-                                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-medium text-primary-600"
-                              >
-                                {{ user.firstName?.charAt(0)
-                                }}{{ user.lastName?.charAt(0) }}
-                              </div>
-                              <div>
+                            <!-- Mobile Layout -->
+                            <div class="md:hidden">
+                              <div class="text-center mb-4">
+                                <div
+                                  class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-2xl font-medium text-primary-600 mx-auto mb-3"
+                                >
+                                  {{ user.firstName?.charAt(0)
+                                  }}{{ user.lastName?.charAt(0) }}
+                                </div>
                                 <h3 class="text-xl font-bold text-gray-900">
                                   {{ user.firstName }} {{ user.lastName }}
                                 </h3>
-                                <p class="text-gray-600">{{ user.email }}</p>
+                                <p class="text-gray-600 text-sm">{{ user.email }}</p>
+                              </div>
+                              <div class="flex flex-col space-y-2">
+                                <button
+                                  @click="showEditMode"
+                                  class="w-full inline-flex items-center justify-center px-4 py-3 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                >
+                                  <svg
+                                    class="w-4 h-4 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                  </svg>
+                                  Edit Profile
+                                </button>
+                                <button
+                                  @click="confirmDelete"
+                                  class="w-full inline-flex items-center justify-center px-4 py-3 border border-red-600 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                  <svg
+                                    class="w-4 h-4 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                  Delete Account
+                                </button>
                               </div>
                             </div>
-                            <div class="flex space-x-3">
-                              <button
-                                @click="showEditMode"
-                                class="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                              >
-                                <svg
-                                  class="w-4 h-4 mr-2"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+
+                            <!-- Desktop Layout -->
+                            <div class="hidden md:block">
+                              <div class="flex items-center space-x-4 mb-4">
+                                <div
+                                  class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-medium text-primary-600"
                                 >
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
-                                Edit Profile
-                              </button>
-                              <button
-                                @click="confirmDelete"
-                                class="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                              >
-                                <svg
-                                  class="w-4 h-4 mr-2"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                                  {{ user.firstName?.charAt(0)
+                                  }}{{ user.lastName?.charAt(0) }}
+                                </div>
+                                <div>
+                                  <h3 class="text-xl font-bold text-gray-900">
+                                    {{ user.firstName }} {{ user.lastName }}
+                                  </h3>
+                                  <p class="text-gray-600">{{ user.email }}</p>
+                                </div>
+                              </div>
+                              <div class="flex space-x-3">
+                                <button
+                                  @click="showEditMode"
+                                  class="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                                 >
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                                Delete Account
-                              </button>
+                                  <svg
+                                    class="w-4 h-4 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                  </svg>
+                                  Edit Profile
+                                </button>
+                                <button
+                                  @click="confirmDelete"
+                                  class="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                  <svg
+                                    class="w-4 h-4 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                  Delete Account
+                                </button>
+                              </div>
                             </div>
                           </div>
 
@@ -287,12 +344,10 @@
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
     <!-- Delete Confirmation Modal -->
     <div
@@ -302,15 +357,15 @@
       aria-labelledby="deleteModalLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog">
-        <div class="modal-content rounded-lg shadow-lg border border-gray-200">
+      <div class="modal-dialog modal-dialog-centered mx-3 md:mx-auto">
+        <div class="modal-content rounded-lg shadow-lg border border-gray-200 max-w-md mx-auto">
           <div class="modal-header bg-red-600 text-white px-4 py-3">
             <h5 class="modal-title text-lg font-medium" id="deleteModalLabel">
               Confirm Account Deletion
             </h5>
             <button
               type="button"
-              class="text-white opacity-80 hover:opacity-100 focus:outline-none"
+              class="text-white opacity-80 hover:opacity-100 focus:outline-none ml-auto"
               data-bs-dismiss="modal"
               aria-label="Close"
             >
@@ -330,55 +385,97 @@
             </button>
           </div>
           <div class="modal-body p-4">
-            <p class="text-gray-700 mb-4">
+            <p class="text-gray-700 mb-4 text-sm md:text-base">
               Are you sure you want to delete your account? This action cannot
               be undone and all your data will be permanently removed.
             </p>
             <div
               v-if="deleteError"
-              class="bg-red-50 text-red-700 p-3 rounded-md border border-red-200"
+              class="bg-red-50 text-red-700 p-3 rounded-md border border-red-200 text-sm"
             >
               {{ deleteError }}
             </div>
           </div>
           <div
-            class="modal-footer bg-gray-50 px-4 py-3 border-t border-gray-200 flex justify-end space-x-3"
+            class="modal-footer bg-gray-50 px-4 py-3 border-t border-gray-200"
           >
-            <button
-              type="button"
-              class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              data-bs-dismiss="modal"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-              @click="deleteAccount"
-              :disabled="deleting"
-            >
-              <svg
-                v-if="deleting"
-                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
+            <!-- Mobile Layout -->
+            <div class="flex flex-col space-y-2 md:hidden">
+              <button
+                type="button"
+                class="w-full px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                data-bs-dismiss="modal"
               >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Delete Account
-            </button>
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                @click="deleteAccount"
+                :disabled="deleting"
+              >
+                <svg
+                  v-if="deleting"
+                  class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Delete Account
+              </button>
+            </div>
+
+            <!-- Desktop Layout -->
+            <div class="hidden md:flex justify-end space-x-3">
+              <button
+                type="button"
+                class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                @click="deleteAccount"
+                :disabled="deleting"
+              >
+                <svg
+                  v-if="deleting"
+                  class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Delete Account
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -389,6 +486,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Navbar from "@/components/Home/Navbar.vue";
+import Sidebar from "@/components/Home/Sidebar.vue";
 import { mapState, mapGetters } from "vuex";
 import { useToast } from "vue-toastification";
 
@@ -416,6 +514,7 @@ export default defineComponent({
   name: "Profile",
   components: {
     Navbar,
+    Sidebar,
   },
   setup() {
     const toast = useToast();

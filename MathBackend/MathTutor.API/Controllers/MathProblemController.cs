@@ -125,6 +125,42 @@ namespace MathTutor.API.Controllers
             return NoContent();
         }
 
+        [HttpGet("test-ai")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> TestAiConnection()
+        {
+            try
+            {
+                var testRequest = new GenerateMathProblemRequestDto
+                {
+                    Topic = "Basic Arithmetic",
+                    Difficulty = "Easy",
+                    TopicId = 1,
+                    SaveToDatabase = false
+                };
+
+                var result = await _mathProblemService.GenerateMathProblemAsync(testRequest);
+
+                return Ok(new {
+                    success = true,
+                    message = "AI connection working",
+                    response = result,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new {
+                    success = false,
+                    message = "AI connection failed",
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message,
+                    stackTrace = ex.StackTrace,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
         [HttpPost("generate")]
         [ProducesResponseType(typeof(GeneratedMathProblemResponseDto), 200)]
         [ProducesResponseType(400)]

@@ -1,6 +1,7 @@
 using Microsoft.SemanticKernel;
 using MathTutor.Application.Constants;
 using MathTutor.Application.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -16,13 +17,17 @@ namespace MathTutor.Application.Services
         /// </summary>
         public Kernel Kernel { get; }
 
+        private readonly ILogger<KernelProvider> _logger;
+
         /// <summary>
         /// Initializes a new instance of the KernelProvider class
         /// </summary>
         /// <param name="kernel">The Semantic Kernel instance</param>
-        public KernelProvider(Kernel kernel)
+        /// <param name="logger">The logger instance</param>
+        public KernelProvider(Kernel kernel, ILogger<KernelProvider> logger)
         {
             Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -36,6 +41,8 @@ namespace MathTutor.Application.Services
         {
             try
             {
+                _logger.LogDebug("Invoking prompt with temperature: {Temperature}, maxTokens: {MaxTokens}", temperature, maxTokens);
+
                 var arguments = new KernelArguments();
 
                 if (temperature.HasValue)
@@ -48,13 +55,16 @@ namespace MathTutor.Application.Services
                     arguments[KernelProviderConstants.MaxTokensParameter] = maxTokens.Value;
                 }
 
+                _logger.LogDebug("Calling Kernel.InvokePromptAsync...");
                 var result = await Kernel.InvokePromptAsync(prompt, arguments);
                 var response = result.GetValue<string>() ?? string.Empty;
 
+                _logger.LogDebug("Kernel response received, length: {Length}", response.Length);
                 return response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error invoking prompt with Semantic Kernel. Prompt length: {PromptLength}", prompt?.Length ?? 0);
                 throw;
             }
         }

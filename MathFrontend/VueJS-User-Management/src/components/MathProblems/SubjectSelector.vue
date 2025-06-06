@@ -430,7 +430,6 @@ export default {
           // Check if user is logged in before trying to fetch attempts
           const token = localStorage.getItem("token");
           if (!token) {
-            console.log("User not logged in, skipping attempts fetch");
             // Set default values for problems
             problems.value = problems.value.map((problem) => ({
               ...problem,
@@ -569,13 +568,8 @@ export default {
           // Update topic completion data
           updateTopicCompletionData(userAttempts.data);
         } catch (attemptError) {
-          console.warn("Could not fetch user attempts:", attemptError);
-
           // Check if this is an authentication error
           if (attemptError.response && attemptError.response.status === 401) {
-            console.warn(
-              "Authentication required to view attempts. User may not be logged in."
-            );
             // You could redirect to login or show a message here
           }
 
@@ -895,7 +889,6 @@ export default {
             updateTopicCompletionData();
           }
         } catch (error) {
-          console.warn("Error calculating initial topic completion:", error);
           updateTopicCompletionData();
         }
       }

@@ -38,12 +38,11 @@ const initializeAuth = async () => {
     if (token) {
       // Initialize auth state with token
       await store.dispatch("user/checkAuth");
-      
+
       // Fetch user profile if we have a valid token
       await store.dispatch("user/getUserProfile");
     }
   } catch (error) {
-    console.error("Error initializing auth:", error);
     // Clear invalid token
     localStorage.removeItem("token");
   }

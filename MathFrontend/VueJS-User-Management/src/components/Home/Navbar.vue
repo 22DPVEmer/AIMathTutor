@@ -1,68 +1,71 @@
 <template>
   <nav class="bg-primary-500 shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+      <div class="flex justify-between h-12 sm:h-16">
         <div class="flex">
           <!-- Logo/Brand -->
           <router-link
             to="/"
-            class="flex items-center px-2 text-white font-semibold text-xl hover:text-white"
+            class="flex items-center px-1 sm:px-2 text-white font-semibold text-base sm:text-xl hover:text-white"
           >
             AI Math Tutor
           </router-link>
 
-          <!-- Left side navigation items -->
-          <div class="hidden sm:ml-6 sm:flex sm:space-x-4">
+          <!-- Left side navigation items - Visible on desktop, hidden on mobile -->
+          <div class="hidden md:ml-6 md:flex md:space-x-4">
             <router-link
               to="/topics"
               class="flex items-center text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-primary-600"
+              :class="{ 'bg-primary-600': $route.path === '/topics' }"
             >
               Topics
             </router-link>
             <router-link
               to="/math-problems"
               class="flex items-center text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-primary-600"
+              :class="{ 'bg-primary-600': $route.path === '/math-problems' }"
             >
               Problem Generator
             </router-link>
             <router-link
               to="/my-problems"
               class="flex items-center text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-primary-600"
+              :class="{ 'bg-primary-600': $route.path === '/my-problems' }"
             >
               My Problems
             </router-link>
           </div>
         </div>
 
-        <!-- Right side navigation items -->
-        <div class="hidden sm:ml-6 sm:flex sm:items-center">
+        <!-- Right side navigation items - Always visible -->
+        <div class="flex items-center">
           <!-- Show these items when user is NOT authenticated -->
           <template v-if="!isAuthenticated">
             <router-link
               to="/login"
-              class="text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-primary-600"
+              class="text-white px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-primary-600"
             >
               Login
             </router-link>
             <router-link
               to="/register"
-              class="text-white px-3 py-2 rounded-md text-sm font-medium ml-4 transition-all duration-200 hover:bg-primary-600"
+              class="text-white px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm font-medium ml-2 sm:ml-4 transition-all duration-200 hover:bg-primary-600"
             >
               Register
             </router-link>
           </template>
 
-          <!-- Show these items when user is authenticated -->
+          <!-- Show username when user is authenticated -->
           <template v-else>
-            <div class="ml-3 relative">
+            <div class="relative">
               <button
                 @click="toggleDropdown"
-                class="flex items-center text-white px-3 py-2 rounded-md text-sm font-medium focus:outline-none transition-all duration-200 hover:bg-primary-600"
+                class="flex items-center text-white px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm font-medium focus:outline-none transition-all duration-200 hover:bg-primary-600"
                 type="button"
               >
                 <span>{{ userData?.firstName || "User" }}</span>
                 <svg
-                  class="ml-2 h-5 w-5"
+                  class="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -79,15 +82,16 @@
               <!-- Dropdown menu -->
               <div
                 v-show="dropdownOpen"
-                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100"
+                class="origin-top-right absolute right-0 mt-1 sm:mt-2 w-40 sm:w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-50"
               >
                 <div class="py-1">
                   <router-link
                     to="/profile"
-                    class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-all duration-200"
+                    @click="dropdownOpen = false"
+                    class="group flex items-center px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm text-gray-700 hover:bg-primary-50 transition-all duration-200"
                   >
                     <svg
-                      class="mr-3 h-5 w-5 text-gray-400 group-hover:text-primary-500"
+                      class="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-primary-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -106,10 +110,10 @@
                   <a
                     href="#"
                     @click.prevent="handleLogout"
-                    class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-all duration-200"
+                    class="group flex items-center px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm text-gray-700 hover:bg-primary-50 transition-all duration-200"
                   >
                     <svg
-                      class="mr-3 h-5 w-5 text-gray-400 group-hover:text-primary-500"
+                      class="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-primary-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -129,71 +133,11 @@
           </template>
         </div>
 
-        <!-- Mobile menu button -->
-        <div class="flex items-center sm:hidden">
-          <button
-            @click="isMobileMenuOpen = !isMobileMenuOpen"
-            class="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-primary-600 focus:outline-none transition-all duration-200"
-          >
-            <svg
-              class="h-6 w-6"
-              :class="{ hidden: isMobileMenuOpen, block: !isMobileMenuOpen }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-            <svg
-              class="h-6 w-6"
-              :class="{ block: isMobileMenuOpen, hidden: !isMobileMenuOpen }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+        <!-- Mobile menu button removed - navigation handled by sidebar -->
       </div>
     </div>
 
-    <!-- Mobile menu -->
-    <div
-      class="sm:hidden"
-      :class="{ block: isMobileMenuOpen, hidden: !isMobileMenuOpen }"
-    >
-      <div class="px-2 pt-2 pb-3 space-y-1">
-        <router-link
-          to="/topics"
-          class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-        >
-          Topics
-        </router-link>
-        <router-link
-          to="/math-problems"
-          class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-        >
-          Problem Generator
-        </router-link>
-        <router-link
-          to="/my-problems"
-          class="text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-600 transition-all duration-200"
-        >
-          My Problems
-        </router-link>
-      </div>
-    </div>
+    <!-- Mobile menu removed - navigation handled by sidebar -->
   </nav>
 </template>
 
@@ -202,10 +146,9 @@ import { mapGetters, mapActions } from "vuex";
 import { ref } from "vue";
 
 export default {
-  name: "",
+  name: "Navbar",
   setup() {
     const dropdownOpen = ref(false);
-    const isMobileMenuOpen = ref(false);
 
     const toggleDropdown = () => {
       dropdownOpen.value = !dropdownOpen.value;
@@ -225,7 +168,6 @@ export default {
 
     return {
       dropdownOpen,
-      isMobileMenuOpen,
       toggleDropdown,
     };
   },

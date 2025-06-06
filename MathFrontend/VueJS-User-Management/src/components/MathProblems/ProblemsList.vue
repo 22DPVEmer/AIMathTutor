@@ -23,7 +23,8 @@
       <div v-if="problems.length > 0">
         <h3 class="font-bold mb-4">Available Problems for {{ topicName }}</h3>
 
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View -->
+        <div class="hidden lg:block overflow-x-auto">
           <table class="min-w-full bg-white rounded-lg overflow-hidden">
             <thead class="bg-gray-100">
               <tr>
@@ -38,7 +39,7 @@
               <tr
                 v-for="(problem, index) in problems"
                 :key="index"
-                class="border-t"
+                class="border-t hover:bg-gray-50"
               >
                 <td class="py-3 px-4">
                   {{ problem.statement.substring(0, 40)
@@ -99,6 +100,72 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="lg:hidden space-y-4">
+          <div
+            v-for="(problem, index) in problems"
+            :key="index"
+            class="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+          >
+            <div class="flex justify-between items-start mb-3">
+              <div class="flex-1 pr-3">
+                <p class="text-sm text-gray-900 font-medium leading-5">
+                  {{ problem.statement.substring(0, 80)
+                  }}{{ problem.statement.length > 80 ? "..." : "" }}
+                </p>
+              </div>
+              <span
+                class="difficulty-badge px-2 py-1 rounded-full text-xs flex-shrink-0"
+                :class="getDifficultyClass(problem.difficulty)"
+              >
+                {{ getDifficultyLabel(problem.difficulty) }}
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center mb-3">
+              <div class="flex flex-col space-y-1 text-sm text-gray-600">
+                <span>
+                  <span class="font-medium">Points:</span> {{ problem.pointValue }}
+                </span>
+                <span>
+                  <span class="font-medium">Progress:</span>
+                  <span
+                    class="px-2 py-1 rounded-full text-xs ml-1"
+                    :class="{
+                      'bg-green-100 text-green-800': problem.directlyCompleted,
+                      'bg-blue-100 text-blue-800': problem.indirectlyCompleted,
+                      'bg-yellow-100 text-yellow-800':
+                        problem.attempted && !problem.completed,
+                      'bg-gray-100 text-gray-800':
+                        !problem.attempted && !problem.completed,
+                    }"
+                  >
+                    {{
+                      problem.directlyCompleted ? problem.pointsEarned : "0"
+                    }}/{{ problem.pointValue }}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="flex space-x-2">
+              <button
+                @click="solveProblem(problem)"
+                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Solve Problem
+              </button>
+              <button
+                v-if="isTeacherOrAdmin"
+                @click="editProblem(problem)"
+                class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                Edit
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div v-else class="text-center py-8 text-gray-500">
