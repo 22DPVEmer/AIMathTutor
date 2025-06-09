@@ -1,9 +1,15 @@
 <template>
-  <div class="col-12 col-md-6 text-bg-primary d-flex align-items-center justify-content-center">
-    <div class="col-10 col-xl-8 py-3">
-      <img class="img-fluid rounded mb-4" loading="lazy" :src="imgSrc" width="200" height="200" :alt="altText" />
-      <h2 class="h1 mb-4">{{ title }}</h2>
-      <p class="lead m-0">{{ description }}</p>
+  <!-- Desktop: Full banner with image -->
+  <div class="hidden md:flex md:w-1/2 bg-primary-600 text-white items-center justify-center p-8">
+    <div class="max-w-md text-center">
+      <img
+        class="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mx-auto rounded-lg mb-6 object-cover"
+        loading="lazy"
+        :src="imgSrc"
+        :alt="altText"
+      />
+      <h2 class="text-2xl lg:text-3xl font-bold mb-4">{{ title }}</h2>
+      <p class="text-base lg:text-lg opacity-90 leading-relaxed">{{ description }}</p>
     </div>
   </div>
 </template>

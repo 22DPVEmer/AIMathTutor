@@ -1,13 +1,46 @@
 <template>
   <div class="topics-container">
-    <div class="row">
-      <!-- Sidebar -->
-      <Sidebar />
+    <!-- Sidebar -->
+    <Sidebar />
 
-      <!-- Main Content -->
-      <main class="col-md-9 ms-sm-auto col-lg-9 px-md-4">
+    <!-- Main Content -->
+    <main class="w-full pt-14 sm:pt-20 md:pt-3 px-3 px-md-4">
+        <!-- Mobile Header -->
+        <div class="d-block d-md-none pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h3 text-center mb-3">Math Topics</h1>
+          <div class="d-grid gap-2">
+            <div class="btn-group" role="group">
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                :class="{ active: currentFilter === 'all' }"
+                @click="showAllTopics"
+              >
+                All Topics
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                :class="{ active: currentFilter === 'progress' }"
+                @click="showInProgress"
+              >
+                In Progress
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                :class="{ active: currentFilter === 'completed' }"
+                @click="showCompleted"
+              >
+                Completed
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Header -->
         <div
-          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+          class="d-none d-md-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
         >
           <h1 class="h2">Math Topics</h1>
           <div class="btn-toolbar mb-2 mb-md-0">
@@ -15,6 +48,7 @@
               <button
                 type="button"
                 class="btn btn-sm btn-outline-primary"
+                :class="{ active: currentFilter === 'all' }"
                 @click="showAllTopics"
               >
                 All Topics
@@ -22,6 +56,7 @@
               <button
                 type="button"
                 class="btn btn-sm btn-outline-primary"
+                :class="{ active: currentFilter === 'progress' }"
                 @click="showInProgress"
               >
                 In Progress
@@ -29,6 +64,7 @@
               <button
                 type="button"
                 class="btn btn-sm btn-outline-primary"
+                :class="{ active: currentFilter === 'completed' }"
                 @click="showCompleted"
               >
                 Completed
@@ -185,7 +221,6 @@
           </div>
         </div>
       </main>
-    </div>
   </div>
 </template>
 
@@ -206,6 +241,7 @@ export default {
       topics: [],
       selectedSchoolClass: null,
       parentTopics: [],
+      currentFilter: 'all',
     };
   },
   methods: {
@@ -294,14 +330,17 @@ export default {
     },
 
     showAllTopics() {
+      this.currentFilter = 'all';
       // Implement filter logic
     },
 
     showInProgress() {
+      this.currentFilter = 'progress';
       // Implement filter logic
     },
 
     showCompleted() {
+      this.currentFilter = 'completed';
       // Implement filter logic
     },
 

@@ -4,13 +4,31 @@
 
     <!-- School Class Navigation Tabs -->
     <div class="school-class-tabs mb-6">
-      <div class="flex border-b">
+      <!-- Mobile Dropdown -->
+      <div class="md:hidden">
+        <select
+          v-model="selectedSchoolClass"
+          @change="selectSchoolClass(selectedSchoolClass)"
+          class="w-full p-3 border border-gray-300 rounded-md text-base bg-white"
+        >
+          <option
+            v-for="(schoolClass, index) in schoolClasses"
+            :key="index"
+            :value="schoolClass"
+          >
+            {{ schoolClass.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Desktop Tabs -->
+      <div class="hidden md:flex border-b overflow-x-auto">
         <button
           v-for="(schoolClass, index) in schoolClasses"
           :key="index"
           @click="selectSchoolClass(schoolClass)"
           :class="[
-            'px-4 py-2 text-center',
+            'px-4 py-2 text-center whitespace-nowrap flex-shrink-0',
             selectedSchoolClass.id === schoolClass.id
               ? 'border-b-2 border-blue-500 text-blue-600 font-medium'
               : 'text-gray-600 hover:text-blue-500',
@@ -38,47 +56,78 @@
         class="mb-8"
       >
         <div
-          class="parent-topic p-4 bg-gray-100 rounded-lg mb-4 cursor-pointer hover:bg-gray-50"
+          class="parent-topic p-4 bg-gray-100 rounded-lg mb-4 cursor-pointer hover:bg-gray-50 transition-colors"
           @click="navigateToParentTopic(parentTopic)"
         >
-          <div class="flex flex-col space-y-2">
-            <div class="flex justify-between items-center">
-              <h3 class="font-bold text-lg">{{ parentTopic.name }}</h3>
-              <div class="flex items-center space-x-2">
-                <!-- Completion percentage -->
-                <span
-                  class="completion-badge px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
-                  v-if="parentTopic.percentageCompleted !== undefined"
-                >
-                  {{ parentTopic.percentageCompleted }}% complete
-                </span>
-                <!-- Debug info -->
-                <span
-                  class="debug-info text-xs text-gray-500"
-                  v-if="parentTopic.pointsEarned !== undefined"
-                >
-                  ({{ parentTopic.pointsEarned }}/{{
-                    parentTopic.totalPointsPossible
-                  }}
-                  pts)
-                </span>
-                <!-- Difficulty badge -->
-                <span
-                  class="difficulty-badge px-2 py-1 rounded-full text-xs"
-                  :class="getDifficultyClass(parentTopic.difficulty)"
-                >
-                  {{ getDifficultyLabel(parentTopic.difficulty) }}
-                </span>
+          <div class="flex flex-col space-y-3">
+            <!-- Mobile Layout -->
+            <div class="md:hidden">
+              <div class="flex flex-col space-y-2">
+                <div class="flex justify-between items-start">
+                  <h3 class="font-bold text-lg flex-1 pr-2">{{ parentTopic.name }}</h3>
+                  <span
+                    class="difficulty-badge px-2 py-1 rounded-full text-xs flex-shrink-0"
+                    :class="getDifficultyClass(parentTopic.difficulty)"
+                  >
+                    {{ getDifficultyLabel(parentTopic.difficulty) }}
+                  </span>
+                </div>
+
+                <!-- Progress info for mobile -->
+                <div class="flex justify-between items-center text-sm">
+                  <span
+                    class="completion-badge px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                    v-if="parentTopic.percentageCompleted !== undefined"
+                  >
+                    {{ parentTopic.percentageCompleted }}% complete
+                  </span>
+                  <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
+                    {{ getSubtopics(parentTopic.id).length }} subtopics
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop Layout -->
+            <div class="hidden md:block">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">{{ parentTopic.name }}</h3>
+                <div class="flex items-center space-x-2">
+                  <!-- Completion percentage -->
+                  <span
+                    class="completion-badge px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                    v-if="parentTopic.percentageCompleted !== undefined"
+                  >
+                    {{ parentTopic.percentageCompleted }}% complete
+                  </span>
+                  <!-- Debug info -->
+                  <span
+                    class="debug-info text-xs text-gray-500"
+                    v-if="parentTopic.pointsEarned !== undefined"
+                  >
+                    ({{ parentTopic.pointsEarned }}/{{
+                      parentTopic.totalPointsPossible
+                    }}
+                    pts)
+                  </span>
+                  <!-- Difficulty badge -->
+                  <span
+                    class="difficulty-badge px-2 py-1 rounded-full text-xs"
+                    :class="getDifficultyClass(parentTopic.difficulty)"
+                  >
+                    {{ getDifficultyLabel(parentTopic.difficulty) }}
+                  </span>
+                </div>
               </div>
             </div>
 
             <!-- Progress bar -->
             <div
-              class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700"
+              class="w-full bg-gray-200 rounded-full h-2.5"
               v-if="parentTopic.percentageCompleted !== undefined"
             >
               <div
-                class="bg-blue-600 h-2.5 rounded-full"
+                class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                 :style="{ width: parentTopic.percentageCompleted + '%' }"
                 :class="{
                   'bg-green-600': parentTopic.percentageCompleted >= 100,
@@ -86,12 +135,12 @@
               ></div>
             </div>
 
-            <p class="text-gray-600 text-sm mt-2">
+            <p class="text-gray-600 text-sm">
               {{ parentTopic.description }}
             </p>
 
-            <!-- Subtopics count badge -->
-            <div class="flex justify-end">
+            <!-- Subtopics count badge for desktop -->
+            <div class="hidden md:flex justify-end">
               <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
                 {{ getSubtopics(parentTopic.id).length }} subtopics
               </span>
@@ -182,7 +231,7 @@ export default {
           await fetchTopics();
         }
       } catch (error) {
-        console.error("Error fetching school classes:", error);
+        // Error fetching school classes
       } finally {
         loading.value = false;
       }
@@ -203,17 +252,10 @@ export default {
         try {
           const token = localStorage.getItem("token");
           if (token) {
-            console.log("Fetching topic completion data from backend API...");
-            console.time("Topic completion fetch");
             const completionData = await getTopicCompletion();
-            console.timeEnd("Topic completion fetch");
 
             // Update topics with completion data
             if (completionData && completionData.length > 0) {
-              console.log("Received topic completion data:", completionData);
-              console.log(
-                `Received completion data for ${completionData.length} topics`
-              );
 
               // Log total points and earned points across all topics
               const totalPointsPossible = completionData.reduce(
@@ -229,19 +271,12 @@ export default {
                   ? Math.round((totalPointsEarned / totalPointsPossible) * 100)
                   : 0;
 
-              console.log(
-                `Overall progress: ${totalPointsEarned}/${totalPointsPossible} points (${overallPercentage}%)`
-              );
-
               // Update each topic with its completion data
               topics.value = topics.value.map((topic) => {
                 const topicCompletion = completionData.find(
                   (tc) => tc.topicId === topic.id
                 );
                 if (topicCompletion) {
-                  console.log(
-                    `Topic ${topic.id} (${topic.name}): ${topicCompletion.pointsEarned}/${topicCompletion.totalPointsPossible} points, ${topicCompletion.percentageCompleted}% complete`
-                  );
                   return {
                     ...topic,
                     totalPointsPossible: topicCompletion.totalPointsPossible,
@@ -249,26 +284,16 @@ export default {
                     percentageCompleted: topicCompletion.percentageCompleted,
                   };
                 } else {
-                  console.log(
-                    `No completion data found for topic ${topic.id} (${topic.name})`
-                  );
                   return topic;
                 }
               });
-            } else {
-              console.log("No topic completion data received");
             }
-          } else {
-            console.log("User not logged in, skipping topic completion fetch");
           }
         } catch (completionError) {
-          console.warn(
-            "Error fetching topic completion data:",
-            completionError
-          );
+          // Error fetching topic completion data
         }
       } catch (error) {
-        console.error("Error fetching topics:", error);
+        // Error fetching topics
       } finally {
         loading.value = false;
       }
@@ -341,7 +366,6 @@ export default {
             updateTopicCompletionData();
           }
         } catch (error) {
-          console.warn("Error calculating initial topic completion:", error);
           updateTopicCompletionData();
         }
       }
@@ -378,10 +402,6 @@ export default {
           const response = await api.get(`/mathproblem/topic/${topic.id}`);
           topicProblems = response.data;
         } catch (error) {
-          console.error(
-            `Error fetching problems for topic ${topic.id}:`,
-            error
-          );
           topicProblems = [];
         }
 
@@ -395,12 +415,6 @@ export default {
         let pointsEarned = 0;
 
         if (userAttempts && userAttempts.length > 0) {
-          console.log(
-            `Calculating points for topic ${topic.id} (${topic.name})`
-          );
-          console.log(
-            `Found ${topicProblems.length} problems and ${userAttempts.length} user attempts`
-          );
 
           // First, create maps to track which statements have been completed
           const completedStatements = new Map();
@@ -430,10 +444,6 @@ export default {
             }
           });
 
-          console.log(
-            `Found ${completedStatements.size} unique completed statements`
-          );
-
           // Create a map of problem IDs to track which ones we've counted
           const countedProblemIds = new Set();
           // Also track normalized statements we've counted to avoid duplicates
@@ -448,9 +458,6 @@ export default {
 
             // Skip if we've already counted a problem with this statement
             if (countedStatements.has(normalizedStatement)) {
-              console.log(
-                `Problem statement "${problem.statement.substring(0, 20)}..." already counted, skipping`
-              );
               return;
             }
 
@@ -490,19 +497,9 @@ export default {
                 pointsEarned += points;
                 countedProblemIds.add(problem.id);
                 countedStatements.add(normalizedStatement);
-
-                console.log(
-                  `Problem ${problem.id} (${problem.statement.substring(0, 20)}...) earned ${points} points`
-                );
-              } else {
-                console.log(`Problem ${problem.id} already counted, skipping`);
               }
             }
           });
-
-          console.log(
-            `Total points earned for topic ${topic.id}: ${pointsEarned}`
-          );
         }
 
         // Calculate percentage
@@ -527,10 +524,6 @@ export default {
 
         return updatedTopic;
       } catch (error) {
-        console.error(
-          `Error calculating completion for topic ${topic.id}:`,
-          error
-        );
         return {
           ...topic,
           totalPointsPossible: 0,

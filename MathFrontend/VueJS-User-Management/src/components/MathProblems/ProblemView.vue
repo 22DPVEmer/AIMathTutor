@@ -1,6 +1,27 @@
 <template>
   <div class="problem-view">
-    <div class="flex justify-between items-center mb-6">
+    <!-- Mobile Header -->
+    <div class="flex flex-col space-y-4 mb-6 md:hidden">
+      <h2 class="text-xl font-bold text-center">{{ topicName }}</h2>
+      <div class="flex flex-col space-y-2">
+        <button
+          @click="goBackToProblems"
+          class="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center shadow-md"
+        >
+          <span class="mr-2 font-bold">←</span> Back to Problems
+        </button>
+        <button
+          v-if="hasNextProblem"
+          @click="goToNextProblem"
+          class="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center shadow-md"
+        >
+          Next Problem <span class="ml-2 font-bold">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Header -->
+    <div class="hidden md:flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">{{ topicName }}</h2>
       <div class="flex gap-2">
         <button
@@ -96,12 +117,52 @@
           <input
             id="answer"
             v-model="userAnswer"
-            class="w-full p-2 border rounded-md"
+            class="w-full p-3 border rounded-md text-base"
             placeholder="Enter your answer here"
           />
         </div>
 
-        <div class="flex flex-wrap gap-2 mb-4">
+        <!-- Mobile Action Buttons -->
+        <div class="flex flex-col gap-3 mb-4 md:hidden">
+          <button
+            @click="checkAnswer"
+            class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-medium text-base"
+            :disabled="!userAnswer || isChecking"
+          >
+            <span v-if="isChecking">Checking...</span>
+            <span v-else>Check Answer</span>
+          </button>
+
+          <button
+            v-if="evaluation || solutionVisible"
+            @click="showSolution"
+            class="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 flex items-center justify-center font-medium text-base"
+          >
+            <span>{{
+              solutionVisible ? "Hide Solution" : "Show Solution"
+            }}</span>
+            <svg
+              class="ml-2"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline
+                points="6 9 12 15 18 9"
+                v-if="!solutionVisible"
+              ></polyline>
+              <polyline points="18 15 12 9 6 15" v-else></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Desktop Action Buttons -->
+        <div class="hidden md:flex flex-wrap gap-2 mb-4">
           <button
             @click="checkAnswer"
             class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
@@ -181,12 +242,26 @@
           <div class="mb-4">
             <textarea
               v-model="guidanceQuestion"
-              class="w-full p-3 border rounded-md"
+              class="w-full p-3 border rounded-md text-base"
               rows="3"
               placeholder="Ask a specific question about this problem or request additional guidance..."
             ></textarea>
           </div>
-          <div class="flex gap-2">
+
+          <!-- Mobile Guidance Button -->
+          <div class="md:hidden mb-4">
+            <button
+              @click="askForGuidance"
+              class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-medium text-base"
+              :disabled="!guidanceQuestion || isRequestingGuidance"
+            >
+              <span v-if="isRequestingGuidance">Requesting...</span>
+              <span v-else>Ask for Guidance</span>
+            </button>
+          </div>
+
+          <!-- Desktop Guidance Button -->
+          <div class="hidden md:flex gap-2">
             <button
               @click="askForGuidance"
               class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"

@@ -1,15 +1,15 @@
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50"
   >
     <div
-      class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+      class="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mx-4 sm:mx-0"
     >
-      <div class="p-6">
+      <div class="p-4 sm:p-6">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold">Edit Math Problem</h2>
-          <button @click="cancel" class="text-gray-500 hover:text-gray-700">
+          <button @click="cancel" class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors duration-200">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-6 w-6"
@@ -35,7 +35,7 @@
             <input
               id="problemName"
               v-model="editedProblem.name"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               placeholder="Enter a name for this problem"
             />
           </div>
@@ -46,7 +46,7 @@
               <select
                 id="topicName"
                 v-model="editedProblem.topicId"
-                class="flex-grow p-2 border rounded-md"
+                class="flex-grow p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               >
                 <option
                   v-for="topic in topics"
@@ -67,7 +67,7 @@
             <select
               id="difficulty"
               v-model="editedProblem.difficulty"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             >
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
@@ -86,7 +86,7 @@
               type="number"
               min="1"
               max="10"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               placeholder="Points for this problem"
             />
           </div>
@@ -99,7 +99,7 @@
               id="statement"
               v-model="editedProblem.statement"
               rows="4"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base resize-vertical"
               placeholder="Enter the problem statement"
             ></textarea>
           </div>
@@ -111,7 +111,7 @@
             <input
               id="solution"
               v-model="editedProblem.solution"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               placeholder="Enter the correct solution"
             />
           </div>
@@ -124,7 +124,7 @@
               id="explanation"
               v-model="editedProblem.explanation"
               rows="4"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base resize-vertical"
               placeholder="Enter the explanation"
             ></textarea>
           </div>
@@ -132,63 +132,66 @@
           <!-- Only show Correct? for user math problems, not published problems -->
           <div v-if="!isPublished">
             <label class="block mb-2 font-medium">Correct?</label>
-            <div class="flex gap-4">
-              <label class="inline-flex items-center">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <label class="inline-flex items-center cursor-pointer gap-2 py-1 min-h-[44px] sm:min-h-[40px]">
                 <input
                   type="radio"
                   v-model="editedProblem.isCorrect"
                   :value="true"
-                  class="form-radio"
+                  class="radio-input w-5 h-5 sm:w-[18px] sm:h-[18px] border-2 border-gray-300 rounded-full appearance-none bg-white checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-all duration-200 flex-shrink-0"
                 />
-                <span class="ml-2">Correct</span>
+                <span class="text-sm sm:text-base font-medium text-gray-700 select-none">Correct</span>
               </label>
-              <label class="inline-flex items-center">
+              <label class="inline-flex items-center cursor-pointer gap-2 py-1 min-h-[44px] sm:min-h-[40px]">
                 <input
                   type="radio"
                   v-model="editedProblem.isCorrect"
                   :value="false"
-                  class="form-radio"
+                  class="radio-input w-5 h-5 sm:w-[18px] sm:h-[18px] border-2 border-gray-300 rounded-full appearance-none bg-white checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-all duration-200 flex-shrink-0"
                 />
-                <span class="ml-2">Incorrect</span>
+                <span class="text-sm sm:text-base font-medium text-gray-700 select-none">Incorrect</span>
               </label>
             </div>
           </div>
         </div>
 
-        <div class="flex justify-between gap-2 mt-6">
+        <!-- Button section with improved mobile layout -->
+        <div class="mt-6 space-y-4">
           <!-- Publish button for teachers (only for user math problems, not published problems) -->
-          <div v-if="isTeacherOrAdmin && !isPublished">
-            <div class="flex gap-2">
-              <button
-                @click="publish"
-                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                :disabled="isPublishing || isSaving"
-              >
-                {{ isPublishing ? "Publishing..." : "Publish as Math Problem" }}
-              </button>
-            </div>
+          <div v-if="isTeacherOrAdmin && !isPublished" class="flex justify-center">
+            <button
+              @click="publish"
+              class="btn-primary w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base min-h-[44px] flex items-center justify-center shadow-md disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
+              :disabled="isPublishing || isSaving"
+            >
+              {{ isPublishing ? "Publishing..." : "Publish as Math Problem" }}
+            </button>
           </div>
 
-          <button
-            @click="deleteProblem"
-            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Delete Problem
-          </button>
-          <div class="flex gap-4">
+          <!-- Action buttons row -->
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
-              @click="cancel"
-              class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+              @click="deleteProblem"
+              class="flex-1 sm:flex-none px-6 py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base min-h-[44px] flex items-center justify-center shadow-md"
             >
-              Cancel
+              Delete Problem
             </button>
-            <button
-              @click="save"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              :disabled="isSaving"
-            >
-              {{ isSaving ? "Saving..." : "Save Changes" }}
-            </button>
+
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 sm:flex-none">
+              <button
+                @click="cancel"
+                class="flex-1 sm:flex-none px-6 py-3 border-2 border-blue-300 text-blue-600 bg-white rounded-md hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base min-h-[44px] flex items-center justify-center shadow-md"
+              >
+                Cancel
+              </button>
+              <button
+                @click="save"
+                class="btn-primary flex-1 sm:flex-none px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base min-h-[44px] flex items-center justify-center shadow-md disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
+                :disabled="isSaving"
+              >
+                {{ isSaving ? "Saving..." : "Save Changes" }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -438,3 +441,42 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Radio button custom styling - only what Tailwind can't handle */
+.radio-input:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+/* Blue gradient for primary buttons - enhanced theme */
+.btn-primary {
+  background: linear-gradient(45deg, #4361ee, #4895ef);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(45deg, #4895ef, #4361ee);
+}
+
+/* Mobile responsive radio button dot sizing */
+@media (max-width: 768px) {
+  .radio-input:checked::after {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .radio-input:checked::after {
+    width: 5px;
+    height: 5px;
+  }
+}
+</style>

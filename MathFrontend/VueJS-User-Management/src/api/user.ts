@@ -104,20 +104,14 @@ api.interceptors.response.use(
 
 // Utility function for handling errors
 const handleError = (error: AxiosError | Error): never => {
-  console.error("API Error:", error);
   if (axios.isAxiosError(error) && error.response) {
     // Server responded with an error status
-    console.error("Response data:", error.response.data);
-    console.error("Response status:", error.response.status);
-    console.error("Response headers:", error.response.headers);
     throw error.response.data;
   } else if (axios.isAxiosError(error) && error.request) {
     // No response received
-    console.error("Request details:", error.request);
     throw { message: "No response from server. Please check your connection." };
   } else {
     // Something else went wrong
-    console.error("Error message:", error.message);
     throw error;
   }
 };
@@ -126,7 +120,6 @@ export const register = async (
   userData: RegisterData
 ): Promise<ApiResponse> => {
   try {
-    console.log("Sending registration request with data:", userData);
     const response: AxiosResponse<ApiResponse> = await api.post(
       "/auth/register",
       {
@@ -136,22 +129,18 @@ export const register = async (
         Password: userData.password,
       }
     );
-    console.log("Registration response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Registration error:", error);
     return handleError(error as AxiosError | Error);
   }
 };
 
 export const login = async (credentials: LoginData): Promise<ApiResponse> => {
   try {
-    console.log("Sending login request with data:", credentials);
     const response: AxiosResponse<ApiResponse> = await api.post("/auth/login", {
       Email: credentials.email,
       Password: credentials.password,
     });
-    console.log("Login response:", response.data);
     return response.data;
   } catch (error) {
     return handleError(error as AxiosError | Error);
@@ -264,7 +253,6 @@ export const logout = async (): Promise<boolean> => {
     localStorage.removeItem("token");
     return true;
   } catch (error) {
-    console.error("Logout error:", error);
     return false;
   }
 };

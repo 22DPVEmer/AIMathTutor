@@ -7,6 +7,23 @@ coverage/
 pnpm-debug.log*
 lerna-debug.log*
 
+# Vite build artifacts
+.vite/
+*.js.map
+chunk-*.js
+chunk-*.js.map
+vue-router.js
+vue-router.js.map
+vue-toastification.js
+vue-toastification.js.map
+vue.js
+vue.js.map
+vuex.js
+vuex.js.map
+axios.js
+axios.js.map
+_metadata.json
+
 # Logs
 logs/
 *.log
@@ -70,6 +87,23 @@ MathBackend/MathTutor.API/MathTutor.API/appsettings.Production.json
 MathBackend/**/wwwroot/
 MathFrontend/*/dist/
 MathFrontend/*/node_modules/
+
+# VueJS Frontend build artifacts
+MathFrontend/VueJS-User-Management/dist/
+MathFrontend/VueJS-User-Management/*.js
+MathFrontend/VueJS-User-Management/*.js.map
+MathFrontend/VueJS-User-Management/chunk-*.js
+MathFrontend/VueJS-User-Management/chunk-*.js.map
+MathFrontend/VueJS-User-Management/_metadata.json
+
+# Root level frontend artifacts (if any)
+/node_modules/
+/package-lock.json
+/*.js
+/*.js.map
+/chunk-*.js
+/chunk-*.js.map
+/_metadata.json
 
 # Database
 # Uncomment the next line if you want to ignore all migrations

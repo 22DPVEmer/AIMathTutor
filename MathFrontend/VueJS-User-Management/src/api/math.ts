@@ -135,20 +135,9 @@ export const getGuidance = async (
   request: GuidanceRequest
 ): Promise<GuidanceResponse> => {
   try {
-    console.log("Sending guidance request:", request);
     const response = await api.post("/MathProblem/get-guidance", request);
-    console.log("Guidance response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error getting guidance:", error);
-    // Log more details about the error
-    if (error.response) {
-      console.error("Error response data:", error.response.data);
-      console.error("Error response status:", error.response.status);
-      console.error("Error response headers:", error.response.headers);
-    } else if (error.request) {
-      console.error("Error request:", error.request);
-    }
     throw error;
   }
 };

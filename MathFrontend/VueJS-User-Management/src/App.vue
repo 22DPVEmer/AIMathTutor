@@ -1,10 +1,12 @@
 <script>
 import Navbar from '@/components/Home/Navbar.vue';
+import Sidebar from '@/components/Home/Sidebar.vue';
 
 export default {
   name: 'App',
   components: {
-    Navbar
+    Navbar,
+    Sidebar
   }
 };
 </script>
@@ -12,6 +14,7 @@ export default {
 <template>
   <div id="app">
     <Navbar />
+    <Sidebar />
     <main class="main-content">
       <router-view></router-view>
     </main>
@@ -27,8 +30,27 @@ export default {
 
 .main-content {
   flex: 1;
-  padding: 20px;
+  padding: 1rem;
   background-color: #f8f9fa;
+}
+
+/* Responsive padding for main content */
+@media (min-width: 640px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    padding: 2.5rem;
+  }
 }
 
 /* Bootstrap overrides and custom styles */
