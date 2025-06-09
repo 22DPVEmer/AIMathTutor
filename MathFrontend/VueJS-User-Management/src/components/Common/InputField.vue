@@ -1,15 +1,22 @@
 <template>
-    <label :for="id" class="form-label text-sm md:text-base font-medium">{{ label }} <span class="text-danger" v-if="required">*</span></label>
+  <div class="">
+    <!-- Label with 8-12px spacing above input -->
+    <label :for="id" class="block text-sm font-medium text-gray-700 mb-2">
+      {{ label }}
+      <span class="text-red-600" v-if="required">*</span>
+    </label>
+    <!-- Input optimized for mobile: 16px font prevents iOS zoom, 48px height for touch targets -->
     <input
         :type="type"
         :id="id"
         :placeholder="placeholder"
-        class="form-control w-full px-3 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        class="mobile-optimized-input w-full h-12 px-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
         :value="modelValue"
         @input="$emit('update:modelValue', $event.target.value)"
         :disabled="disabled"
         autocomplete="off"
     />
+  </div>
 </template>
 
 <script>

@@ -86,15 +86,15 @@
       <div
         v-for="problem in filteredProblems"
         :key="problem.id"
-        class="bg-white shadow-md rounded-lg p-6 transition-all duration-200"
+        class="bg-white shadow-md rounded-lg p-4 sm:p-6 transition-all duration-200 hover:shadow-lg border border-gray-100"
       >
-        <div class="flex justify-between">
+        <div class="flex justify-between items-start">
           <span class="text-sm text-gray-500">{{
             formatDate(problem.createdAt)
           }}</span>
-          <div class="flex space-x-2">
+          <div class="flex items-center space-x-2">
             <span
-              class="text-sm font-semibold px-3 py-1 rounded-full"
+              class="text-sm font-semibold px-3 py-1 rounded-full inline-flex items-center justify-center min-h-[32px]"
               :class="
                 problem.isCorrect
                   ? 'bg-green-100 text-green-800'
@@ -106,7 +106,7 @@
             <button
               v-if="isTeacherOrAdmin === true"
               @click="editProblem(problem)"
-              class="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+              class="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors inline-flex items-center justify-center min-h-[32px]"
             >
               Edit
             </button>
@@ -656,6 +656,53 @@ export default {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Improved button and badge styling */
+.bg-white.shadow-md.rounded-lg {
+  transition: all 0.2s ease;
+}
+
+.bg-white.shadow-md.rounded-lg:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .my-problems-view {
+    padding: 1rem;
+  }
+
+  .flex.justify-between.items-start {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .flex.items-center.space-x-2 {
+    align-self: flex-end;
+    gap: 0.5rem;
+  }
+
+  /* Ensure buttons are touch-friendly on mobile */
+  .text-sm.font-semibold.px-3.py-1.rounded-full {
+    min-height: 36px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .flex.justify-between.items-start {
+    gap: 0.5rem;
+  }
+
+  .text-sm.font-semibold.px-3.py-1.rounded-full {
+    min-height: 32px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
   }
 }
 </style>

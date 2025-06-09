@@ -1,8 +1,8 @@
 <template>
   <div class="math-problem-generator w-full px-4 sm:px-6 lg:px-8">
     <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 md:p-8 mb-6 w-full">
-      <div class="card-header">
-        <h2 class="card-title">Create Your Problem</h2>
+      <div class="flex items-center justify-center mb-6">
+        <h2 class="card-title text-2xl font-bold text-purple-800 relative pb-2">Create Your Problem</h2>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -10,57 +10,57 @@
           <label for="topicType" class="block mb-2 font-medium text-gray-700"
             >Topic Selection</label
           >
-          <div class="flex gap-4 mb-3">
-            <label class="inline-flex items-center">
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-3">
+            <label class="inline-flex items-center cursor-pointer gap-2 py-1 min-h-[44px] sm:min-h-[40px]">
               <input
                 type="radio"
                 v-model="topicSelectionType"
                 value="existing"
-                class="mr-2 text-blue-600"
+                class="radio-input w-5 h-5 sm:w-[18px] sm:h-[18px] border-2 border-gray-300 rounded-full appearance-none bg-white checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-all duration-200 flex-shrink-0"
               />
-              Use Existing Topic
+              <span class="text-sm sm:text-base font-medium text-gray-700 select-none">Use Existing Topic</span>
             </label>
-            <label class="inline-flex items-center">
+            <label class="inline-flex items-center cursor-pointer gap-2 py-1 min-h-[44px] sm:min-h-[40px]">
               <input
                 type="radio"
                 v-model="topicSelectionType"
                 value="custom"
-                class="mr-2 text-blue-600"
+                class="radio-input w-5 h-5 sm:w-[18px] sm:h-[18px] border-2 border-gray-300 rounded-full appearance-none bg-white checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-all duration-200 flex-shrink-0"
               />
-              Custom Topic
+              <span class="text-sm sm:text-base font-medium text-gray-700 select-none">Custom Topic</span>
             </label>
           </div>
 
           <div v-if="topicSelectionType === 'existing'" class="mt-3">
             <!-- Topic Pills for existing topics -->
-            <div class="topic-pills max-h-60 overflow-y-auto pr-2">
-              <div
-                v-for="topic in topics"
-                :key="topic.id"
-                class="topic-pill"
-                :class="{ active: selectedTopicId == topic.id }"
-                @click="selectTopic(topic.id)"
-              >
-                {{ topic.name }}
-                <span v-if="topic.problemCount > 0" class="problem-count"
-                  >({{ topic.problemCount }})</span
+            <div class="max-h-48 sm:max-h-60 overflow-y-auto overflow-x-hidden pr-1 sm:pr-2 border border-gray-200 rounded-lg p-2 bg-gray-50 scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-100">
+              <div class="flex flex-wrap gap-2">
+                <div
+                  v-for="topic in topics"
+                  :key="topic.id"
+                  class="topic-pill px-3 py-2 bg-gray-200 text-gray-700 rounded-full text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 min-h-[44px] sm:min-h-[40px] flex items-center justify-center select-none active:scale-95"
+                  :class="{
+                    'bg-blue-600 text-white hover:bg-blue-700 hover:text-white': selectedTopicId == topic.id,
+                    'bg-gray-200 text-gray-700': selectedTopicId != topic.id
+                  }"
+                  @click="selectTopic(topic.id)"
                 >
+                  {{ topic.name }}
+                  <span v-if="topic.problemCount > 0" class="ml-1 text-xs opacity-75"
+                    >({{ topic.problemCount }})</span
+                  >
+                </div>
               </div>
             </div>
           </div>
 
           <div v-else class="mt-3">
-            <div class="input-container">
-              <input
-                id="customTopic"
-                v-model="formData.topic"
-                class="input-animated w-full"
-                placeholder=" "
-              />
-              <label for="customTopic" class="input-label"
-                >e.g. Algebra, Calculus, Geometry</label
-              >
-            </div>
+            <input
+              id="customTopic"
+              v-model="formData.topic"
+              class="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all duration-200"
+              placeholder="e.g. Algebra, Calculus, Geometry"
+            />
           </div>
         </div>
 
@@ -68,24 +68,22 @@
           <label for="difficulty" class="block mb-2 font-medium text-gray-700"
             >Difficulty</label
           >
-          <div class="dropdown">
-            <select
-              id="difficulty"
-              v-model="formData.difficulty"
-              class="dropdown-select w-full"
-            >
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
-          </div>
+          <select
+            id="difficulty"
+            v-model="formData.difficulty"
+            class="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all duration-200 bg-white"
+          >
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
         </div>
       </div>
 
-      <div class="actions">
+      <div class="flex justify-center mt-6">
         <button
           @click="generateProblem"
-          class="btn btn-primary btn-lg w-full sm:w-auto"
+          class="btn-primary px-8 py-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-lg w-full sm:w-auto min-h-[56px] flex items-center justify-center shadow-md disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
           :disabled="isLoading"
         >
           <span v-if="isLoading">Generating...</span>
@@ -96,15 +94,14 @@
 
     <div
       v-if="generatedProblem"
-      class="problem-card w-full"
-      style="display: block"
+      class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 sm:p-8 mt-8 w-full"
     >
-      <div class="problem-header">
-        <h3 class="problem-title">{{ formData.topic }} Problem</h3>
-        <span class="problem-badge">{{ formData.difficulty }}</span>
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h3 class="text-xl sm:text-2xl font-bold text-purple-800">{{ formData.topic }} Problem</h3>
+        <span class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm font-semibold">{{ formData.difficulty }}</span>
       </div>
 
-      <div class="problem-content">
+      <div class="mb-6 text-lg leading-relaxed">
         <div v-html="formattedStatement" class="prose max-w-none"></div>
       </div>
 
@@ -115,7 +112,7 @@
         <input
           id="answer"
           v-model="userAnswer"
-          class="input-animated w-full"
+          class="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all duration-200"
           placeholder="Enter your answer here"
         />
       </div>
@@ -123,7 +120,7 @@
       <div class="flex flex-wrap gap-3 mb-4">
         <button
           @click="checkAnswer"
-          class="btn btn-primary"
+          class="btn-primary px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base min-h-[44px] flex items-center justify-center shadow-md disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
           :disabled="!userAnswer || isChecking"
         >
           <span v-if="isChecking">Checking...</span>
@@ -132,7 +129,7 @@
 
         <button
           @click="showSolution"
-          class="solution-toggle"
+          class="px-4 py-3 bg-transparent border-none text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-all duration-200 font-semibold text-sm sm:text-base min-h-[44px] flex items-center justify-center gap-2"
           v-if="evaluation || solutionVisible"
         >
           <span>{{ solutionVisible ? "Hide Solution" : "Show Solution" }}</span>
@@ -145,19 +142,17 @@
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
+            class="transition-transform duration-200"
+            :class="{ 'rotate-180': solutionVisible }"
           >
-            <polyline
-              points="6 9 12 15 18 9"
-              v-if="!solutionVisible"
-            ></polyline>
-            <polyline points="18 15 12 9 6 15" v-else></polyline>
+            <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </button>
 
         <button
           v-if="evaluation"
           @click="saveAttempt"
-          class="btn btn-primary"
+          class="btn-primary px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base min-h-[44px] flex items-center justify-center shadow-md disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
           :disabled="isSaving || attemptSaved"
         >
           <span v-if="isSaving">Saving...</span>
@@ -177,14 +172,13 @@
 
       <div
         v-if="solutionVisible"
-        class="solution-content"
-        style="display: block"
+        class="mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200"
       >
-        <h4 class="font-semibold mb-2">Solution:</h4>
-        <div v-html="formattedSolution"></div>
+        <h4 class="font-semibold mb-3 text-lg text-gray-800">Solution:</h4>
+        <div v-html="formattedSolution" class="mb-4 p-4 bg-white rounded-md border border-gray-100"></div>
 
-        <h4 class="font-semibold mt-4 mb-2">Explanation:</h4>
-        <div v-html="formattedExplanation"></div>
+        <h4 class="font-semibold mt-6 mb-3 text-lg text-gray-800">Explanation:</h4>
+        <div v-html="formattedExplanation" class="p-4 bg-white rounded-md border border-gray-100"></div>
       </div>
     </div>
   </div>
@@ -449,27 +443,28 @@ export default {
 </script>
 
 <style scoped>
+/* Container responsive adjustments */
 .math-problem-generator {
-  max-width: 1000px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
+@media (max-width: 1200px) {
+  .math-problem-generator {
+    max-width: 95%;
+    padding: 0 1rem;
+  }
 }
 
-.card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #3a0ca3;
-  position: relative;
-  padding-bottom: 0.5rem;
+@media (max-width: 768px) {
+  .math-problem-generator {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
 }
 
+/* Title underline decoration - can't be done with Tailwind */
 .card-title::after {
   content: "";
   position: absolute;
@@ -482,226 +477,42 @@ export default {
   border-radius: 3px;
 }
 
-.topic-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.topic-pill {
-  background-color: #e9ecef;
-  color: #212529;
-  padding: 0.5rem 1rem;
-  border-radius: 30px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.topic-pill:hover {
-  background-color: #4895ef;
-  color: white;
-}
-
-.topic-pill.active {
-  background-color: #4361ee;
-  color: white;
-}
-
-.problem-count {
-  font-size: 0.8rem;
-  opacity: 0.8;
-  margin-left: 3px;
-}
-
-.input-container {
-  position: relative;
-  margin-top: 0.5rem;
-}
-
-.input-animated {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.input-animated:focus {
-  outline: none;
-  border-color: #4361ee;
-}
-
-.input-animated:focus + .input-label,
-.input-animated:not(:placeholder-shown) + .input-label {
-  top: -10px;
-  left: 10px;
-  font-size: 0.8rem;
-  padding: 0 5px;
+/* Radio button custom styling - only what Tailwind can't handle */
+.radio-input:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background-color: white;
 }
 
-.input-label {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-  pointer-events: none;
-  transition: all 0.3s ease;
-}
-
-.dropdown {
-  position: relative;
-}
-
-.dropdown-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  background-color: white;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  transition: all 0.3s ease;
-}
-
-.dropdown-select:focus {
-  outline: none;
-  border-color: #4895ef;
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25);
-}
-
-.dropdown::after {
-  content: "▼";
-  font-size: 12px;
-  color: #6c757d;
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-.btn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
+/* Blue gradient for primary buttons */
 .btn-primary {
   background: linear-gradient(45deg, #4361ee, #4895ef);
-  color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: linear-gradient(45deg, #4895ef, #4361ee);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
 }
 
-.btn-lg {
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-}
-
-.actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.problem-card {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  margin-top: 2rem;
-}
-
-.problem-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.problem-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #3a0ca3;
-}
-
-.problem-badge {
-  background-color: #4895ef;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.problem-content {
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-}
-
-.solution-toggle {
-  background: none;
-  border: none;
-  color: #4361ee;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.solution-toggle:hover {
-  color: #3a0ca3;
-}
-
-.solution-content {
-  background-color: #e9ecef;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-top: 1rem;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
+/* Mobile responsive radio button dot sizing */
 @media (max-width: 768px) {
-  .topic-pills {
-    flex-direction: column;
-    gap: 0.5rem;
+  .radio-input:checked::after {
+    width: 6px;
+    height: 6px;
   }
 }
+
+@media (max-width: 480px) {
+  .radio-input:checked::after {
+    width: 5px;
+    height: 5px;
+  }
+}
+
+
 </style>

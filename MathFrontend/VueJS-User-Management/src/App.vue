@@ -1,10 +1,12 @@
 <script>
 import Navbar from '@/components/Home/Navbar.vue';
+import Sidebar from '@/components/Home/Sidebar.vue';
 
 export default {
   name: 'App',
   components: {
-    Navbar
+    Navbar,
+    Sidebar
   }
 };
 </script>
@@ -12,6 +14,7 @@ export default {
 <template>
   <div id="app">
     <Navbar />
+    <Sidebar />
     <main class="main-content">
       <router-view></router-view>
     </main>

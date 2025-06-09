@@ -3,7 +3,7 @@
   <div class="md:hidden">
     <button
       @click="toggleSidebar"
-      class="sidebar-btn fixed top-2 left-2 sm:top-4 sm:left-4 z-50 p-2 sm:p-3 bg-primary-600 text-white rounded-md shadow-lg"
+      class="sidebar-btn fixed top-14 left-2 sm:top-20 sm:left-4 z-50 p-2 sm:p-3 bg-primary-600 text-white rounded-md shadow-lg"
       :class="{ 'bg-primary-700': sidebarOpen }"
     >
       <svg
@@ -240,6 +240,15 @@ nav {
     padding: 8px;
     min-height: 40px;
     min-width: 40px;
+    /* Ensure button is below navbar on mobile */
+    top: 56px; /* h-12 navbar = 48px + 8px margin */
+  }
+}
+
+/* Tablet and larger mobile screens */
+@media (min-width: 640px) and (max-width: 768px) {
+  .sidebar-btn {
+    top: 72px; /* h-16 navbar = 64px + 8px margin */
   }
 }
 
@@ -249,7 +258,7 @@ nav {
     padding: 6px;
     min-height: 36px;
     min-width: 36px;
-    top: 8px;
+    top: 52px; /* Below navbar on small screens */
     left: 8px;
   }
 

@@ -190,11 +190,111 @@
   /* Ensure forms are mobile-friendly */
   .form-control {
     @apply w-full px-3 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    min-height: 44px; /* Ensure touch-friendly minimum height */
   }
 
   @media (min-width: 768px) {
     .form-control {
       @apply py-2 text-sm;
+      min-height: auto;
+    }
+  }
+
+  /* Mobile-specific improvements for very small screens */
+  @media (max-width: 375px) {
+    .form-control {
+      @apply px-2 py-3 text-sm;
+    }
+
+    /* Ensure buttons are touch-friendly */
+    button {
+      min-height: 44px;
+    }
+  }
+
+  /* Mobile-optimized input styling for iPhone SE and similar devices */
+  .mobile-optimized-input {
+    /* 16px font size prevents iOS zoom */
+    font-size: 16px !important;
+    /* 48px height (3rem) for comfortable touch targets */
+    height: 48px;
+    /* Proper padding for mobile */
+    padding: 12px 16px;
+    /* Ensure consistent border radius */
+    border-radius: 8px;
+    /* Smooth transitions */
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  /* Focus state for mobile inputs */
+  .mobile-optimized-input:focus {
+    border-color: #217bff;
+    box-shadow: 0 0 0 2px rgba(33, 123, 255, 0.25);
+  }
+
+  /* Ensure proper spacing for mobile forms */
+  .mobile-input {
+    margin-bottom: 20px;
+  }
+
+  /* Mobile container optimizations for iPhone SE (375px) */
+  @media (max-width: 375px) {
+    .mobile-optimized-input {
+      font-size: 16px !important;
+      height: 48px;
+      padding: 12px 14px;
+    }
+
+    /* Optimize container for very small screens while maintaining good proportions */
+    .max-w-sm {
+      max-width: 340px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    /* Optimize typography for small screens */
+    h1 {
+      font-size: 1.75rem !important; /* 28px */
+    }
+
+    /* Ensure proper button sizing */
+    button {
+      min-height: 48px;
+      font-size: 16px;
+    }
+  }
+
+  /* Additional mobile optimizations for better UX */
+  @media (max-width: 480px) {
+    /* Prevent zoom on input focus for iOS */
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      font-size: 16px !important;
+    }
+
+    /* Optimize spacing for mobile forms */
+    .space-y-5 > * + * {
+      margin-top: 1.25rem; /* 20px */
+    }
+
+    /* Better touch targets for links */
+    a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* Ensure good proportions on wider mobile screens */
+    .max-w-sm {
+      max-width: 380px;
+    }
+  }
+
+  /* Optimizations for larger mobile screens */
+  @media (min-width: 390px) and (max-width: 480px) {
+    .max-w-sm {
+      max-width: 360px;
     }
   }
 }
