@@ -12,5 +12,10 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: true, // Allow external connections for Docker
+  },
+  preview: {
+    port: 3000,
+    host: true,
   },
 });

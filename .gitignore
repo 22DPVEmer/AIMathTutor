@@ -31,14 +31,23 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
+# Environment variables and credentials
 .env
 .env.local
 .env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.staging
 *.local
+
+# Credential files
+credentials.txt
+credentials-filled.txt
+secrets.txt
+config.local.json
+appsettings.Secrets.json
 
 # C# / Backend
 bin/
@@ -84,6 +93,9 @@ _ReSharper*/
 # Project specific
 MathBackend/MathTutor.API/MathTutor.API/appsettings.Development.json
 MathBackend/MathTutor.API/MathTutor.API/appsettings.Production.json
+MathBackend/MathTutor.API/appsettings.Development.json
+MathBackend/MathTutor.API/appsettings.Production.json
+MathBackend/appsettings.Docker.json
 MathBackend/**/wwwroot/
 MathFrontend/*/dist/
 MathFrontend/*/node_modules/
@@ -130,6 +142,12 @@ MathBackend/MathTutor.Infrastructure/Migrations/
 # System Files
 .DS_Store
 Thumbs.db
+
+# Docker runtime files
+docker-compose.override.yml
+**/docker-data/
+**/volumes/
+.docker/
 
 # ApplicationDbContextModelSnapshot
 **/ApplicationDbContextModelSnapshot.cs
