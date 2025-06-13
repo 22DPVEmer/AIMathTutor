@@ -156,13 +156,7 @@ jobs:
         curl -fsSL https://railway.app/install.sh | sh
         echo "$HOME/.railway/bin" >> $GITHUB_PATH
         
-    - name: Deploy Backend to Railway
-      run: |
-        railway up --service mathtutor-backend
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        
-    - name: Deploy Frontend to Railway
+    - name: Deploy to Railway
       run: |
         railway up --service mathtutor-frontend
       env:
