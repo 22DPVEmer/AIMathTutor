@@ -93,11 +93,25 @@ builder.Services.AddScoped<IUserMathProblemRepository, UserMathProblemRepository
 builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
 builder.Services.AddScoped<ISchoolClassRepository, SchoolClassRepository>();
 
-// Register DbContext
+// Register DbContext with dynamic provider selection
+var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "SqlServer";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+{
+    switch (databaseProvider.ToLower())
+    {
+        case "postgresql":
+            options.UseNpgsql(connectionString,
+                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+            break;
+        case "sqlserver":
+        default:
+            options.UseSqlServer(connectionString,
+                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+            break;
+    }
+});
 
 // Register Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -176,6 +190,9 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 // Register infrastructure services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+// Register Database Initialization Service
+builder.Services.AddScoped<DatabaseInitializationService>();
+
 // Add services to the container.
 builder.Services.AddScoped<IMathKernelService, MathKernelService>();
 
@@ -223,6 +240,16 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Initialize database (for Docker environments)
+if (app.Environment.EnvironmentName == "Docker")
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializationService>();
+        await dbInitializer.InitializeAsync();
+    }
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -253,5 +280,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Add health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 app.Run();

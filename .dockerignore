@@ -1,0 +1,115 @@
+# Git
+.git
+.gitignore
+.gitattributes
+# Keep README.md for deployment info
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite build artifacts
+.vite/
+*.js.map
+chunk-*.js
+chunk-*.js.map
+vue-router.js
+vue-router.js.map
+vue-toastification.js
+vue-toastification.js.map
+vue.js
+vue.js.map
+vuex.js
+vuex.js.map
+axios.js
+axios.js.map
+_metadata.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# C# / Backend
+bin/
+obj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+TestResults/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+_ReSharper*/
+*.ReSharper*
+*.DotSettings.user
+*.dotCover
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+# Database
+*.mdf
+*.ldf
+*.sdf
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+**/tmp/
+**/temp/
+**/.temp/
+
+# Testing
+/cypress/videos/
+/cypress/screenshots/
+
+# Other
+.DS_Store
+Thumbs.db
+*.ntvs*
+*.njsproj
+*.sw?

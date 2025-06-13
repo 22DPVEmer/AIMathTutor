@@ -19,7 +19,7 @@ export default {
   props: {
     imgSrc: {
       type: String,
-      default: '/src/assets/images/ai-math-tutor.png',
+      default: '/ai-math-tutor.png',
     },
     altText: {
       type: String,

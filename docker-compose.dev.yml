@@ -1,0 +1,75 @@
+services:
+  # PostgreSQL Database for Development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: mathtutor-postgres-dev
+    environment:
+      - POSTGRES_DB=MathTutorDb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-YourStrong@Passw0rd}
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts with production
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - mathtutor-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Backend API with development settings and PostgreSQL
+  backend:
+    build:
+      context: ./MathBackend
+      dockerfile: Dockerfile
+    container_name: mathtutor-backend-dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DatabaseProvider=PostgreSQL
+      - ConnectionStrings__DefaultConnection=Host=postgres-dev;Port=5432;Database=MathTutorDb;Username=postgres;Password=${POSTGRES_PASSWORD:-YourStrong@Passw0rd}
+      - JwtSettings__Secret=${JWT_SECRET:-YourSuperSecretKeyThatShouldBeAtLeast32CharactersLongForDevelopment}
+      - AI__Gemini__ApiKey=${GEMINI_API_KEY}
+    ports:
+      - "5000:8080"
+    volumes:
+      # Mount source code for hot reload (optional)
+      - ./MathBackend:/src
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    networks:
+      - mathtutor-dev-network
+    restart: unless-stopped
+
+  # Frontend with development server (Vite)
+  frontend-dev:
+    image: node:18-alpine
+    container_name: mathtutor-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:5000/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./MathFrontend/VueJS-User-Management:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - mathtutor-dev-network
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  mathtutor-dev-network:
+    driver: bridge

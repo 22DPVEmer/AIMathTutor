@@ -1,0 +1,78 @@
+services:
+  # PostgreSQL Database (for platforms that don't provide managed DB)
+  postgres:
+    image: postgres:15-alpine
+    container_name: mathtutor-postgres-prod
+    environment:
+      - POSTGRES_DB=MathTutorDb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mathtutor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: ./MathBackend
+      dockerfile: Dockerfile
+    container_name: mathtutor-backend-prod
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - DatabaseProvider=PostgreSQL
+      - ConnectionStrings__DefaultConnection=${DATABASE_URL:-Host=postgres;Port=5432;Database=MathTutorDb;Username=postgres;Password=${POSTGRES_PASSWORD}}
+      - JwtSettings__Secret=${JWT_SECRET}
+      - AI__Gemini__ApiKey=${GEMINI_API_KEY}
+      - AllowedOrigins__0=${FRONTEND_URL:-https://yourdomain.com}
+      - AllowedOrigins__1=https://www.yourdomain.com
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mathtutor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend
+  frontend:
+    build:
+      context: ./MathFrontend/VueJS-User-Management
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${BACKEND_URL:-https://api.yourdomain.com}/api
+    container_name: mathtutor-frontend-prod
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - mathtutor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  mathtutor-network:
+    driver: bridge
