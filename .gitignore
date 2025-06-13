@@ -136,7 +136,7 @@ MathBackend/MathTutor.Infrastructure/Migrations/
 .idea/
 *.ntvs*
 *.njsproj
-*.sln
+
 *.sw?
 
 # System Files
