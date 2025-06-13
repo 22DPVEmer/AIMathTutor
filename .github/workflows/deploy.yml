@@ -158,14 +158,13 @@ jobs:
         
     - name: Deploy Backend to Railway
       run: |
-        railway login --token ${{ secrets.RAILWAY_TOKEN }}
-        railway service deploy --service mathtutor-backend
+        railway up --service mathtutor-backend
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         
     - name: Deploy Frontend to Railway
       run: |
-        railway service deploy --service mathtutor-frontend
+        railway up --service mathtutor-frontend
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         
